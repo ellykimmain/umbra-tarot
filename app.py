@@ -81,17 +81,17 @@ if "user_email" not in st.session_state:
 
 user_email = st.session_state["user_email"]
 
-# 사이드바
+# 사이드바 (Pro Oracle 3회 제한 반영)
 st.sidebar.markdown("### 🪐 Membership Tiers")
 plan_choice = st.sidebar.radio(
     "Select Your Plan", 
-    ["Free Trial (3 Days - Basic + 1 Custom Query)", "Pro Oracle ($1.99 / 7 Days - Unlimited)"]
+    ["Free Trial (3 Days - Basic + 1 Custom Query)", "Pro Oracle ($1.99 / 7 Days - 3 Queries / Day)"]
 )
 
 if "Free" in plan_choice:
-    st.sidebar.info("✨ Free Plan: 3 Days Free. Includes 1 'Who Am I' and 1 'Custom Query' per day.")
+    st.sidebar.info("✨ Free Plan: Includes 1 'Who Am I' and 1 'Custom Query' per day.")
 else:
-    st.sidebar.success("💎 Pro Oracle Active: Unlimited Deep Custom Questions ($1.99/7d).")
+    st.sidebar.success("💎 Pro Oracle Active: Up to 3 Custom Queries per day ($1.99/7d).")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔮 Oracle Mode")
@@ -269,7 +269,7 @@ FINAL PROPHECY
 
         status.empty()
 
-        # 🚨 웹훅을 통한 구글 시트 데이터 전송
+        # 웹훅 전송
         try:
             webhook_url = st.secrets["SHEET_WEBHOOK_URL"]
             payload = {
@@ -278,8 +278,8 @@ FINAL PROPHECY
                 "whoami": 1 if reading_mode.startswith("1") else 0,
                 "custom": 1 if reading_mode.startswith("2") else 0
             }
-            requests.post(webhook_url, json=payload)
-        except Exception as webhook_e:
+            requests.post(webhook_url, json=payload, timeout=3)
+        except Exception:
             pass
 
         st.success(f"Prophecy manifested for {user_name} ({birth_place}).")
@@ -343,5 +343,7 @@ FINAL PROPHECY
                 st.error(f"Failed to send email. Check your settings. ({email_e})")
 
     except Exception as e:
+        status.empty()
+        st.error(f"An error occurred: {e}")
         status.empty()
         st.error(f"An error occurred: {e}")
