@@ -123,7 +123,13 @@ with col2:
 with col3:
     birth_day = st.number_input("Day", min_value=1, max_value=31, value=15)
 
-birth_time = st.text_input("Birth Time (e.g. 14:30)", value="12:00")
+col_hour, col_minute = st.columns(2)
+with col_hour:
+    birth_hour = st.selectbox("Birth Hour", [f"{i:02d}" for i in range(24)], index=12)
+with col_minute:
+    birth_minute = st.selectbox("Birth Minute", [f"{i:02d}" for i in range(60)], index=0)
+
+birth_time = f"{birth_hour}:{birth_minute}"
 
 # 모드 2일 때 질문 입력창
 user_question = ""
