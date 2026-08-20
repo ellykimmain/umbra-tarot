@@ -101,24 +101,25 @@ birth_time = st.selectbox("Time of Birth", time_options)
 
 # (위쪽에는 생년월일, 태어난 시간 등의 입력 코드가 있습니다.)
 
-# 커스텀 질문 모드일 경우: 드롭다운 선택 및 직접 입력 연동
+# 커스텀 질문 모드일 경우: 현실적이고 구체적인 질문 프리셋 제공
 if "2." in reading_mode or "Custom" in reading_mode:
     question_options = [
-        "What is the hidden truth of my current situation?",
-        "What subconscious fear is holding me back?",
-        "What energy should I embrace to move forward?",
+        "When will this current financial hardship finally improve?", # 지금의 재정적 어려움은 언제 좋아질까?
+        "What is the hidden block preventing my wealth and success?", # 내 재물운을 가로막고 있는 숨겨진 원인은 무엇인가?
+        "What is the true intention of the person I am thinking about?", # 내가 생각하는 그 사람의 진짜 속마음은 무엇인가?
+        "Am I on the right path with my current business or career?", # 지금 나의 사업/커리어 방향이 맞게 가고 있는 것인가?
         "Direct Input (Write your own query)"
     ]
     selected_query = st.selectbox("Choose your query or select Direct Input", question_options)
     
     # '직접 입력'을 선택했을 때만 텍스트 입력창 활성화
     if selected_query == "Direct Input (Write your own query)":
-        user_question = st.text_area("Your Deep Query", placeholder="Type your specific question here...")
+        user_question = st.text_area("Your Deep Query", placeholder="e.g., Will my new business venture succeed this year?")
     else:
         user_question = selected_query
 else:
     user_question = ""
-
+    
 # 메인 버튼 및 방어 로직
 if st.button("Consult the Oracle & Draw Cards"):
     today = datetime.now().strftime("%Y-%m-%d")
