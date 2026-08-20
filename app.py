@@ -23,7 +23,7 @@ oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_END
 
 st.set_page_config(page_title="Umbra & Tarot: Shadow Prophecy", layout="centered", initial_sidebar_state="expanded")
 
-# 커스텀 CSS (사이드바 모든 텍스트 요소를 밝은 화이트로 완벽 고정)
+# 커스텀 CSS (메인 입력창 라벨을 완전한 순백색으로 강제 고정)
 st.markdown("""
     <style>
     .stApp { background-color: #0b0b0e; color: #f1f1f1; }
@@ -33,10 +33,10 @@ st.markdown("""
     div.stButton > button:first-child { background-color: #15151c; color: #f3e5ab; border: 1px solid #4a4a75; font-weight: 600; border-radius: 5px; width: 100%; }
     div.stButton > button:first-child:hover { background-color: #4a4a75; color: #ffffff; border: 1px solid #f3e5ab; }
     
-    /* 메인 화면 입력창 라벨 */
-    .main label, .main [data-testid="stWidgetLabel"] p { color: #f1f1f1 !important; font-weight: 500; }
+    /* 메인 화면 입력창 라벨 텍스트를 무조건 선명한 화이트로 고정 */
+    .main [data-testid="stWidgetLabel"] label, .main [data-testid="stWidgetLabel"] p, .main label { color: #ffffff !important; font-weight: 600 !important; }
     
-    /* 사이드바 내부 모든 텍스트, 라벨, 셀렉터 글씨를 무조건 선명한 화이트로 고정 */
+    /* 사이드바 영역 */
     section[data-testid="stSidebar"] { background-color: #121218 !important; }
     section[data-testid="stSidebar"] *, section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] span, section[data-testid="stSidebar"] p { color: #ffffff !important; }
     </style>
