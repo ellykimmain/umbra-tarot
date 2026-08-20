@@ -193,3 +193,12 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
     except Exception as e:
         status.update(label="The astral connection was lost.", state="error", expanded=False)
         st.error(f"The astral connection was lost. System Error: {e}")
+
+except Exception as e:
+        status.update(label="The astral gates are closed.", state="error", expanded=False)
+        error_msg = str(e)
+        # 구글 할당량 초과 에러(429) 감지 시 선착순 마감 메시지 영문 출력
+        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+            st.error("🌙 The astral energy is depleted. Today's complimentary prophecies (Limit: 20) have concluded. Return after midnight.")
+        else:
+            st.error("The astral connection was lost. Please try again later.")
