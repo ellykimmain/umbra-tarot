@@ -131,13 +131,13 @@ if st.button("Consult the Oracle & Draw Cards"):
 
     # 로딩 애니메이션 및 다채로운 텍스트 전환 연출 복구
     status = st.status("🌌 Tunnelling through the astral plane...", expanded=True)
-    time.sleep(1.0)
+    time.sleep(1.5)
     status.update(label="🔮 Consulting the cosmic alignment & Manse-ryeok data...", state="running")
-    time.sleep(1.0)
+    time.sleep(1.5)
     status.update(label="🃏 Drawing the shadow arcana cards...", state="running")
-    time.sleep(1.0)
+    time.sleep(1.5)
     status.update(label="⚡ Channeling the blunt prophecy...", state="running")
-    time.sleep(1.0)
+    time.sleep(2.0)
     
     try:
         astrology_data = "External API connection placeholder: Sun in Taurus, Moon in Scorpio, Ascendant Leo."
