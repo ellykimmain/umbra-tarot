@@ -53,7 +53,7 @@ st.markdown("""
 st.markdown("<h1 class='main-title'>👁️ UMBRA & TAROT</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-title'>Pierce the veil of your shadow self. Unearth the truths hidden in the astral dark.</p>", unsafe_allow_html=True)
 
-# 🚨 전면 로그인 방어벽
+# 전면 로그인 방어벽
 if "google_token" not in st.session_state:
     st.warning("👁️ Google Login is required to enter the astral realm.")
     result = oauth2.authorize_button(
@@ -81,7 +81,7 @@ if "user_email" not in st.session_state:
 
 user_email = st.session_state["user_email"]
 
-# 사이드바 (Pro Oracle 3회 제한 반영)
+# 사이드바
 st.sidebar.markdown("### 🪐 Membership Tiers")
 plan_choice = st.sidebar.radio(
     "Select Your Plan", 
@@ -89,9 +89,9 @@ plan_choice = st.sidebar.radio(
 )
 
 if "Free" in plan_choice:
-    st.sidebar.info("✨ Free Plan: Includes 1 'Who Am I' and 1 'Custom Query' per day.")
+    st.sidebar.info("✨ Free Plan: Includes 1 'Who Am I' or 1 'Custom Query' per day.")
 else:
-    st.sidebar.success("💎 Pro Oracle Active: Up to 3 Custom Queries per day ($1.99/7d).")
+    st.sidebar.success("💎 Pro Oracle Active: Up to 3 Queries per day ($1.99/7d).")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔮 Oracle Mode")
@@ -178,8 +178,27 @@ tarot_deck = {
     "The World": {"file": "images/world.jpg", "symbol": "🌍 XXI. The World"}
 }
 
+# ----------------------------------------------------
+# 메인 실행 버튼 및 횟수 방어 로직
+# ----------------------------------------------------
 if st.button("Consult the Oracle & Draw Cards"):
     
+    # 오늘 날짜 및 사용자 식별 키 생성
+    today = datetime.now().strftime("%Y-%m-%d")
+    user_key = f"{user_email}_{today}"
+    
+    # 세션 횟수 저장소 초기화
+    if "already_prophesied" not in st.session_state:
+        st.session_state["already_prophesied"] = {}
+        
+    count = st.session_state["already_prophesied"].get(user_key, 0)
+    limit = 3 if "Pro Oracle" in plan_choice else 1
+    
+    # 횟수 초과 시 즉시 진행 중단
+    if count >= limit:
+        st.error(f"🌙 You have reached your daily limit ({limit} query/queries per day). Return when the stars realign tomorrow.")
+        st.stop()
+
     drawn_keys = random.sample(list(tarot_deck.keys()), 3)
     card1_name = drawn_keys[0]
     card2_name = drawn_keys[1]
@@ -269,18 +288,8 @@ FINAL PROPHECY
 
         status.empty()
 
-        # 웹훅 전송
-        try:
-            webhook_url = st.secrets["SHEET_WEBHOOK_URL"]
-            payload = {
-                "email": user_email,
-                "date": current_date,
-                "whoami": 1 if reading_mode.startswith("1") else 0,
-                "custom": 1 if reading_mode.startswith("2") else 0
-            }
-            requests.post(webhook_url, json=payload, timeout=3)
-        except Exception:
-            pass
+        # 타로 리딩 성공 후 실행 횟수 증가 처리
+        st.session_state["already_prophesied"][user_key] = count + 1
 
         st.success(f"Prophecy manifested for {user_name} ({birth_place}).")
         st.markdown("## 🃏 The Three Gates of Umbra")
@@ -324,6 +333,7 @@ FINAL PROPHECY
         st.markdown("## 👁️ Oracle's Vision")
         st.info(response.text)
 
+        # 이메일 발송
         if user_email:
             try:
                 sender_email = st.secrets["EMAIL_SENDER"]
@@ -343,7 +353,5 @@ FINAL PROPHECY
                 st.error(f"Failed to send email. Check your settings. ({email_e})")
 
     except Exception as e:
-        status.empty()
-        st.error(f"An error occurred: {e}")
         status.empty()
         st.error(f"An error occurred: {e}")
