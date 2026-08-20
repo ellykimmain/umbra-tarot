@@ -145,19 +145,19 @@ response = client.models.generate_content(
     contents=prompt
 )
     
-    # 성공 기록
-    st.session_state["already_prophesied"][user_key] = count + 1
-    
-    st.success("Prophecy manifested.")
-    st.info(response.text)
-    
-    # 이메일 발송
-    try:
-        msg = MIMEText(f"Prophecy for {user_name}:\n\n{response.text}")
-        msg['Subject'] = "👁️ Your Shadow Prophecy"
-        msg['From'] = st.secrets["EMAIL_SENDER"]
-        msg['To'] = user_email
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(st.secrets["EMAIL_SENDER"], st.secrets["EMAIL_PASSWORD"])
-            server.send_message(msg)
-    except: st.error("Email failed.")
+# 성공 기록
+st.session_state["already_prophesied"][user_key] = count + 1
+
+st.success("Prophecy manifested.")
+st.info(response.text)
+
+# 이메일 발송
+try:
+    msg = MIMEText(f"Prophecy for {user_name}:\n\n{response.text}")
+    msg['Subject'] = "👁️ Your Shadow Prophecy"
+    msg['From'] = st.secrets["EMAIL_SENDER"]
+    msg['To'] = user_email
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        server.login(st.secrets["EMAIL_SENDER"], st.secrets["EMAIL_PASSWORD"])
+        server.send_message(msg)
+except: st.error("Email failed.")
