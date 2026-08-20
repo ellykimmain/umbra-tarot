@@ -4,9 +4,10 @@ import streamlit as st
 import random
 import time
 import os
-import requests  # <-- 이 줄을 반드시 추가해라!
+import requests
 from google import genai
 from streamlit_oauth import OAuth2Component
+from datetime import datetime
 
 # Streamlit Secrets 로드
 api_key = st.secrets["GEMINI_API_KEY"]
@@ -29,67 +30,70 @@ st.set_page_config(
 # 커스텀 CSS
 st.markdown("""
     <style>
-    .stApp {
-        background-color: #0b0b0e;
-        color: #f1f1f1;
-    }
+    .stApp { background-color: #0b0b0e; color: #f1f1f1; }
     .main-title {
-        text-align: center;
-        color: #f3e5ab;
-        font-family: 'Cinzel', serif;
-        letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(243, 229, 171, 0.3);
-        font-size: 2.5rem;
+        text-align: center; color: #f3e5ab; font-family: 'Cinzel', serif;
+        letter-spacing: 2px; text-shadow: 0 0 10px rgba(243, 229, 171, 0.3); font-size: 2.5rem;
     }
-    @media (max-width: 768px) {
-        .main-title {
-            font-size: 1.6rem !important;
-        }
-    }
-    .sub-title {
-        text-align: center;
-        color: #b3b3cc;
-        font-size: 1.05rem;
-    }
+    @media (max-width: 768px) { .main-title { font-size: 1.6rem !important; } }
+    .sub-title { text-align: center; color: #b3b3cc; font-size: 1.05rem; }
     .card-box {
-        background-color: #15151c;
-        border: 1px solid #4a4a75;
-        padding: 15px;
-        border-radius: 10px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        background-color: #15151c; border: 1px solid #4a4a75; padding: 15px;
+        border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     }
-    label {
-        color: #d1d1e0 !important;
-        font-weight: 500;
-    }
+    label { color: #d1d1e0 !important; font-weight: 500; }
     div.stButton > button:first-child {
-        background-color: #15151c;
-        color: #f3e5ab;
-        border: 1px solid #4a4a75;
-        font-weight: 600;
-        border-radius: 5px;
+        background-color: #15151c; color: #f3e5ab; border: 1px solid #4a4a75;
+        font-weight: 600; border-radius: 5px; width: 100%;
     }
-    div.stButton > button:first-child:hover {
-        background-color: #4a4a75;
-        color: #ffffff;
-        border: 1px solid #f3e5ab;
-    }
+    div.stButton > button:first-child:hover { background-color: #4a4a75; color: #ffffff; border: 1px solid #f3e5ab; }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 class='main-title'>👁️ UMBRA & TAROT</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-title'>Pierce the veil of your shadow self. Unearth the truths hidden in the astral dark.</p>", unsafe_allow_html=True)
 
-# 사이드바
+# 🚨 전면 로그인 방어벽 (무조건 로그인해야 진행 가능)
+if "google_token" not in st.session_state:
+    st.warning("👁️ Google Login is required to enter the astral realm.")
+    result = oauth2.authorize_button(
+        name="Continue with Google",
+        icon="https://www.google.com/favicon.ico",
+        redirect_uri=REDIRECT_URI,
+        scope="openid email profile",
+        key="google_login",
+        use_container_width=True
+    )
+    if result:
+        st.session_state["google_token"] = result.get("token")
+        st.rerun()
+    st.stop()
+
+# 로그인 성공 후 이메일 추출 및 세션 저장
+if "user_email" not in st.session_state:
+    try:
+        access_token = st.session_state["google_token"]["access_token"]
+        headers = {'Authorization': f'Bearer {access_token}'}
+        user_info = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', headers=headers).json()
+        st.session_state["user_email"] = user_info.get('email', '')
+    except Exception:
+        st.session_state["user_email"] = ""
+
+# 일일 횟수 제한용 세션 변수 초기화
+if "usage_whoami" not in st.session_state:
+    st.session_state["usage_whoami"] = 0
+if "usage_custom" not in st.session_state:
+    st.session_state["usage_custom"] = 0
+
+# 사이드바 (기획 변경 반영)
 st.sidebar.markdown("### 🪐 Membership Tiers")
 plan_choice = st.sidebar.radio(
     "Select Your Plan", 
-    ["Free Trial (1 reading/day - 7 Days Free)", "Pro Oracle ($1.99 / 7 Days - 3 readings/day)"]
+    ["Free Trial (3 Days - Basic + 1 Custom Query)", "Pro Oracle ($1.99 / 7 Days - Unlimited)"]
 )
 
 if "Free" in plan_choice:
-    st.sidebar.info("✨ Free Plan Active: 1 Daily Shadow Reading.")
+    st.sidebar.info("✨ Free Plan: 3 Days Free. Includes 1 'Who Am I' and 1 'Custom Query' per day.")
 else:
     st.sidebar.success("💎 Pro Oracle Active: Unlimited Deep Custom Questions ($1.99/7d).")
 
@@ -100,22 +104,10 @@ reading_mode = st.sidebar.radio(
     ["1. Who Am I? (Raw Shadow Discovery)", "2. Custom Oracle Query (Deep Question)"]
 )
 
-# 2번 모드 선택 시 로그인 검증
-if reading_mode == "2. Custom Oracle Query (Deep Question)":
-    if "google_token" not in st.session_state:
-        st.warning("Google Login is required to access the Custom Oracle Query.")
-        result = oauth2.authorize_button(
-            name="Continue with Google",
-            icon="https://www.google.com/favicon.ico",
-            redirect_uri=REDIRECT_URI,
-            scope="openid email profile",
-            key="google_login",
-            use_container_width=True
-        )
-        if result:
-            st.session_state["google_token"] = result.get("token")
-            st.rerun()
-        st.stop()
+# 환영 메시지
+user_email = st.session_state["user_email"]
+if user_email:
+    st.info(f"✉️ Welcome, voyager. Your prophecy will be securely sent to: **{user_email}**")
 
 # 사용자 입력 폼
 user_name = st.text_input("Your Name / Alias", value="")
@@ -167,31 +159,12 @@ if reading_mode == "2. Custom Oracle Query (Deep Question)":
         "What hidden truth must I face to break my current karmic cycle?",
         "Other (Direct Input)"
     ]
-    
     selected_query = st.selectbox("✨ Select your query or choose 'Other':", predefined_queries)
     
     if selected_query == "Other (Direct Input)":
         user_question = st.text_input("✍️ Enter your specific query:", value="")
     else:
         user_question = selected_query
-
-# [수정된 이메일 자동 인식 로직]
-user_email = ""
-if reading_mode == "2. Custom Oracle Query (Deep Question)" and "google_token" in st.session_state:
-    try:
-        # 로그인된 구글 계정에서 이메일을 자동으로 긁어옴
-        access_token = st.session_state["google_token"]["access_token"]
-        headers = {'Authorization': f'Bearer {access_token}'}
-        user_info = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', headers=headers).json()
-        user_email = user_info.get('email', '')
-        
-        st.info(f"✉️ The prophecy will be automatically sent to: **{user_email}**")
-    except Exception:
-        # 만약 가져오기 실패하면 수동 입력창 띄움
-        user_email = st.text_input("Your Email (To receive the prophecy)", value="")
-else:
-    # 1번 모드(비로그인)일 때는 직접 입력받음
-    user_email = st.text_input("Your Email (To receive the prophecy)", value="")
 
 tarot_deck = {
     "The Fool": {"file": "images/fool.jpg", "symbol": "🃏 0. The Fool"},
@@ -213,6 +186,14 @@ tarot_deck = {
 
 if st.button("Consult the Oracle & Draw Cards"):
     
+    # 🚨 일일 횟수 제한 검증
+    if reading_mode == "1. Who Am I? (Raw Shadow Discovery)" and st.session_state["usage_whoami"] >= 1:
+        st.error("🌙 You have already discovered your Shadow Self today. The astral veil requires time to reset. Please return tomorrow.")
+        st.stop()
+    elif reading_mode == "2. Custom Oracle Query (Deep Question)" and st.session_state["usage_custom"] >= 1:
+        st.error("🌙 You have exhausted your deep query for today. Over-questioning the Oracle clouds the truth. Please return tomorrow.")
+        st.stop()
+    
     drawn_keys = random.sample(list(tarot_deck.keys()), 3)
     card1_name = drawn_keys[0]
     card2_name = drawn_keys[1]
@@ -225,9 +206,9 @@ if st.button("Consult the Oracle & Draw Cards"):
         "🪐 Calculating the shadow planets (Rahu & Ketu)...",
         "☊ Unveiling the devourer's eclipse...",
         "🔮 Shuffling the forbidden deck...",
-        "🃏 Drawing the First Gate (The Core)...",
-        "🃏 Drawing the Second Gate (The Wealth & Trap)...",
-        "🃏 Drawing the Third Gate (The Inevitable Fate)...",
+        "🃏 Drawing the First Gate...",
+        "🃏 Drawing the Second Gate...",
+        "🃏 Drawing the Third Gate...",
         "🌑 The spirits are settling upon the cards..."
     ]
 
@@ -238,16 +219,24 @@ if st.button("Consult the Oracle & Draw Cards"):
     status.info("👁️ The Oracle speaks... compiling the dark prophecy...")
     time.sleep(0.5)
 
-    user_context_hint = "Reflect subtle underlying ambitions, drive for independence, and unspoken strategic pursuits."
+    # 🚨 실시간 날짜 및 나이 계산 로직 적용
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_year = datetime.now().year
+    user_age = current_year - birth_year
+
+    user_context_hint = f"Reflect subtle underlying ambitions, drive for independence, and unspoken strategic pursuits. The user is {user_age} years old. Ensure the advice, tone, and life perspective are highly appropriate for someone of this mature age, reflecting their deep life experience rather than superficial youth advice."
 
     if reading_mode == "1. Who Am I? (Raw Shadow Discovery)":
         prompt = f"""
 You are an ancient, terrifyingly accurate mystic oracle speaking from the shadows of the astral realm. Your tone is cold, piercing, mesmerizing, and deeply psychological.
 
+CURRENT DATE: {current_date} (Base all future predictions and timelines strictly from this date.)
+
 USER PROFILE
 Name: {user_name}
 Origin: {birth_place}
 Birth: {birth_year}-{birth_month:02d}-{birth_day:02d} {birth_time}
+Age: {user_age} years old
 Subtle Astral Resonance: {user_context_hint}
 
 DRAWN ARCANAS
@@ -265,10 +254,13 @@ FINAL PROPHECY
         prompt = f"""
 You are an ancient, terrifyingly accurate mystic oracle speaking from the shadows of the astral realm. Your tone is cold, piercing, mesmerizing, and deeply psychological.
 
+CURRENT DATE: {current_date} (Base all future predictions and timelines strictly from this date.)
+
 USER PROFILE
 Name: {user_name}
 Origin: {birth_place}
 Birth: {birth_year}-{birth_month:02d}-{birth_day:02d} {birth_time}
+Age: {user_age} years old
 Query: "{user_question}"
 Subtle Astral Resonance: {user_context_hint}
 
@@ -291,6 +283,12 @@ FINAL PROPHECY
         )
 
         status.empty()
+
+        # 리딩 횟수 차감(증가)
+        if reading_mode == "1. Who Am I? (Raw Shadow Discovery)":
+            st.session_state["usage_whoami"] += 1
+        else:
+            st.session_state["usage_custom"] += 1
 
         st.success(f"Prophecy manifested for {user_name} ({birth_place}).")
         st.markdown("## 🃏 The Three Gates of Umbra")
