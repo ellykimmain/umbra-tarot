@@ -129,7 +129,7 @@ if st.button("Consult the Oracle & Draw Cards"):
         st.error("🌙 The Oracle has already spoken to you for today. Return when the stars realign tomorrow.")
         st.stop()
 
-    # 로딩 애니메이션 및 다채로운 텍스트 전환 연출 복구
+    # 로딩 애니메이션 및 다채로운 텍스트 전환 연출
     status = st.status("🌌 Tunnelling through the astral plane...", expanded=True)
     time.sleep(1.5)
     status.update(label="🔮 Consulting the cosmic alignment & Manse-ryeok data...", state="running")
@@ -137,7 +137,7 @@ if st.button("Consult the Oracle & Draw Cards"):
     status.update(label="🃏 Drawing the shadow arcana cards...", state="running")
     time.sleep(1.5)
     status.update(label="⚡ Channeling the blunt prophecy...", state="running")
-    time.sleep(2.0)
+    time.sleep(1.5)
     
     try:
         astrology_data = "External API connection placeholder: Sun in Taurus, Moon in Scorpio, Ascendant Leo."
@@ -166,7 +166,7 @@ DRAWN ARCANAS
 Analyze the exact astrological data provided above, the Manse-ryeok elements, and the Tarot cards. 
 Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
-try:
+    try:
         response = client.models.generate_content(
             model="gemini-3.6-flash", 
             contents=prompt
