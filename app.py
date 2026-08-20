@@ -23,7 +23,7 @@ oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_END
 
 st.set_page_config(page_title="Umbra & Tarot: Shadow Prophecy", layout="centered")
 
-# 커스텀 CSS (입력창 라벨 텍스트 가독성 강제 고정)
+# 커스텀 CSS (사이드바 및 입력창 라벨 가독성 완벽 개선 패치 포함)
 st.markdown("""
     <style>
     .stApp { background-color: #0b0b0e; color: #f1f1f1; }
@@ -32,7 +32,9 @@ st.markdown("""
     .card-box { background-color: #15151c; border: 1px solid #4a4a75; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); }
     div.stButton > button:first-child { background-color: #15151c; color: #f3e5ab; border: 1px solid #4a4a75; font-weight: 600; border-radius: 5px; width: 100%; }
     div.stButton > button:first-child:hover { background-color: #4a4a75; color: #ffffff; border: 1px solid #f3e5ab; }
-    div[data-testid="stWidgetLabel"] p, label p, label div { color: #e0e0e0 !important; }
+    
+    /* 메인 및 사이드바 모든 위젯 라벨 가독성 강제 고정 */
+    div[data-testid="stWidgetLabel"] p, label p, label div, section[data-testid="stSidebar"] label span { color: #f1f1f1 !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -159,7 +161,6 @@ Analyze the exact astrological data provided above, the Manse-ryeok elements, an
 Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
     try:
-        # 구글 서버가 요구하는 최신 권장 모델 gemini-3.6-flash로 정상 호출
         response = client.models.generate_content(
             model="gemini-3.6-flash", 
             contents=prompt
@@ -171,7 +172,7 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
         st.success("Prophecy manifested.")
         st.info(response.text)
 
-        # 이메일 발송
+        # 이메일 발송 (영문)
         try:
             msg = MIMEText(f"Prophecy for {user_name}:\n\n{response.text}")
             msg['Subject'] = "👁️ Your Shadow Prophecy"
@@ -185,4 +186,4 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
             
     except Exception as e:
         status.empty()
-        st.error(f"The astral connection was lost. System Error: {e}")
+        st.error("The astral connection was lost. Please try again.")
