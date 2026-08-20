@@ -85,6 +85,9 @@ with col1:
 with col2:
     birth_city = st.text_input("City of Birth", "")
 
+# 지역 입력(City, Country) 코드 바로 아래에 추가
+birth_time = st.text_input("Time of Birth (e.g., 23:30 or Unknown)", "Unknown")
+
 # AI 프롬프트 전달을 위해 백그라운드에서 하나의 텍스트로 병합
 birth_place = f"{birth_city}, {birth_country}"
 
@@ -94,6 +97,14 @@ birth_year = st.number_input("Year", min_value=1930, max_value=2026, value=1988)
 birth_month = st.number_input("Month", min_value=1, max_value=12, value=6)
 birth_day = st.number_input("Day", min_value=1, max_value=31, value=15)
 birth_time = "12:00"
+
+# (위쪽에는 생년월일, 태어난 시간 등의 입력 코드가 있습니다.)
+
+# 커스텀 질문 모드일 경우에만 질문 입력칸 표시
+if "2." in reading_mode or "Custom" in reading_mode:
+    user_question = st.text_area("Your Deep Query for the Oracle", placeholder="What truth do you seek from the astral realm?")
+else:
+    user_question = ""
 
 # 메인 버튼 및 방어 로직
 if st.button("Consult the Oracle & Draw Cards"):
@@ -112,8 +123,27 @@ if st.button("Consult the Oracle & Draw Cards"):
     status = st.info("🌌 Tunnelling through the astral plane...")
     time.sleep(1)
     
-    prompt = f"Perform a mystic tarot reading for {user_name}."
-    response = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
+   # 1. 커스텀 질문 존재 여부에 따른 조건부 텍스트 추가
+question_context = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
+
+# 2. 점성술과 Manse-ryeok 기운이 통합된 프롬프트 엔진
+prompt = f"""You are a dark, mystic Tarot Oracle. Perform a chillingly accurate and deep shadow reading.
+
+USER PROFILE
+Name: {user_name}
+Origin: {birth_place}
+Birth: {birth_year}-{birth_month:02d}-{birth_day:02d} {birth_time}{question_context}
+
+ASTROLOGICAL & MANSE-RYEOK ALIGNMENT
+Calculate and analyze the user's Western Astrological profile (Sun, Moon, Ascendant) and Eastern Manse-ryeok (Four Pillars) elemental dynamics based on the provided time and location. Do not output the raw chart data. Instead, seamlessly weave these precise cosmic mechanics and elemental forces into the Tarot interpretation to create a highly differentiated, deep reading.
+
+Deliver the prophecy in a dark, atmospheric tone."""
+
+# 3. Gemini API 호출 (최신 3.6-flash 모델)
+response = client.models.generate_content(
+    model="gemini-3.6-flash", 
+    contents=prompt
+)
     
     # 성공 기록
     st.session_state["already_prophesied"][user_key] = count + 1
