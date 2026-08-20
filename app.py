@@ -85,8 +85,7 @@ with col1:
 with col2:
     birth_city = st.text_input("City of Birth", "")
 
-# 지역 입력(City, Country) 코드 바로 아래에 추가
-birth_time = st.text_input("Time of Birth (e.g., 23:30 or Unknown)", "Unknown")
+
 
 # AI 프롬프트 전달을 위해 백그라운드에서 하나의 텍스트로 병합
 birth_place = f"{birth_city}, {birth_country}"
