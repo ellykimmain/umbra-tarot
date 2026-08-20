@@ -96,13 +96,27 @@ birth_year = st.number_input("Year", min_value=1930, max_value=2026, value=1988)
 # (중략: Birth date/time inputs 동일)
 birth_month = st.number_input("Month", min_value=1, max_value=12, value=6)
 birth_day = st.number_input("Day", min_value=1, max_value=31, value=15)
-birth_time = "12:00"
+# 태어난 시간 선택 (30분 단위 드롭다운)
+time_options = ["Unknown"] + [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 30)]
+birth_time = st.selectbox("Time of Birth", time_options)
 
 # (위쪽에는 생년월일, 태어난 시간 등의 입력 코드가 있습니다.)
 
-# 커스텀 질문 모드일 경우에만 질문 입력칸 표시
+# 커스텀 질문 모드일 경우: 드롭다운 선택 및 직접 입력 연동
 if "2." in reading_mode or "Custom" in reading_mode:
-    user_question = st.text_area("Your Deep Query for the Oracle", placeholder="What truth do you seek from the astral realm?")
+    question_options = [
+        "What is the hidden truth of my current situation?",
+        "What subconscious fear is holding me back?",
+        "What energy should I embrace to move forward?",
+        "Direct Input (Write your own query)"
+    ]
+    selected_query = st.selectbox("Choose your query or select Direct Input", question_options)
+    
+    # '직접 입력'을 선택했을 때만 텍스트 입력창 활성화
+    if selected_query == "Direct Input (Write your own query)":
+        user_question = st.text_area("Your Deep Query", placeholder="Type your specific question here...")
+    else:
+        user_question = selected_query
 else:
     user_question = ""
 
