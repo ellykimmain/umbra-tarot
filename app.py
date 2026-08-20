@@ -166,7 +166,7 @@ DRAWN ARCANAS
 Analyze the exact astrological data provided above, the Manse-ryeok elements, and the Tarot cards. 
 Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
-    try:
+try:
         response = client.models.generate_content(
             model="gemini-3.6-flash", 
             contents=prompt
@@ -191,10 +191,6 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
             st.error("Email failed.")
             
     except Exception as e:
-        status.update(label="The astral connection was lost.", state="error", expanded=False)
-        st.error(f"The astral connection was lost. System Error: {e}")
-
-except Exception as e:
         status.update(label="The astral gates are closed.", state="error", expanded=False)
         error_msg = str(e)
         # 구글 할당량 초과 에러(429) 감지 시 선착순 마감 메시지 영문 출력
