@@ -14,7 +14,6 @@ st.set_page_config(
 )
 
 # 다크 오컬트 프리미엄 스타일 커스텀 CSS
-# 다크 오컬트 프리미엄 스타일 커스텀 CSS
 st.markdown("""
     <style>
     .stApp {
@@ -27,8 +26,13 @@ st.markdown("""
         font-family: 'Cinzel', serif;
         letter-spacing: 2px;
         text-shadow: 0 0 10px rgba(243, 229, 171, 0.3);
-        white-space: nowrap;
-        font-size: clamp(1.5rem, 6vw, 3rem);
+        font-size: 2.5rem;
+    }
+    /* 스마트폰(모바일) 화면일 때 글자 크기 축소 */
+    @media (max-width: 768px) {
+        .main-title {
+            font-size: 1.6rem !important;
+        }
     }
     .sub-title {
         text-align: center;
