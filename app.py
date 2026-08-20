@@ -159,24 +159,11 @@ Analyze the exact astrological data provided above, the Manse-ryeok elements, an
 Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
     try:
-        # 404 모델 에러 원천 차단: 안정적인 모델명 자동 탐색 및 폴백(Fallback) 시스템
-        fallback_models = ["gemini-1.5-flash-latest", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro-latest"]
-        response = None
-        last_error = None
-        
-        for model_name in fallback_models:
-            try:
-                response = client.models.generate_content(
-                    model=model_name, 
-                    contents=prompt
-                )
-                break # 성공 시 루프 즉시 탈출
-            except Exception as e:
-                last_error = e
-                continue # 실패하면 다음 모델명으로 자동 재시도
-                
-        if not response:
-            raise Exception(f"All fallback models failed. Last API Error: {last_error}")
+        # 최신 공식 SDK 표준 모델명인 gemini-2.0-flash로 즉시 호출
+        response = client.models.generate_content(
+            model="gemini-2.0-flash", 
+            contents=prompt
+        )
         
         st.session_state["already_prophesied"][user_key] = count + 1
         
