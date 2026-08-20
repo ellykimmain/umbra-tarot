@@ -23,7 +23,7 @@ oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_END
 
 st.set_page_config(page_title="Umbra & Tarot: Shadow Prophecy", layout="centered")
 
-# 커스텀 CSS (사이드바 및 입력창 라벨 가독성 완벽 개선 패치 포함)
+# 커스텀 CSS (메인 화면과 사이드바 가독성 분리 패치)
 st.markdown("""
     <style>
     .stApp { background-color: #0b0b0e; color: #f1f1f1; }
@@ -33,8 +33,11 @@ st.markdown("""
     div.stButton > button:first-child { background-color: #15151c; color: #f3e5ab; border: 1px solid #4a4a75; font-weight: 600; border-radius: 5px; width: 100%; }
     div.stButton > button:first-child:hover { background-color: #4a4a75; color: #ffffff; border: 1px solid #f3e5ab; }
     
-    /* 메인 및 사이드바 모든 위젯 라벨 가독성 강제 고정 */
-    div[data-testid="stWidgetLabel"] p, label p, label div, section[data-testid="stSidebar"] label span { color: #f1f1f1 !important; }
+    /* 메인 화면 입력창 라벨: 밝은 회색 */
+    .main div[data-testid="stWidgetLabel"] p, .main label p { color: #e0e0e0 !important; }
+    
+    /* 사이드바 라벨 및 텍스트: 선명한 어두운 차콜 색상으로 뚜렷하게 노출 */
+    section[data-testid="stSidebar"] label span, section[data-testid="stSidebar"] p, section[data-testid="stSidebar"] div { color: #1a1a1a !important; }
     </style>
 """, unsafe_allow_html=True)
 
