@@ -73,7 +73,15 @@ if user_email: st.info(f"✉️ Welcome, voyager. Prophecy will be sent to: **{u
 
 # 입력 폼
 user_name = st.text_input("Your Name / Alias", "")
-birth_place = st.text_input("Origin / Place of Birth (City, Country)", "") # 이 줄을 추가하십시오.
+# 국가와 도시를 좌우로 분리하여 입력받는 UI
+col1, col2 = st.columns(2)
+with col1:
+    birth_country = st.text_input("Country of Birth", "United States") # 주요 타깃 국가를 기본값으로 세팅
+with col2:
+    birth_city = st.text_input("City of Birth", "")
+
+# AI 프롬프트 전달을 위해 백그라운드에서 하나의 텍스트로 병합
+birth_place = f"{birth_city}, {birth_country}"
 
 # (이 아래에 기존의 Year, Month, Day 입력 코드는 그대로 둡니다)
 birth_year = st.number_input("Year", min_value=1930, max_value=2026, value=1988)
