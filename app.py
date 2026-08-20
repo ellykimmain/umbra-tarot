@@ -3,7 +3,6 @@ from email.mime.text import MIMEText
 import streamlit as st
 import random
 import time
-import os
 import requests
 from google import genai
 from streamlit_oauth import OAuth2Component
@@ -43,7 +42,7 @@ st.markdown("<p class='sub-title'>Pierce the veil of your shadow self. Unearth t
 if "google_token" not in st.session_state:
     st.markdown("### ✨ Claim Your 3-Day Free Trial")
     st.markdown("Unlock the gates. Sign in now to receive your **complimentary 'Who Am I' shadow reading** and **1 deep custom query**.")
-    st.info("Google Login is required to begin your free trial and enter the astral realm.")
+    st.info("👁️ Google Login is required to begin your free trial and enter the astral realm.")
     
     result = oauth2.authorize_button(name="Continue with Google", icon="https://www.google.com/favicon.ico", redirect_uri=REDIRECT_URI, scope="openid email profile", key="google_login", use_container_width=True)
     if result:
@@ -56,7 +55,8 @@ if "user_email" not in st.session_state:
         headers = {'Authorization': f'Bearer {st.session_state["google_token"]["access_token"]}'}
         user_info = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', headers=headers).json()
         st.session_state["user_email"] = user_info.get('email', '')
-    except: st.session_state["user_email"] = ""
+    except: 
+        st.session_state["user_email"] = ""
 
 user_email = st.session_state["user_email"]
 
@@ -69,6 +69,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔮 Oracle Mode")
 reading_mode = st.sidebar.radio("Choose Reading Focus", ["1. Who Am I? (Raw Shadow Discovery)", "2. Custom Oracle Query (Deep Question)"])
 
+# 환영 메시지 (가독성 개선 완료)
 if user_email:
     st.markdown(f"""
         <div style="background-color: #151522; padding: 15px; border-radius: 8px; border: 1px solid #3f3f5a; color: #e0e0e0; margin-bottom: 20px;">
@@ -78,36 +79,32 @@ if user_email:
 
 # 입력 폼
 user_name = st.text_input("Your Name / Alias", "")
+
 # 국가와 도시를 좌우로 분리하여 입력받는 UI
 col1, col2 = st.columns(2)
 with col1:
-    birth_country = st.text_input("Country of Birth", "United States") # 주요 타깃 국가를 기본값으로 세팅
+    birth_country = st.text_input("Country of Birth", "United States")
 with col2:
     birth_city = st.text_input("City of Birth", "")
-
-
 
 # AI 프롬프트 전달을 위해 백그라운드에서 하나의 텍스트로 병합
 birth_place = f"{birth_city}, {birth_country}"
 
-# (이 아래에 기존의 Year, Month, Day 입력 코드는 그대로 둡니다)
 birth_year = st.number_input("Year", min_value=1930, max_value=2026, value=1988)
-# (중략: Birth date/time inputs 동일)
 birth_month = st.number_input("Month", min_value=1, max_value=12, value=6)
 birth_day = st.number_input("Day", min_value=1, max_value=31, value=15)
+
 # 태어난 시간 선택 (30분 단위 드롭다운)
 time_options = ["Unknown"] + [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 30)]
 birth_time = st.selectbox("Time of Birth", time_options)
 
-# (위쪽에는 생년월일, 태어난 시간 등의 입력 코드가 있습니다.)
-
 # 커스텀 질문 모드일 경우: 현실적이고 구체적인 질문 프리셋 제공
 if "2." in reading_mode or "Custom" in reading_mode:
     question_options = [
-        "When will this current financial hardship finally improve?", # 지금의 재정적 어려움은 언제 좋아질까?
-        "What is the hidden block preventing my wealth and success?", # 내 재물운을 가로막고 있는 숨겨진 원인은 무엇인가?
-        "What is the true intention of the person I am thinking about?", # 내가 생각하는 그 사람의 진짜 속마음은 무엇인가?
-        "Am I on the right path with my current business or career?", # 지금 나의 사업/커리어 방향이 맞게 가고 있는 것인가?
+        "When will this current financial hardship finally improve?",
+        "What is the hidden block preventing my wealth and success?",
+        "What is the true intention of the person I am thinking about?",
+        "Am I on the right path with my current business or career?",
         "Direct Input (Write your own query)"
     ]
     selected_query = st.selectbox("Choose your query or select Direct Input", question_options)
@@ -120,58 +117,79 @@ if "2." in reading_mode or "Custom" in reading_mode:
 else:
     user_question = ""
     
-# 메인 버튼 및 방어 로직
+# 메인 버튼 및 방어 로직 (API 연동 및 태국점 톤앤매너 적용)
 if st.button("Consult the Oracle & Draw Cards"):
     today = datetime.now().strftime("%Y-%m-%d")
     user_key = f"{user_email}_{today}"
-    if "already_prophesied" not in st.session_state: st.session_state["already_prophesied"] = {}
+    if "already_prophesied" not in st.session_state: 
+        st.session_state["already_prophesied"] = {}
     
-    # [테스트 시 limit=1 로 설정됨]
     count = st.session_state["already_prophesied"].get(user_key, 0)
     if count >= 1:
-        st.error("🌙 The Oracle has already spoken to you for today. Return when the stars realign tomorrow.")
+        st.error("오늘은 이미 점괘를 내렸다. 욕심부리지 말고 내일 다시 오라.")
         st.stop()
 
-    # 리딩 수행
-    drawn_keys = random.sample(["The Fool", "The Magician", "The Hermit", "The Devil", "The Star"], 3)
-    status = st.info("🌌 Tunnelling through the astral plane...")
+    status = st.info("🌌 별들의 궤적을 추적하고 타로를 뽑는 중...")
     time.sleep(1)
     
-   # 1. 커스텀 질문 존재 여부에 따른 조건부 텍스트 추가
-question_context = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
+    # [별자리 API 외부 통신 로직 - 실제 사용 시 본인의 API 정보로 교체 필요]
+    try:
+        # api_url = "https://your-astrology-api-endpoint.com/v1/horoscope"
+        # api_payload = {"year": birth_year, "month": birth_month, "day": birth_day, "time": birth_time, "city": birth_city}
+        # api_response = requests.post(api_url, json=api_payload, headers={"Authorization": "Bearer YOUR_API_KEY"})
+        # astrology_data = api_response.json()
+        
+        # (현재는 테스트를 위해 임시 텍스트로 대체)
+        astrology_data = "External API connection placeholder: Sun in Taurus, Moon in Scorpio, Ascendant Leo."
+    except Exception as e:
+        astrology_data = "API 연결 실패. 자체 연산 기운으로 대체함."
 
-# 2. 점성술과 Manse-ryeok 기운이 통합된 프롬프트 엔진
-prompt = f"""You are a dark, mystic Tarot Oracle. Perform a chillingly accurate and deep shadow reading.
+    drawn_keys = random.sample(["The Fool", "The Magician", "The Hermit", "The Devil", "The Star"], 3)
+    question_context = f"\n의뢰인의 질문: {user_question}" if user_question else ""
+
+    # 태국 점성술사(Thai Fortune Teller) + 만세력 팩트 폭행 프롬프트 엔진
+    prompt = f"""You are a highly skilled, blunt, and slightly cynical traditional Thai fortune teller (태국 점성술사). 
+You speak directly, offering no comforting lies. Deliver cold, hard truths based on the cosmic data. Use a tone that is piercing, mystical, and authoritative.
 
 USER PROFILE
 Name: {user_name}
 Origin: {birth_place}
 Birth: {birth_year}-{birth_month:02d}-{birth_day:02d} {birth_time}{question_context}
 
-ASTROLOGICAL & MANSE-RYEOK ALIGNMENT
-Calculate and analyze the user's Western Astrological profile (Sun, Moon, Ascendant) and Eastern Manse-ryeok (Four Pillars) elemental dynamics based on the provided time and location. Do not output the raw chart data. Instead, seamlessly weave these precise cosmic mechanics and elemental forces into the Tarot interpretation to create a highly differentiated, deep reading.
+ASTROLOGY API REAL-TIME DATA & MANSE-RYEOK
+{astrology_data}
+Calculate the precise Eastern Manse-ryeok (Four Pillars) elemental dynamics based on the provided time and location.
 
-Deliver the prophecy in a dark, atmospheric tone."""
+DRAWN ARCANAS
+{', '.join(drawn_keys)}
 
-# 3. Gemini API 호출 (최신 3.6-flash 모델)
-response = client.models.generate_content(
-    model="gemini-3.6-flash", 
-    contents=prompt
-)
-    
-# 성공 기록
-st.session_state["already_prophesied"][user_key] = count + 1
+Analyze the exact astrological data provided above, the Manse-ryeok elements, and the Tarot cards. 
+Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in Korean, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
-st.success("Prophecy manifested.")
-st.info(response.text)
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.6-flash", 
+            contents=prompt
+        )
+        
+        st.session_state["already_prophesied"][user_key] = count + 1
+        
+        status.empty() 
+        st.success("점괘가 나왔다.")
+        st.info(response.text)
 
-# 이메일 발송
-try:
-    msg = MIMEText(f"Prophecy for {user_name}:\n\n{response.text}")
-    msg['Subject'] = "👁️ Your Shadow Prophecy"
-    msg['From'] = st.secrets["EMAIL_SENDER"]
-    msg['To'] = user_email
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-        server.login(st.secrets["EMAIL_SENDER"], st.secrets["EMAIL_PASSWORD"])
-        server.send_message(msg)
-except: st.error("Email failed.")
+        # 이메일 발송
+        try:
+            msg = MIMEText(f"{user_name}을 위한 태국 점성술과 타로의 예언:\n\n{response.text}")
+            msg['Subject'] = "👁️ 당신의 운명 점괘"
+            msg['From'] = st.secrets["EMAIL_SENDER"]
+            msg['To'] = user_email
+            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+                server.login(st.secrets["EMAIL_SENDER"], st.secrets["EMAIL_PASSWORD"])
+                server.send_message(msg)
+        except Exception as e: 
+            st.error("이메일 전송에 실패했다.")
+            
+    except Exception as e:
+        status.empty()
+        st.error("기운이 얽혀 점괘를 낼 수 없다. 다시 시도하라.")
