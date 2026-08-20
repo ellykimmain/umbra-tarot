@@ -72,7 +72,10 @@ reading_mode = st.sidebar.radio("Choose Reading Focus", ["1. Who Am I? (Raw Shad
 if user_email: st.info(f"✉️ Welcome, voyager. Prophecy will be sent to: **{user_email}**")
 
 # 입력 폼
-user_name = st.text_input("Your Name / Alias", value="")
+user_name = st.text_input("Your Name / Alias", "")
+birth_place = st.text_input("Origin / Place of Birth (City, Country)", "") # 이 줄을 추가하십시오.
+
+# (이 아래에 기존의 Year, Month, Day 입력 코드는 그대로 둡니다)
 birth_year = st.number_input("Year", min_value=1930, max_value=2026, value=1988)
 # (중략: Birth date/time inputs 동일)
 birth_month = st.number_input("Month", min_value=1, max_value=12, value=6)
