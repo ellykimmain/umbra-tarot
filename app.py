@@ -23,20 +23,16 @@ oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_END
 
 st.set_page_config(page_title="Umbra & Tarot: Shadow Prophecy", layout="centered", initial_sidebar_state="expanded")
 
-# 커스텀 CSS (메인 입력창 라벨을 완전한 순백색으로 강제 고정)
+# 커스텀 CSS (깔끔하고 직관적인 디자인 유지)
 st.markdown("""
     <style>
-    .stApp { background-color: #0b0b0e; color: #f1f1f1; }
+    .stApp { background-color: #0b0b0e; color: #ffffff; }
     .main-title { text-align: center; color: #f3e5ab; font-family: 'Cinzel', serif; letter-spacing: 2px; text-shadow: 0 0 10px rgba(243, 229, 171, 0.3); font-size: 2.5rem; }
     .sub-title { text-align: center; color: #b3b3cc; font-size: 1.05rem; }
-    .card-box { background-color: #15151c; border: 1px solid #4a4a75; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); }
     div.stButton > button:first-child { background-color: #15151c; color: #f3e5ab; border: 1px solid #4a4a75; font-weight: 600; border-radius: 5px; width: 100%; }
     div.stButton > button:first-child:hover { background-color: #4a4a75; color: #ffffff; border: 1px solid #f3e5ab; }
     
-    /* 메인 화면 입력창 라벨 텍스트를 무조건 선명한 화이트로 고정 */
-    .main [data-testid="stWidgetLabel"] label, .main [data-testid="stWidgetLabel"] p, .main label { color: #ffffff !important; font-weight: 600 !important; }
-    
-    /* 사이드바 영역 */
+    /* 사이드바 가독성 고정 */
     section[data-testid="stSidebar"] { background-color: #121218 !important; }
     section[data-testid="stSidebar"] *, section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] span, section[data-testid="stSidebar"] p { color: #ffffff !important; }
     </style>
@@ -162,7 +158,7 @@ DRAWN ARCANAS
 {', '.join(drawn_keys)}
 
 Analyze the exact astrological data provided above, the Manse-ryeok elements, and the Tarot cards. 
-Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
+Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of the traditional, blunt Thai fortune teller."""
 
     try:
         response = client.models.generate_content(
