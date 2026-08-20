@@ -8,8 +8,8 @@ import requests
 from google import genai
 from streamlit_oauth import OAuth2Component
 from datetime import datetime
-import gspread
-from google.oauth2.credentials import Credentials
+from streamlit_gsheets import GSheetsConnection
+import pandas as pd
 
 # Streamlit Secrets 로드
 api_key = st.secrets["GEMINI_API_KEY"]
@@ -55,14 +55,14 @@ st.markdown("""
 st.markdown("<h1 class='main-title'>👁️ UMBRA & TAROT</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-title'>Pierce the veil of your shadow self. Unearth the truths hidden in the astral dark.</p>", unsafe_allow_html=True)
 
-# 🚨 전면 로그인 방어벽
+# 🚨 전면 로그인 방어벽 (권한 스코프 깔끔하게 유지)
 if "google_token" not in st.session_state:
     st.warning("👁️ Google Login is required to enter the astral realm.")
     result = oauth2.authorize_button(
         name="Continue with Google",
         icon="https://www.google.com/favicon.ico",
         redirect_uri=REDIRECT_URI,
-        scope="openid email profile https://www.googleapis.com/auth/spreadsheets",
+        scope="openid email profile",
         key="google_login",
         use_container_width=True
     )
@@ -82,49 +82,6 @@ if "user_email" not in st.session_state:
         st.session_state["user_email"] = ""
 
 user_email = st.session_state["user_email"]
-
-# 구글 시트 DB 연결 함수 (OAuth 토큰 활용)
-def get_user_usage_from_sheet(email):
-    try:
-        access_token = st.session_state["google_token"]["access_token"]
-        creds = Credentials(access_token)
-        gc = gspread.authorize(creds)
-        
-        # 'Umbra_DB' 스프레드시트 열기
-        sheet = gc.open("Umbra_DB").sheet1
-        records = sheet.get_all_records()
-        
-        today_str = datetime.now().strftime("%Y-%m-%d")
-        
-        for i, row in enumerate(records):
-            if row.get("Email") == email:
-                if row.get("Date") == today_str:
-                    return int(row.get("WhoAmI_Count", 0)), int(row.get("Custom_Count", 0)), i + 2 # row index
-                else:
-                    # 날짜가 바뀌었으면 오늘 날짜로 초기화 갱신
-                    sheet.update_cell(i + 2, 2, today_str)
-                    sheet.update_cell(i + 2, 3, 0)
-                    sheet.update_cell(i + 2, 4, 0)
-                    return 0, 0, i + 2
-                    
-        # 유저 기록이 없으면 새로 추가
-        sheet.append_row([email, today_str, 0, 0])
-        return 0, 0, len(records) + 2
-    except Exception as e:
-        st.error(f"Database connection warning: {e}")
-        return 0, 0, None
-
-def update_user_usage_in_sheet(row_idx, whoami_count, custom_count):
-    try:
-        access_token = st.session_state["google_token"]["access_token"]
-        creds = Credentials(access_token)
-        gc = gspread.authorize(creds)
-        sheet = gc.open("Umbra_DB").sheet1
-        
-        sheet.update_cell(row_idx, 3, whoami_count)
-        sheet.update_cell(row_idx, 4, custom_count)
-    except Exception as e:
-        pass
 
 # 사이드바
 st.sidebar.markdown("### 🪐 Membership Tiers")
@@ -225,16 +182,36 @@ tarot_deck = {
 
 if st.button("Consult the Oracle & Draw Cards"):
     
-    # 🚨 구글 시트 DB에서 실시간 사용 횟수 검증
-    whoami_used, custom_used, row_idx = get_user_usage_from_sheet(user_email)
-    
-    if reading_mode == "1. Who Am I? (Raw Shadow Discovery)" and whoami_used >= 1:
-        st.error("🌙 You have already discovered your Shadow Self today. The astral veil requires time to reset. Please return tomorrow.")
-        st.stop()
-    elif reading_mode == "2. Custom Oracle Query (Deep Question)" and custom_used >= 1:
-        st.error("🌙 You have exhausted your deep query for today. Over-questioning the Oracle clouds the truth. Please return tomorrow.")
-        st.stop()
-    
+    # 🚨 구글 시트 연결을 통한 일일 횟수 체크
+    try:
+        conn = st.connection("gsheets", type=GSheetsConnection)
+        df = conn.read(ttl=0)
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        
+        user_row = df[df["Email"] == user_email]
+        
+        whoami_used = 0
+        custom_used = 0
+        
+        if not user_row.empty:
+            stored_date = str(user_row["Date"].values[0])
+            whoami_used = int(user_row["WhoAmI_Count"].values[0])
+            custom_used = int(user_row["Custom_Count"].values[0])
+            
+            if stored_date != today_str:
+                whoami_used = 0
+                custom_used = 0
+        
+        if reading_mode == "1. Who Am I? (Raw Shadow Discovery)" and whoami_used >= 1:
+            st.error("🌙 You have already discovered your Shadow Self today. The astral veil requires time to reset. Please return tomorrow.")
+            st.stop()
+        elif reading_mode == "2. Custom Oracle Query (Deep Question)" and custom_used >= 1:
+            st.error("🌙 You have exhausted your deep query for today. Over-questioning the Oracle clouds the truth. Please return tomorrow.")
+            st.stop()
+            
+    except Exception as db_e:
+        st.warning(f"DB check skipped due to connection setup: {db_e}")
+
     drawn_keys = random.sample(list(tarot_deck.keys()), 3)
     card1_name = drawn_keys[0]
     card2_name = drawn_keys[1]
@@ -324,11 +301,39 @@ FINAL PROPHECY
 
         status.empty()
 
-        # 🚨 구글 시트 DB에 횟수 반영 기록
-        if reading_mode == "1. Who Am I? (Raw Shadow Discovery)":
-            update_user_usage_in_sheet(row_idx, whoami_used + 1, custom_used)
-        else:
-            update_user_usage_in_sheet(row_idx, whoami_used, custom_used + 1)
+        # 🚨 시트 카운트 업데이트 반영
+        try:
+            conn = st.connection("gsheets", type=GSheetsConnection)
+            df = conn.read(ttl=0)
+            today_str = datetime.now().strftime("%Y-%m-%d")
+            
+            user_row_idx = df[df["Email"] == user_email].index
+            
+            if not user_row_idx.empty:
+                idx = user_row_idx[0]
+                stored_date = str(df.loc[idx, "Date"])
+                
+                if stored_date != today_str:
+                    df.loc[idx, "Date"] = today_str
+                    df.loc[idx, "WhoAmI_Count"] = 0
+                    df.loc[idx, "Custom_Count"] = 0
+                
+                if reading_mode == "1. Who Am I? (Raw Shadow Discovery)":
+                    df.loc[idx, "WhoAmI_Count"] = int(df.loc[idx, "WhoAmI_Count"]) + 1
+                else:
+                    df.loc[idx, "Custom_Count"] = int(df.loc[idx, "Custom_Count"]) + 1
+            else:
+                new_row = pd.DataFrame([{
+                    "Email": user_email, 
+                    "Date": today_str, 
+                    "WhoAmI_Count": 1 if reading_mode.startswith("1") else 0, 
+                    "Custom_Count": 1 if reading_mode.startswith("2") else 0
+                }])
+                df = pd.concat([df, new_row], ignore_index=True)
+                
+            conn.update(data=df)
+        except Exception as update_e:
+            pass
 
         st.success(f"Prophecy manifested for {user_name} ({birth_place}).")
         st.markdown("## 🃏 The Three Gates of Umbra")
