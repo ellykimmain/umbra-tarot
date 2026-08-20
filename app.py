@@ -4,6 +4,7 @@ import streamlit as st
 import random
 import time
 import os
+import requests  # <-- 이 줄을 반드시 추가해라!
 from google import genai
 from streamlit_oauth import OAuth2Component
 
@@ -174,7 +175,23 @@ if reading_mode == "2. Custom Oracle Query (Deep Question)":
     else:
         user_question = selected_query
 
-user_email = st.text_input("Your Email (To receive the prophecy)", value="")
+# [수정된 이메일 자동 인식 로직]
+user_email = ""
+if reading_mode == "2. Custom Oracle Query (Deep Question)" and "google_token" in st.session_state:
+    try:
+        # 로그인된 구글 계정에서 이메일을 자동으로 긁어옴
+        access_token = st.session_state["google_token"]["access_token"]
+        headers = {'Authorization': f'Bearer {access_token}'}
+        user_info = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', headers=headers).json()
+        user_email = user_info.get('email', '')
+        
+        st.info(f"✉️ The prophecy will be automatically sent to: **{user_email}**")
+    except Exception:
+        # 만약 가져오기 실패하면 수동 입력창 띄움
+        user_email = st.text_input("Your Email (To receive the prophecy)", value="")
+else:
+    # 1번 모드(비로그인)일 때는 직접 입력받음
+    user_email = st.text_input("Your Email (To receive the prophecy)", value="")
 
 tarot_deck = {
     "The Fool": {"file": "images/fool.jpg", "symbol": "🃏 0. The Fool"},
