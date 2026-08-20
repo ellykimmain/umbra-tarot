@@ -5,17 +5,27 @@ import random
 import time
 import os
 from google import genai
+from streamlit_oauth import OAuth2Component
 
-# Streamlit Secrets에서 API Key 가져오기
+# Streamlit Secrets 로드
 api_key = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=api_key)
+
+CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
+CLIENT_SECRET = st.secrets["GOOGLE_CLIENT_SECRET"]
+REDIRECT_URI = st.secrets["REDIRECT_URI"]
+AUTHORIZE_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
+TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
+REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke"
+
+oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_ENDPOINT, TOKEN_ENDPOINT, REVOKE_ENDPOINT)
 
 st.set_page_config(
     page_title="Umbra & Tarot: Shadow Prophecy",
     layout="centered"
 )
 
-# 다크 오컬트 프리미엄 스타일 커스텀 CSS
+# 커스텀 CSS
 st.markdown("""
     <style>
     .stApp {
@@ -30,7 +40,6 @@ st.markdown("""
         text-shadow: 0 0 10px rgba(243, 229, 171, 0.3);
         font-size: 2.5rem;
     }
-    /* 스마트폰(모바일) 화면일 때 글자 크기 축소 */
     @media (max-width: 768px) {
         .main-title {
             font-size: 1.6rem !important;
@@ -53,7 +62,6 @@ st.markdown("""
         color: #d1d1e0 !important;
         font-weight: 500;
     }
-    /* 버튼 스타일 강제 덮어쓰기 */
     div.stButton > button:first-child {
         background-color: #15151c;
         color: #f3e5ab;
@@ -69,13 +77,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
 st.markdown("<h1 class='main-title'>👁️ UMBRA & TAROT</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-title'>Pierce the veil of your shadow self. Unearth the truths hidden in the astral dark.</p>", unsafe_allow_html=True)
 
-# -------------------------------------------------------------
-# [멤버십 및 리딩 모드 세션]
-# -------------------------------------------------------------
+# 사이드바
 st.sidebar.markdown("### 🪐 Membership Tiers")
 plan_choice = st.sidebar.radio(
     "Select Your Plan", 
@@ -94,7 +99,24 @@ reading_mode = st.sidebar.radio(
     ["1. Who Am I? (Raw Shadow Discovery)", "2. Custom Oracle Query (Deep Question)"]
 )
 
-# 사용자 기본 정보 입력
+# 2번 모드 선택 시 로그인 검증
+if reading_mode == "2. Custom Oracle Query (Deep Question)":
+    if "google_token" not in st.session_state:
+        st.warning("Google Login is required to access the Custom Oracle Query.")
+        result = oauth2.authorize_button(
+            name="Continue with Google",
+            icon="https://www.google.com/favicon.ico",
+            redirect_uri=REDIRECT_URI,
+            scope="openid email profile",
+            key="google_login",
+            use_container_width=True
+        )
+        if result:
+            st.session_state["google_token"] = result.get("token")
+            st.rerun()
+        st.stop()
+
+# 사용자 입력 폼
 user_name = st.text_input("Your Name / Alias", value="")
 
 popular_cities = [
@@ -134,15 +156,12 @@ with col_minute:
 
 birth_time = f"{birth_hour}:{birth_minute}"
 
-# 모드 2일 때 질문 입력창
 user_question = ""
 if reading_mode == "2. Custom Oracle Query (Deep Question)":
     user_question = st.text_input("✨ Enter your specific query (Wealth, Career, Hidden Truth):", value="What unseen forces are blocking my financial breakthrough?")
 
-# 결과 받을 이메일 입력창 (위치 수정 완료)
 user_email = st.text_input("Your Email (To receive the prophecy)", value="")
 
-# 타로 카드 데이터
 tarot_deck = {
     "The Fool": {"file": "images/fool.jpg", "symbol": "🃏 0. The Fool"},
     "The Magician": {"file": "images/magician.jpg", "symbol": "🪄 I. The Magician"},
@@ -168,7 +187,6 @@ if st.button("Consult the Oracle & Draw Cards"):
     card2_name = drawn_keys[1]
     card3_name = drawn_keys[2]
 
-    # 10단계 오컬트 로딩 연출
     status = st.empty()
     messages = [
         "🌌 Tunnelling through the astral plane...",
@@ -193,7 +211,7 @@ if st.button("Consult the Oracle & Draw Cards"):
 
     if reading_mode == "1. Who Am I? (Raw Shadow Discovery)":
         prompt = f"""
-You are an ancient, terrifyingly accurate mystic oracle speaking from the shadows of the astral realm. Your tone is cold, piercing, mesmerizing, and deeply psychological—like a gifted shaman who looks straight through human pretense and speaks absolute truths.
+You are an ancient, terrifyingly accurate mystic oracle speaking from the shadows of the astral realm. Your tone is cold, piercing, mesmerizing, and deeply psychological.
 
 USER PROFILE
 Name: {user_name}
@@ -206,19 +224,15 @@ Gate I (Shadow Self): {card1_name}
 Gate II (Wealth & Power): {card2_name}
 Gate III (Destiny): {card3_name}
 
-Deliver a chillingly profound, cinematic reading. Do not sound like a generic AI or cheerful coach. Sound like an arcane oracle unearthing hidden secrets, suppressed hungers, and raw spiritual karma (using Rahu/Ketu astrological symbolism). Weave in their subtle resonance naturally so it feels uncomfortably accurate.
-
-Use exactly these sections:
+Deliver a chillingly profound, cinematic reading. Use exactly these sections:
 SHADOW SELF
 WEALTH & POWER
 DESTINY
 FINAL PROPHECY
-
-Keep it punchy, haunting, and intensely engaging in English.
 """
     else:
         prompt = f"""
-You are an ancient, terrifyingly accurate mystic oracle speaking from the shadows of the astral realm. Your tone is cold, piercing, mesmerizing, and deeply psychological—like a gifted shaman who looks straight through human pretense and answers hidden truths.
+You are an ancient, terrifyingly accurate mystic oracle speaking from the shadows of the astral realm. Your tone is cold, piercing, mesmerizing, and deeply psychological.
 
 USER PROFILE
 Name: {user_name}
@@ -232,15 +246,11 @@ Gate I (Direct Truth): {card1_name}
 Gate II (Hidden Obstacle / Shadow): {card2_name}
 Gate III (Unfolding Fate): {card3_name}
 
-Deliver a chillingly profound, cinematic reading directly answering the user's query through the lens of dark astral forces (Rahu/Ketu) and their underlying energetic resonance. Speak with unyielding prophetic authority.
-
-Use exactly these sections:
+Deliver a chillingly profound, cinematic reading directly answering the user's query. Use exactly these sections:
 DIRECT TRUTH
 HIDDEN OBSTACLE
 UNFOLDING FATE
 FINAL PROPHECY
-
-Keep it punchy, haunting, and intensely engaging in English.
 """
 
     try:
@@ -293,7 +303,6 @@ Keep it punchy, haunting, and intensely engaging in English.
         st.markdown("## 👁️ Oracle's Vision")
         st.info(response.text)
 
-        # 들여쓰기 완벽하게 수정된 이메일 전송 로직
         if user_email:
             try:
                 sender_email = st.secrets["EMAIL_SENDER"]
