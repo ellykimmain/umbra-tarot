@@ -159,9 +159,9 @@ Analyze the exact astrological data provided above, the Manse-ryeok elements, an
 Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
     try:
-        # SDK 표준 정석 모델인 gemini-2.0-flash 사용
+        # 구글 서버가 요구하는 최신 권장 모델 gemini-3.6-flash로 정상 호출
         response = client.models.generate_content(
-            model="gemini-2.0-flash", 
+            model="gemini-3.6-flash", 
             contents=prompt
         )
         
