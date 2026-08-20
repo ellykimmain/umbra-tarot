@@ -158,7 +158,21 @@ birth_time = f"{birth_hour}:{birth_minute}"
 
 user_question = ""
 if reading_mode == "2. Custom Oracle Query (Deep Question)":
-    user_question = st.text_input("✨ Enter your specific query (Wealth, Career, Hidden Truth):", value="What unseen forces are blocking my financial breakthrough?")
+    predefined_queries = [
+        "What unseen forces are blocking my financial breakthrough?",
+        "When will my current financial struggles be resolved?",
+        "When will a new, destined relationship enter my life?",
+        "Which path should I take for my career and ultimate destiny?",
+        "What hidden truth must I face to break my current karmic cycle?",
+        "Other (Direct Input)"
+    ]
+    
+    selected_query = st.selectbox("✨ Select your query or choose 'Other':", predefined_queries)
+    
+    if selected_query == "Other (Direct Input)":
+        user_question = st.text_input("✍️ Enter your specific query:", value="")
+    else:
+        user_question = selected_query
 
 user_email = st.text_input("Your Email (To receive the prophecy)", value="")
 
