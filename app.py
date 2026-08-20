@@ -23,7 +23,7 @@ oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_END
 
 st.set_page_config(page_title="Umbra & Tarot: Shadow Prophecy", layout="centered")
 
-# 커스텀 CSS
+# 커스텀 CSS (입력창 라벨 텍스트 가독성 강제 고정 추가)
 st.markdown("""
     <style>
     .stApp { background-color: #0b0b0e; color: #f1f1f1; }
@@ -32,6 +32,9 @@ st.markdown("""
     .card-box { background-color: #15151c; border: 1px solid #4a4a75; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); }
     div.stButton > button:first-child { background-color: #15151c; color: #f3e5ab; border: 1px solid #4a4a75; font-weight: 600; border-radius: 5px; width: 100%; }
     div.stButton > button:first-child:hover { background-color: #4a4a75; color: #ffffff; border: 1px solid #f3e5ab; }
+    
+    /* UI 가독성 패치: 모든 입력창 라벨의 글씨를 밝은 회색으로 고정 */
+    div[data-testid="stWidgetLabel"] p, label p, label div { color: #e0e0e0 !important; }
     </style>
 """, unsafe_allow_html=True)
 
