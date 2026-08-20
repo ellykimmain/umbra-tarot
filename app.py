@@ -21,13 +21,11 @@ REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke"
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_ENDPOINT, TOKEN_ENDPOINT, REVOKE_ENDPOINT)
 
-# 강제 다크 테마 설정으로 배경/글자 충돌 원천 차단
 st.set_page_config(page_title="Umbra & Tarot: Shadow Prophecy", layout="centered", initial_sidebar_state="expanded")
 
-# 완벽히 분리된 커스텀 CSS (메인과 사이드바 가독성 동시 확보)
+# 커스텀 CSS (사이드바 모든 텍스트 요소를 밝은 화이트로 완벽 고정)
 st.markdown("""
     <style>
-    /* 전체 앱 배경 및 기본 글자색 */
     .stApp { background-color: #0b0b0e; color: #f1f1f1; }
     .main-title { text-align: center; color: #f3e5ab; font-family: 'Cinzel', serif; letter-spacing: 2px; text-shadow: 0 0 10px rgba(243, 229, 171, 0.3); font-size: 2.5rem; }
     .sub-title { text-align: center; color: #b3b3cc; font-size: 1.05rem; }
@@ -35,12 +33,12 @@ st.markdown("""
     div.stButton > button:first-child { background-color: #15151c; color: #f3e5ab; border: 1px solid #4a4a75; font-weight: 600; border-radius: 5px; width: 100%; }
     div.stButton > button:first-child:hover { background-color: #4a4a75; color: #ffffff; border: 1px solid #f3e5ab; }
     
-    /* 메인 화면 입력창 라벨: 선명한 밝은 회색 */
+    /* 메인 화면 입력창 라벨 */
     .main label, .main [data-testid="stWidgetLabel"] p { color: #f1f1f1 !important; font-weight: 500; }
     
-    /* 사이드바 영역: 배경을 어둡게 고정하고 글자색을 하얗게 강제 고정하여 가독성 100% 확보 */
+    /* 사이드바 내부 모든 텍스트, 라벨, 셀렉터 글씨를 무조건 선명한 화이트로 고정 */
     section[data-testid="stSidebar"] { background-color: #121218 !important; }
-    section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] p, section[data-testid="stSidebar"] span { color: #f1f1f1 !important; }
+    section[data-testid="stSidebar"] *, section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] span, section[data-testid="stSidebar"] p { color: #ffffff !important; }
     </style>
 """, unsafe_allow_html=True)
 
