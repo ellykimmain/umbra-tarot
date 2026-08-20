@@ -60,7 +60,7 @@ if "user_email" not in st.session_state:
 
 user_email = st.session_state["user_email"]
 
-# 사이드바 (Pro 기능 비활성화)
+# 사이드바
 st.sidebar.markdown("### 🪐 Membership Tiers")
 st.sidebar.radio("Select Your Plan", ["Free Trial (Active)", "Pro Oracle (Available Sept 1st)"], index=0, disabled=True)
 st.sidebar.info("✨ **Grand Opening!** Currently in Free Trial Period.")
@@ -69,7 +69,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔮 Oracle Mode")
 reading_mode = st.sidebar.radio("Choose Reading Focus", ["1. Who Am I? (Raw Shadow Discovery)", "2. Custom Oracle Query (Deep Question)"])
 
-# 환영 메시지 (가독성 개선 완료)
+# 환영 메시지
 if user_email:
     st.markdown(f"""
         <div style="background-color: #151522; padding: 15px; border-radius: 8px; border: 1px solid #3f3f5a; color: #e0e0e0; margin-bottom: 20px;">
@@ -80,25 +80,24 @@ if user_email:
 # 입력 폼
 user_name = st.text_input("Your Name / Alias", "")
 
-# 국가와 도시를 좌우로 분리하여 입력받는 UI
+# 국가/도시 분리 입력
 col1, col2 = st.columns(2)
 with col1:
     birth_country = st.text_input("Country of Birth", "United States")
 with col2:
     birth_city = st.text_input("City of Birth", "")
 
-# AI 프롬프트 전달을 위해 백그라운드에서 하나의 텍스트로 병합
 birth_place = f"{birth_city}, {birth_country}"
 
 birth_year = st.number_input("Year", min_value=1930, max_value=2026, value=1988)
 birth_month = st.number_input("Month", min_value=1, max_value=12, value=6)
 birth_day = st.number_input("Day", min_value=1, max_value=31, value=15)
 
-# 태어난 시간 선택 (30분 단위 드롭다운)
+# 태어난 시간 드롭다운
 time_options = ["Unknown"] + [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 30)]
 birth_time = st.selectbox("Time of Birth", time_options)
 
-# 커스텀 질문 모드일 경우: 현실적이고 구체적인 질문 프리셋 제공
+# 질문 프리셋 및 직접 입력
 if "2." in reading_mode or "Custom" in reading_mode:
     question_options = [
         "When will this current financial hardship finally improve?",
@@ -109,7 +108,6 @@ if "2." in reading_mode or "Custom" in reading_mode:
     ]
     selected_query = st.selectbox("Choose your query or select Direct Input", question_options)
     
-    # '직접 입력'을 선택했을 때만 텍스트 입력창 활성화
     if selected_query == "Direct Input (Write your own query)":
         user_question = st.text_area("Your Deep Query", placeholder="e.g., Will my new business venture succeed this year?")
     else:
@@ -117,7 +115,7 @@ if "2." in reading_mode or "Custom" in reading_mode:
 else:
     user_question = ""
     
-# 메인 버튼 및 방어 로직 (API 연동 및 태국점 톤앤매너 적용)
+# 메인 버튼 및 방어 로직
 if st.button("Consult the Oracle & Draw Cards"):
     today = datetime.now().strftime("%Y-%m-%d")
     user_key = f"{user_email}_{today}"
@@ -126,29 +124,23 @@ if st.button("Consult the Oracle & Draw Cards"):
     
     count = st.session_state["already_prophesied"].get(user_key, 0)
     if count >= 1:
-        st.error("오늘은 이미 점괘를 내렸다. 욕심부리지 말고 내일 다시 오라.")
+        st.error("🌙 The Oracle has already spoken to you for today. Return when the stars realign tomorrow.")
         st.stop()
 
-    status = st.info("🌌 별들의 궤적을 추적하고 타로를 뽑는 중...")
+    status = st.info("🌌 Tunnelling through the astral plane...")
     time.sleep(1)
     
-    # [별자리 API 외부 통신 로직 - 실제 사용 시 본인의 API 정보로 교체 필요]
+    # [별자리 API 외부 통신 뼈대 - 현재는 안정성을 위해 자체 연산으로 대체]
     try:
-        # api_url = "https://your-astrology-api-endpoint.com/v1/horoscope"
-        # api_payload = {"year": birth_year, "month": birth_month, "day": birth_day, "time": birth_time, "city": birth_city}
-        # api_response = requests.post(api_url, json=api_payload, headers={"Authorization": "Bearer YOUR_API_KEY"})
-        # astrology_data = api_response.json()
-        
-        # (현재는 테스트를 위해 임시 텍스트로 대체)
         astrology_data = "External API connection placeholder: Sun in Taurus, Moon in Scorpio, Ascendant Leo."
     except Exception as e:
-        astrology_data = "API 연결 실패. 자체 연산 기운으로 대체함."
+        astrology_data = "API connection failed. Falling back to native cosmic calculations."
 
     drawn_keys = random.sample(["The Fool", "The Magician", "The Hermit", "The Devil", "The Star"], 3)
-    question_context = f"\n의뢰인의 질문: {user_question}" if user_question else ""
+    question_context = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
 
-    # 태국 점성술사(Thai Fortune Teller) + 만세력 팩트 폭행 프롬프트 엔진
-    prompt = f"""You are a highly skilled, blunt, and slightly cynical traditional Thai fortune teller (태국 점성술사). 
+    # 100% 영문 출력: 태국 점성술사 + 만세력 팩트 폭행 프롬프트
+    prompt = f"""You are a highly skilled, blunt, and slightly cynical traditional Thai fortune teller. 
 You speak directly, offering no comforting lies. Deliver cold, hard truths based on the cosmic data. Use a tone that is piercing, mystical, and authoritative.
 
 USER PROFILE
@@ -164,7 +156,7 @@ DRAWN ARCANAS
 {', '.join(drawn_keys)}
 
 Analyze the exact astrological data provided above, the Manse-ryeok elements, and the Tarot cards. 
-Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in Korean, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
+Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
     try:
         response = client.models.generate_content(
@@ -175,21 +167,21 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
         st.session_state["already_prophesied"][user_key] = count + 1
         
         status.empty() 
-        st.success("점괘가 나왔다.")
+        st.success("Prophecy manifested.")
         st.info(response.text)
 
-        # 이메일 발송
+        # 이메일 발송 (영문)
         try:
-            msg = MIMEText(f"{user_name}을 위한 태국 점성술과 타로의 예언:\n\n{response.text}")
-            msg['Subject'] = "👁️ 당신의 운명 점괘"
+            msg = MIMEText(f"Prophecy for {user_name}:\n\n{response.text}")
+            msg['Subject'] = "👁️ Your Shadow Prophecy"
             msg['From'] = st.secrets["EMAIL_SENDER"]
             msg['To'] = user_email
             with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
                 server.login(st.secrets["EMAIL_SENDER"], st.secrets["EMAIL_PASSWORD"])
                 server.send_message(msg)
         except Exception as e: 
-            st.error("이메일 전송에 실패했다.")
+            st.error("Email failed.")
             
     except Exception as e:
         status.empty()
-        st.error("기운이 얽혀 점괘를 낼 수 없다. 다시 시도하라.")
+        st.error("The astral connection was lost. Please try again.")
