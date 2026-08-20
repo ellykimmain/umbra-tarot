@@ -1,3 +1,5 @@
+import smtplib
+from email.mime.text import MIMEText
 import streamlit as st
 import random
 import time
@@ -66,6 +68,7 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
 
 st.markdown("<h1 class='main-title'>👁️ UMBRA & TAROT</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-title'>Pierce the veil of your shadow self. Unearth the truths hidden in the astral dark.</p>", unsafe_allow_html=True)
@@ -136,7 +139,10 @@ user_question = ""
 if reading_mode == "2. Custom Oracle Query (Deep Question)":
     user_question = st.text_input("✨ Enter your specific query (Wealth, Career, Hidden Truth):", value="What unseen forces are blocking my financial breakthrough?")
 
-# 타로 카드 데이터 (로컬 이미지 예외 처리 지원)
+# 결과 받을 이메일 입력창 (위치 수정 완료)
+user_email = st.text_input("Your Email (To receive the prophecy)", value="")
+
+# 타로 카드 데이터
 tarot_deck = {
     "The Fool": {"file": "images/fool.jpg", "symbol": "🃏 0. The Fool"},
     "The Magician": {"file": "images/magician.jpg", "symbol": "🪄 I. The Magician"},
@@ -183,8 +189,6 @@ if st.button("Consult the Oracle & Draw Cards"):
     status.info("👁️ The Oracle speaks... compiling the dark prophecy...")
     time.sleep(0.5)
 
-    # 💡 [컨텍스트 연동 고도화] 사용자의 최근 흐름 및 성향을 미세하게 반영할 수 있는 프롬프트 구조
-    # (실제 개인 데이터 연동 API가 활성화된 환경이라면 아래 컨텍스트 변수에 실시간 데이터가 주입됩니다)
     user_context_hint = "Reflect subtle underlying ambitions, drive for independence, and unspoken strategic pursuits."
 
     if reading_mode == "1. Who Am I? (Raw Shadow Discovery)":
@@ -288,6 +292,25 @@ Keep it punchy, haunting, and intensely engaging in English.
         st.markdown("---")
         st.markdown("## 👁️ Oracle's Vision")
         st.info(response.text)
+
+        # 들여쓰기 완벽하게 수정된 이메일 전송 로직
+        if user_email:
+            try:
+                sender_email = st.secrets["EMAIL_SENDER"]
+                sender_password = st.secrets["EMAIL_PASSWORD"]
+                
+                msg = MIMEText(f"Target: {user_name}\n\n{response.text}")
+                msg['Subject'] = f"👁️ Umbra & Tarot: Shadow Prophecy for {user_name}"
+                msg['From'] = sender_email
+                msg['To'] = user_email
+                
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+                    server.login(sender_email, sender_password)
+                    server.send_message(msg)
+                    
+                st.success("✨ The prophecy has been securely sent to your email.")
+            except Exception as email_e:
+                st.error(f"Failed to send email. Check your settings. ({email_e})")
 
     except Exception as e:
         status.empty()
