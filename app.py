@@ -3,7 +3,6 @@ from email.mime.text import MIMEText
 import streamlit as st
 import random
 import time
-import os
 import requests
 from google import genai
 from streamlit_oauth import OAuth2Component
@@ -22,17 +21,26 @@ REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke"
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_ENDPOINT, TOKEN_ENDPOINT, REVOKE_ENDPOINT)
 
-st.set_page_config(page_title="Umbra & Tarot: Shadow Prophecy", layout="centered")
+st.set_page_config(page_title="Umbra & Tarot: Shadow Prophecy", layout="centered", initial_sidebar_state="expanded")
 
-# 커스텀 CSS
+# 화이트 배경 및 깔끔한 가독성을 위한 커스텀 CSS
 st.markdown("""
     <style>
-    .stApp { background-color: #0b0b0e; color: #f1f1f1; }
-    .main-title { text-align: center; color: #f3e5ab; font-family: 'Cinzel', serif; letter-spacing: 2px; text-shadow: 0 0 10px rgba(243, 229, 171, 0.3); font-size: 2.5rem; }
-    .sub-title { text-align: center; color: #b3b3cc; font-size: 1.05rem; }
-    .card-box { background-color: #15151c; border: 1px solid #4a4a75; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); }
-    div.stButton > button:first-child { background-color: #15151c; color: #f3e5ab; border: 1px solid #4a4a75; font-weight: 600; border-radius: 5px; width: 100%; }
-    div.stButton > button:first-child:hover { background-color: #4a4a75; color: #ffffff; border: 1px solid #f3e5ab; }
+    /* 전체 앱 배경을 화이트로 고정하고 글씨를 짙은 차콜색으로 설정 */
+    .stApp { background-color: #f8f9fa; color: #212529; }
+    .main-title { text-align: center; color: #1a1a2e; font-family: 'Cinzel', serif; letter-spacing: 2px; font-size: 2.5rem; font-weight: 700; }
+    .sub-title { text-align: center; color: #6c757d; font-size: 1.05rem; }
+    
+    /* 입력창 라벨 글씨를 짙고 선명하게 고정 */
+    label, [data-testid="stWidgetLabel"] p { color: #212529 !important; font-weight: 600 !important; }
+    
+    /* 버튼 디자인 */
+    div.stButton > button:first-child { background-color: #1a1a2e; color: #f3e5ab; border: 1px solid #1a1a2e; font-weight: 600; border-radius: 5px; width: 100%; }
+    div.stButton > button:first-child:hover { background-color: #33334d; color: #ffffff; }
+    
+    /* 사이드바 영역 */
+    section[data-testid="stSidebar"] { background-color: #f1f3f5 !important; }
+    section[data-testid="stSidebar"] *, section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] span, section[data-testid="stSidebar"] p { color: #212529 !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -61,7 +69,7 @@ if "user_email" not in st.session_state:
 
 user_email = st.session_state["user_email"]
 
-# 사이드바 (Pro 기능 비활성화)
+# 사이드바
 st.sidebar.markdown("### 🪐 Membership Tiers")
 st.sidebar.radio("Select Your Plan", ["Free Trial (Active)", "Pro Oracle (Available Sept 1st)"], index=0, disabled=True)
 st.sidebar.info("✨ **Grand Opening!** Currently in Free Trial Period.")
@@ -70,35 +78,35 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔮 Oracle Mode")
 reading_mode = st.sidebar.radio("Choose Reading Focus", ["1. Who Am I? (Raw Shadow Discovery)", "2. Custom Oracle Query (Deep Question)"])
 
+# 환영 메시지
 if user_email:
     st.markdown(f"""
-        <div style="background-color: #151522; padding: 15px; border-radius: 8px; border: 1px solid #3f3f5a; color: #e0e0e0; margin-bottom: 20px;">
-            🌌 <b>Welcome, voyager.</b> Prophecy will be sent to: <span style="color: #fca311; font-weight: bold;">{user_email}</span>
+        <div style="background-color: #e9ecef; padding: 15px; border-radius: 8px; border: 1px solid #ced4da; color: #212529; margin-bottom: 20px;">
+            🌌 <b>Welcome, voyager.</b> Prophecy will be sent to: <span style="color: #d97706; font-weight: bold;">{user_email}</span>
         </div>
     """, unsafe_allow_html=True)
 
 # 입력 폼
 user_name = st.text_input("Your Name / Alias", "")
 
-# 국가와 도시를 좌우로 분리하여 입력받는 UI
+# 국가/도시 분리 입력
 col1, col2 = st.columns(2)
 with col1:
     birth_country = st.text_input("Country of Birth", "United States")
 with col2:
     birth_city = st.text_input("City of Birth", "")
 
-# AI 프롬프트 전달을 위해 백그라운드에서 하나의 텍스트로 병합
 birth_place = f"{birth_city}, {birth_country}"
 
 birth_year = st.number_input("Year", min_value=1930, max_value=2026, value=1988)
 birth_month = st.number_input("Month", min_value=1, max_value=12, value=6)
 birth_day = st.number_input("Day", min_value=1, max_value=31, value=15)
 
-# 태어난 시간 선택 (30분 단위 드롭다운)
+# 태어난 시간 드롭다운
 time_options = ["Unknown"] + [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 30)]
 birth_time = st.selectbox("Time of Birth", time_options)
 
-# 커스텀 질문 모드일 경우: 현실적이고 구체적인 질문 프리셋 제공
+# 질문 프리셋 및 직접 입력
 if "2." in reading_mode or "Custom" in reading_mode:
     question_options = [
         "When will this current financial hardship finally improve?",
@@ -109,7 +117,6 @@ if "2." in reading_mode or "Custom" in reading_mode:
     ]
     selected_query = st.selectbox("Choose your query or select Direct Input", question_options)
     
-    # '직접 입력'을 선택했을 때만 텍스트 입력창 활성화
     if selected_query == "Direct Input (Write your own query)":
         user_question = st.text_area("Your Deep Query", placeholder="e.g., Will my new business venture succeed this year?")
     else:
@@ -117,58 +124,61 @@ if "2." in reading_mode or "Custom" in reading_mode:
 else:
     user_question = ""
     
-# 메인 버튼 및 방어 로직 (들여쓰기 및 구조 완벽 복구)
+# 메인 버튼 및 방어 로직
 if st.button("Consult the Oracle & Draw Cards"):
     today = datetime.now().strftime("%Y-%m-%d")
     user_key = f"{user_email}_{today}"
     if "already_prophesied" not in st.session_state: 
         st.session_state["already_prophesied"] = {}
     
-    # 일일 제한 확인 로직
     count = st.session_state["already_prophesied"].get(user_key, 0)
     if count >= 1:
         st.error("🌙 The Oracle has already spoken to you for today. Return when the stars realign tomorrow.")
         st.stop()
 
-    # 리딩 수행
-    drawn_keys = random.sample(["The Fool", "The Magician", "The Hermit", "The Devil", "The Star"], 3)
     status = st.info("🌌 Tunnelling through the astral plane...")
     time.sleep(1)
     
-    # 1. 커스텀 질문 존재 여부에 따른 조건부 텍스트 추가
+    try:
+        astrology_data = "External API connection placeholder: Sun in Taurus, Moon in Scorpio, Ascendant Leo."
+    except Exception as e:
+        astrology_data = "API connection failed. Falling back to native cosmic calculations."
+
+    drawn_keys = random.sample(["The Fool", "The Magician", "The Hermit", "The Devil", "The Star"], 3)
     question_context = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
 
-    # 2. 점성술과 Manse-ryeok 기운이 통합된 프롬프트 엔진 (뽑힌 카드 정보 주입)
-    prompt = f"""You are a dark, mystic Tarot Oracle. Perform a chillingly accurate and deep shadow reading.
+    # 100% 영문 출력: 태국 점성술사 + 만세력 팩트 폭행 프롬프트
+    prompt = f"""You are a highly skilled, blunt, and slightly cynical traditional Thai fortune teller. 
+You speak directly, offering no comforting lies. Deliver cold, hard truths based on the cosmic data. Use a tone that is piercing, mystical, and authoritative.
 
 USER PROFILE
 Name: {user_name}
 Origin: {birth_place}
 Birth: {birth_year}-{birth_month:02d}-{birth_day:02d} {birth_time}{question_context}
 
-ASTROLOGICAL & MANSE-RYEOK ALIGNMENT
-Calculate and analyze the user's Western Astrological profile (Sun, Moon, Ascendant) and Eastern Manse-ryeok (Four Pillars) elemental dynamics based on the provided time and location. Do not output the raw chart data. Instead, seamlessly weave these precise cosmic mechanics and elemental forces into the Tarot interpretation to create a highly differentiated, deep reading.
+ASTROLOGY API REAL-TIME DATA & MANSE-RYEOK
+{astrology_data}
+Calculate the precise Eastern Manse-ryeok (Four Pillars) elemental dynamics based on the provided time and location.
 
 DRAWN ARCANAS
 {', '.join(drawn_keys)}
 
-Deliver the prophecy in a dark, atmospheric tone."""
+Analyze the exact astrological data provided above, the Manse-ryeok elements, and the Tarot cards. 
+Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
-    # 3. Gemini API 호출 (최신 3.6-flash 모델) 및 에러 방어
     try:
         response = client.models.generate_content(
             model="gemini-3.6-flash", 
             contents=prompt
         )
         
-        # 성공 기록
         st.session_state["already_prophesied"][user_key] = count + 1
         
         status.empty() 
         st.success("Prophecy manifested.")
         st.info(response.text)
 
-        # 이메일 발송
+        # 이메일 발송 (영문)
         try:
             msg = MIMEText(f"Prophecy for {user_name}:\n\n{response.text}")
             msg['Subject'] = "👁️ Your Shadow Prophecy"
