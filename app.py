@@ -14,6 +14,7 @@ st.set_page_config(
 )
 
 # 다크 오컬트 프리미엄 스타일 커스텀 CSS
+# 다크 오컬트 프리미엄 스타일 커스텀 CSS
 st.markdown("""
     <style>
     .stApp {
@@ -26,6 +27,8 @@ st.markdown("""
         font-family: 'Cinzel', serif;
         letter-spacing: 2px;
         text-shadow: 0 0 10px rgba(243, 229, 171, 0.3);
+        white-space: nowrap;
+        font-size: clamp(1.5rem, 6vw, 3rem);
     }
     .sub-title {
         text-align: center;
@@ -43,6 +46,19 @@ st.markdown("""
     label {
         color: #d1d1e0 !important;
         font-weight: 500;
+    }
+    /* 버튼 스타일 강제 덮어쓰기 */
+    div.stButton > button:first-child {
+        background-color: #15151c;
+        color: #f3e5ab;
+        border: 1px solid #4a4a75;
+        font-weight: 600;
+        border-radius: 5px;
+    }
+    div.stButton > button:first-child:hover {
+        background-color: #4a4a75;
+        color: #ffffff;
+        border: 1px solid #f3e5ab;
     }
     </style>
 """, unsafe_allow_html=True)
