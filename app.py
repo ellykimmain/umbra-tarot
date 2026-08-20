@@ -8,6 +8,8 @@ import requests
 from google import genai
 from streamlit_oauth import OAuth2Component
 from datetime import datetime
+import gspread
+from google.oauth2.credentials import Credentials
 
 # Streamlit Secrets 로드
 api_key = st.secrets["GEMINI_API_KEY"]
@@ -53,14 +55,14 @@ st.markdown("""
 st.markdown("<h1 class='main-title'>👁️ UMBRA & TAROT</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-title'>Pierce the veil of your shadow self. Unearth the truths hidden in the astral dark.</p>", unsafe_allow_html=True)
 
-# 🚨 전면 로그인 방어벽 (무조건 로그인해야 진행 가능)
+# 🚨 전면 로그인 방어벽
 if "google_token" not in st.session_state:
     st.warning("👁️ Google Login is required to enter the astral realm.")
     result = oauth2.authorize_button(
         name="Continue with Google",
         icon="https://www.google.com/favicon.ico",
         redirect_uri=REDIRECT_URI,
-        scope="openid email profile",
+        scope="openid email profile https://www.googleapis.com/auth/spreadsheets",
         key="google_login",
         use_container_width=True
     )
@@ -69,7 +71,7 @@ if "google_token" not in st.session_state:
         st.rerun()
     st.stop()
 
-# 로그인 성공 후 이메일 추출 및 세션 저장
+# 로그인 성공 후 이메일 추출
 if "user_email" not in st.session_state:
     try:
         access_token = st.session_state["google_token"]["access_token"]
@@ -79,13 +81,52 @@ if "user_email" not in st.session_state:
     except Exception:
         st.session_state["user_email"] = ""
 
-# 일일 횟수 제한용 세션 변수 초기화
-if "usage_whoami" not in st.session_state:
-    st.session_state["usage_whoami"] = 0
-if "usage_custom" not in st.session_state:
-    st.session_state["usage_custom"] = 0
+user_email = st.session_state["user_email"]
 
-# 사이드바 (기획 변경 반영)
+# 구글 시트 DB 연결 함수 (OAuth 토큰 활용)
+def get_user_usage_from_sheet(email):
+    try:
+        access_token = st.session_state["google_token"]["access_token"]
+        creds = Credentials(access_token)
+        gc = gspread.authorize(creds)
+        
+        # 'Umbra_DB' 스프레드시트 열기
+        sheet = gc.open("Umbra_DB").sheet1
+        records = sheet.get_all_records()
+        
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        
+        for i, row in enumerate(records):
+            if row.get("Email") == email:
+                if row.get("Date") == today_str:
+                    return int(row.get("WhoAmI_Count", 0)), int(row.get("Custom_Count", 0)), i + 2 # row index
+                else:
+                    # 날짜가 바뀌었으면 오늘 날짜로 초기화 갱신
+                    sheet.update_cell(i + 2, 2, today_str)
+                    sheet.update_cell(i + 2, 3, 0)
+                    sheet.update_cell(i + 2, 4, 0)
+                    return 0, 0, i + 2
+                    
+        # 유저 기록이 없으면 새로 추가
+        sheet.append_row([email, today_str, 0, 0])
+        return 0, 0, len(records) + 2
+    except Exception as e:
+        st.error(f"Database connection warning: {e}")
+        return 0, 0, None
+
+def update_user_usage_in_sheet(row_idx, whoami_count, custom_count):
+    try:
+        access_token = st.session_state["google_token"]["access_token"]
+        creds = Credentials(access_token)
+        gc = gspread.authorize(creds)
+        sheet = gc.open("Umbra_DB").sheet1
+        
+        sheet.update_cell(row_idx, 3, whoami_count)
+        sheet.update_cell(row_idx, 4, custom_count)
+    except Exception as e:
+        pass
+
+# 사이드바
 st.sidebar.markdown("### 🪐 Membership Tiers")
 plan_choice = st.sidebar.radio(
     "Select Your Plan", 
@@ -104,8 +145,6 @@ reading_mode = st.sidebar.radio(
     ["1. Who Am I? (Raw Shadow Discovery)", "2. Custom Oracle Query (Deep Question)"]
 )
 
-# 환영 메시지
-user_email = st.session_state["user_email"]
 if user_email:
     st.info(f"✉️ Welcome, voyager. Your prophecy will be securely sent to: **{user_email}**")
 
@@ -186,11 +225,13 @@ tarot_deck = {
 
 if st.button("Consult the Oracle & Draw Cards"):
     
-    # 🚨 일일 횟수 제한 검증
-    if reading_mode == "1. Who Am I? (Raw Shadow Discovery)" and st.session_state["usage_whoami"] >= 1:
+    # 🚨 구글 시트 DB에서 실시간 사용 횟수 검증
+    whoami_used, custom_used, row_idx = get_user_usage_from_sheet(user_email)
+    
+    if reading_mode == "1. Who Am I? (Raw Shadow Discovery)" and whoami_used >= 1:
         st.error("🌙 You have already discovered your Shadow Self today. The astral veil requires time to reset. Please return tomorrow.")
         st.stop()
-    elif reading_mode == "2. Custom Oracle Query (Deep Question)" and st.session_state["usage_custom"] >= 1:
+    elif reading_mode == "2. Custom Oracle Query (Deep Question)" and custom_used >= 1:
         st.error("🌙 You have exhausted your deep query for today. Over-questioning the Oracle clouds the truth. Please return tomorrow.")
         st.stop()
     
@@ -219,7 +260,6 @@ if st.button("Consult the Oracle & Draw Cards"):
     status.info("👁️ The Oracle speaks... compiling the dark prophecy...")
     time.sleep(0.5)
 
-    # 🚨 실시간 날짜 및 나이 계산 로직 적용
     current_date = datetime.now().strftime("%Y-%m-%d")
     current_year = datetime.now().year
     user_age = current_year - birth_year
@@ -284,11 +324,11 @@ FINAL PROPHECY
 
         status.empty()
 
-        # 리딩 횟수 차감(증가)
+        # 🚨 구글 시트 DB에 횟수 반영 기록
         if reading_mode == "1. Who Am I? (Raw Shadow Discovery)":
-            st.session_state["usage_whoami"] += 1
+            update_user_usage_in_sheet(row_idx, whoami_used + 1, custom_used)
         else:
-            st.session_state["usage_custom"] += 1
+            update_user_usage_in_sheet(row_idx, whoami_used, custom_used + 1)
 
         st.success(f"Prophecy manifested for {user_name} ({birth_place}).")
         st.markdown("## 🃏 The Three Gates of Umbra")
