@@ -23,7 +23,7 @@ oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_END
 
 st.set_page_config(page_title="Umbra & Tarot: Shadow Prophecy", layout="centered")
 
-# 커스텀 CSS (입력창 라벨 텍스트 가독성 강제 고정 추가)
+# 커스텀 CSS (입력창 라벨 텍스트 가독성 강제 고정)
 st.markdown("""
     <style>
     .stApp { background-color: #0b0b0e; color: #f1f1f1; }
@@ -32,8 +32,6 @@ st.markdown("""
     .card-box { background-color: #15151c; border: 1px solid #4a4a75; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); }
     div.stButton > button:first-child { background-color: #15151c; color: #f3e5ab; border: 1px solid #4a4a75; font-weight: 600; border-radius: 5px; width: 100%; }
     div.stButton > button:first-child:hover { background-color: #4a4a75; color: #ffffff; border: 1px solid #f3e5ab; }
-    
-    /* UI 가독성 패치: 모든 입력창 라벨의 글씨를 밝은 회색으로 고정 */
     div[data-testid="stWidgetLabel"] p, label p, label div { color: #e0e0e0 !important; }
     </style>
 """, unsafe_allow_html=True)
@@ -133,7 +131,6 @@ if st.button("Consult the Oracle & Draw Cards"):
     status = st.info("🌌 Tunnelling through the astral plane...")
     time.sleep(1)
     
-    # [별자리 API 외부 통신 뼈대 - 현재는 안정성을 위해 자체 연산으로 대체]
     try:
         astrology_data = "External API connection placeholder: Sun in Taurus, Moon in Scorpio, Ascendant Leo."
     except Exception as e:
@@ -162,11 +159,24 @@ Analyze the exact astrological data provided above, the Manse-ryeok elements, an
 Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
     try:
-        # 모델명을 안정적인 1.5-flash로 교체 완료
-        response = client.models.generate_content(
-            model="gemini-1.5-flash", 
-            contents=prompt
-        )
+        # 404 모델 에러 원천 차단: 안정적인 모델명 자동 탐색 및 폴백(Fallback) 시스템
+        fallback_models = ["gemini-1.5-flash-latest", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro-latest"]
+        response = None
+        last_error = None
+        
+        for model_name in fallback_models:
+            try:
+                response = client.models.generate_content(
+                    model=model_name, 
+                    contents=prompt
+                )
+                break # 성공 시 루프 즉시 탈출
+            except Exception as e:
+                last_error = e
+                continue # 실패하면 다음 모델명으로 자동 재시도
+                
+        if not response:
+            raise Exception(f"All fallback models failed. Last API Error: {last_error}")
         
         st.session_state["already_prophesied"][user_key] = count + 1
         
@@ -174,7 +184,7 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
         st.success("Prophecy manifested.")
         st.info(response.text)
 
-        # 이메일 발송 (영문)
+        # 이메일 발송
         try:
             msg = MIMEText(f"Prophecy for {user_name}:\n\n{response.text}")
             msg['Subject'] = "👁️ Your Shadow Prophecy"
@@ -188,5 +198,4 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
             
     except Exception as e:
         status.empty()
-        # 시스템 에러의 진짜 원인을 강제로 출력
         st.error(f"The astral connection was lost. System Error: {e}")
