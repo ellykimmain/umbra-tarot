@@ -162,8 +162,9 @@ Analyze the exact astrological data provided above, the Manse-ryeok elements, an
 Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
     try:
+        # 모델명을 안정적인 1.5-flash로 교체 완료
         response = client.models.generate_content(
-            model="gemini-3.6-flash", 
+            model="gemini-1.5-flash", 
             contents=prompt
         )
         
@@ -187,4 +188,5 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
             
     except Exception as e:
         status.empty()
-        st.error("The astral connection was lost. Please try again.")
+        # 시스템 에러의 진짜 원인을 강제로 출력
+        st.error(f"The astral connection was lost. System Error: {e}")
