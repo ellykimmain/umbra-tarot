@@ -8,8 +8,6 @@ import requests
 from google import genai
 from streamlit_oauth import OAuth2Component
 from datetime import datetime
-from streamlit_gsheets import GSheetsConnection
-import pandas as pd
 
 # Streamlit Secrets 로드
 api_key = st.secrets["GEMINI_API_KEY"]
@@ -55,7 +53,7 @@ st.markdown("""
 st.markdown("<h1 class='main-title'>👁️ UMBRA & TAROT</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-title'>Pierce the veil of your shadow self. Unearth the truths hidden in the astral dark.</p>", unsafe_allow_html=True)
 
-# 🚨 전면 로그인 방어벽 (권한 스코프 깔끔하게 유지)
+# 🚨 전면 로그인 방어벽
 if "google_token" not in st.session_state:
     st.warning("👁️ Google Login is required to enter the astral realm.")
     result = oauth2.authorize_button(
@@ -182,36 +180,6 @@ tarot_deck = {
 
 if st.button("Consult the Oracle & Draw Cards"):
     
-    # 🚨 구글 시트 연결을 통한 일일 횟수 체크
-    try:
-        conn = st.connection("gsheets", type=GSheetsConnection)
-        df = conn.read(ttl=0)
-        today_str = datetime.now().strftime("%Y-%m-%d")
-        
-        user_row = df[df["Email"] == user_email]
-        
-        whoami_used = 0
-        custom_used = 0
-        
-        if not user_row.empty:
-            stored_date = str(user_row["Date"].values[0])
-            whoami_used = int(user_row["WhoAmI_Count"].values[0])
-            custom_used = int(user_row["Custom_Count"].values[0])
-            
-            if stored_date != today_str:
-                whoami_used = 0
-                custom_used = 0
-        
-        if reading_mode == "1. Who Am I? (Raw Shadow Discovery)" and whoami_used >= 1:
-            st.error("🌙 You have already discovered your Shadow Self today. The astral veil requires time to reset. Please return tomorrow.")
-            st.stop()
-        elif reading_mode == "2. Custom Oracle Query (Deep Question)" and custom_used >= 1:
-            st.error("🌙 You have exhausted your deep query for today. Over-questioning the Oracle clouds the truth. Please return tomorrow.")
-            st.stop()
-            
-    except Exception as db_e:
-        st.warning(f"DB check skipped due to connection setup: {db_e}")
-
     drawn_keys = random.sample(list(tarot_deck.keys()), 3)
     card1_name = drawn_keys[0]
     card2_name = drawn_keys[1]
@@ -301,38 +269,17 @@ FINAL PROPHECY
 
         status.empty()
 
-        # 🚨 시트 카운트 업데이트 반영
+        # 🚨 웹훅을 통한 구글 시트 데이터 전송
         try:
-            conn = st.connection("gsheets", type=GSheetsConnection)
-            df = conn.read(ttl=0)
-            today_str = datetime.now().strftime("%Y-%m-%d")
-            
-            user_row_idx = df[df["Email"] == user_email].index
-            
-            if not user_row_idx.empty:
-                idx = user_row_idx[0]
-                stored_date = str(df.loc[idx, "Date"])
-                
-                if stored_date != today_str:
-                    df.loc[idx, "Date"] = today_str
-                    df.loc[idx, "WhoAmI_Count"] = 0
-                    df.loc[idx, "Custom_Count"] = 0
-                
-                if reading_mode == "1. Who Am I? (Raw Shadow Discovery)":
-                    df.loc[idx, "WhoAmI_Count"] = int(df.loc[idx, "WhoAmI_Count"]) + 1
-                else:
-                    df.loc[idx, "Custom_Count"] = int(df.loc[idx, "Custom_Count"]) + 1
-            else:
-                new_row = pd.DataFrame([{
-                    "Email": user_email, 
-                    "Date": today_str, 
-                    "WhoAmI_Count": 1 if reading_mode.startswith("1") else 0, 
-                    "Custom_Count": 1 if reading_mode.startswith("2") else 0
-                }])
-                df = pd.concat([df, new_row], ignore_index=True)
-                
-            conn.update(data=df)
-        except Exception as update_e:
+            webhook_url = st.secrets["SHEET_WEBHOOK_URL"]
+            payload = {
+                "email": user_email,
+                "date": current_date,
+                "whoami": 1 if reading_mode.startswith("1") else 0,
+                "custom": 1 if reading_mode.startswith("2") else 0
+            }
+            requests.post(webhook_url, json=payload)
+        except Exception as webhook_e:
             pass
 
         st.success(f"Prophecy manifested for {user_name} ({birth_place}).")
