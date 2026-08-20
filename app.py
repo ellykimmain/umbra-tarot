@@ -36,14 +36,14 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 class='main-title'>👁️ UMBRA & TAROT</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='main-title'> UMBRA & TAROT</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-title'>Pierce the veil of your shadow self. Unearth the truths hidden in the astral dark.</p>", unsafe_allow_html=True)
 
 # 로그인 세션 관리
 if "google_token" not in st.session_state:
     st.markdown("### ✨ Claim Your 3-Day Free Trial")
     st.markdown("Unlock the gates. Sign in now to receive your **complimentary 'Who Am I' shadow reading** and **1 deep custom query**.")
-    st.info("👁️ Google Login is required to begin your free trial and enter the astral realm.")
+    st.info("Google Login is required to begin your free trial and enter the astral realm.")
     
     result = oauth2.authorize_button(name="Continue with Google", icon="https://www.google.com/favicon.ico", redirect_uri=REDIRECT_URI, scope="openid email profile", key="google_login", use_container_width=True)
     if result:
