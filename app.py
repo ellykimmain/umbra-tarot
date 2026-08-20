@@ -26,19 +26,12 @@ st.set_page_config(page_title="Umbra & Tarot: Shadow Prophecy", layout="centered
 # 화이트 배경 및 깔끔한 가독성을 위한 커스텀 CSS
 st.markdown("""
     <style>
-    /* 전체 앱 배경을 화이트로 고정하고 글씨를 짙은 차콜색으로 설정 */
     .stApp { background-color: #f8f9fa; color: #212529; }
     .main-title { text-align: center; color: #1a1a2e; font-family: 'Cinzel', serif; letter-spacing: 2px; font-size: 2.5rem; font-weight: 700; }
     .sub-title { text-align: center; color: #6c757d; font-size: 1.05rem; }
-    
-    /* 입력창 라벨 글씨를 짙고 선명하게 고정 */
     label, [data-testid="stWidgetLabel"] p { color: #212529 !important; font-weight: 600 !important; }
-    
-    /* 버튼 디자인 */
     div.stButton > button:first-child { background-color: #1a1a2e; color: #f3e5ab; border: 1px solid #1a1a2e; font-weight: 600; border-radius: 5px; width: 100%; }
     div.stButton > button:first-child:hover { background-color: #33334d; color: #ffffff; }
-    
-    /* 사이드바 영역 */
     section[data-testid="stSidebar"] { background-color: #f1f3f5 !important; }
     section[data-testid="stSidebar"] *, section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] span, section[data-testid="stSidebar"] p { color: #212529 !important; }
     </style>
@@ -136,8 +129,15 @@ if st.button("Consult the Oracle & Draw Cards"):
         st.error("🌙 The Oracle has already spoken to you for today. Return when the stars realign tomorrow.")
         st.stop()
 
-    status = st.info("🌌 Tunnelling through the astral plane...")
-    time.sleep(1)
+    # 로딩 애니메이션 및 다채로운 텍스트 전환 연출 복구
+    status = st.status("🌌 Tunnelling through the astral plane...", expanded=True)
+    time.sleep(0.8)
+    status.update(label="🔮 Consulting the cosmic alignment & Manse-ryeok data...", state="running")
+    time.sleep(0.8)
+    status.update(label="🃏 Drawing the shadow arcana cards...", state="running")
+    time.sleep(0.8)
+    status.update(label="⚡ Channeling the blunt prophecy...", state="running")
+    time.sleep(0.6)
     
     try:
         astrology_data = "External API connection placeholder: Sun in Taurus, Moon in Scorpio, Ascendant Leo."
@@ -174,7 +174,7 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
         
         st.session_state["already_prophesied"][user_key] = count + 1
         
-        status.empty() 
+        status.update(label="Prophecy manifested successfully.", state="complete", expanded=False)
         st.success("Prophecy manifested.")
         st.info(response.text)
 
@@ -191,5 +191,5 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
             st.error("Email failed.")
             
     except Exception as e:
-        status.empty()
-        st.error("The astral connection was lost. Please try again.")
+        status.update(label="The astral connection was lost.", state="error", expanded=False)
+        st.error(f"The astral connection was lost. System Error: {e}")
