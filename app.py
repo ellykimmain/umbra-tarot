@@ -69,7 +69,12 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔮 Oracle Mode")
 reading_mode = st.sidebar.radio("Choose Reading Focus", ["1. Who Am I? (Raw Shadow Discovery)", "2. Custom Oracle Query (Deep Question)"])
 
-if user_email: st.info(f"✉️ Welcome, voyager. Prophecy will be sent to: **{user_email}**")
+if user_email:
+    st.markdown(f"""
+        <div style="background-color: #151522; padding: 15px; border-radius: 8px; border: 1px solid #3f3f5a; color: #e0e0e0; margin-bottom: 20px;">
+            🌌 <b>Welcome, voyager.</b> Prophecy will be sent to: <span style="color: #fca311; font-weight: bold;">{user_email}</span>
+        </div>
+    """, unsafe_allow_html=True)
 
 # 입력 폼
 user_name = st.text_input("Your Name / Alias", "")
