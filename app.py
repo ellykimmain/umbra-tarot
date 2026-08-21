@@ -187,17 +187,22 @@ if st.button("Consult the Oracle & Draw Cards"):
         "The World": "images/The_World.jpg"
     }
 
-# 4. 아르카나 카드 이미지 UI 렌더링
+import os
+
+    # 4. 아르카나 카드 이미지 UI 렌더링
     st.markdown("<h3 style='text-align: center; color: #1a1a2e; margin-top: 20px;'>🃏 The Drawn Arcanas</h3>", unsafe_allow_html=True)
     cols = st.columns(3)
     
     for i, card in enumerate(drawn_keys):
         with cols[i]:
-            try:
-                st.image(card_images[card], caption=card, use_container_width=True)
-            except FileNotFoundError:
+            img_path = card_images.get(card, "")
+            # OS 단에서 파일 존재 여부를 먼저 확인하여 치명적 에러 원천 차단
+            if os.path.exists(img_path):
+                st.image(img_path, caption=card, use_container_width=True)
+            else:
+                # 파일명이나 확장자가 틀려서 못 찾은 경우 앱을 터뜨리지 않고 에러 텍스트만 출력
                 st.error(f"[{card} Image Missing]")
-
+                
     # 100% 영문 출력: 태국 점성술사 + 만세력 팩트 폭행 프롬프트
     prompt = f"""You are a highly skilled, blunt, and slightly cynical traditional Thai fortune teller. 
 You speak directly, offering no comforting lies. Deliver cold, hard truths based on the cosmic data. Use a tone that is piercing, mystical, and authoritative.
