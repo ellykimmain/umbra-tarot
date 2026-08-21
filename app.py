@@ -96,11 +96,9 @@ birth_year = st.number_input("Year", min_value=1930, max_value=2026, value=1988)
 birth_month = st.number_input("Month", min_value=1, max_value=12, value=6)
 birth_day = st.number_input("Day", min_value=1, max_value=31, value=15)
 
-# 태어난 시간 드롭다운
 time_options = ["Unknown"] + [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 30)]
 birth_time = st.selectbox("Time of Birth", time_options)
 
-# 질문 프리셋 및 직접 입력
 if "2." in reading_mode or "Custom" in reading_mode:
     question_options = [
         "When will this current financial hardship finally improve?",
@@ -118,10 +116,10 @@ if "2." in reading_mode or "Custom" in reading_mode:
 else:
     user_question = ""
     
-# 메인 버튼 및 방어 로직
+# 메인 버튼 및 실행 로직
 if st.button("Consult the Oracle & Draw Cards"):
-    today = datetime.now().strftime("%Y-%m-%d")
-    user_key = f"{user_email}_{today}"
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    user_key = f"{user_email}_{current_date}"
     if "already_prophesied" not in st.session_state: 
         st.session_state["already_prophesied"] = {}
     
@@ -130,14 +128,16 @@ if st.button("Consult the Oracle & Draw Cards"):
         st.error("🌙 The Oracle has already spoken to you for today. Return when the stars realign tomorrow.")
         st.stop()
 
-    # 로딩 애니메이션 및 다채로운 텍스트 전환 연출
-    status = st.status("🌌 Tunnelling through the astral plane...", expanded=True)
+    # 테두리 없는 깔끔한 텍스트 애니메이션 로딩
+    loading_placeholder = st.empty()
+    
+    loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🌌 Tunnelling through the astral plane...</p>", unsafe_allow_html=True)
     time.sleep(1.5)
-    status.update(label="🔮 Consulting the cosmic alignment & Manse-ryeok data...", state="running")
+    loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🔮 Consulting the cosmic alignment & Manse-ryeok data...</p>", unsafe_allow_html=True)
     time.sleep(1.5)
-    status.update(label="🃏 Drawing the shadow arcana cards...", state="running")
+    loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🃏 Drawing the shadow arcana cards...</p>", unsafe_allow_html=True)
     time.sleep(1.5)
-    status.update(label="⚡ Channeling the blunt prophecy...", state="running")
+    loading_placeholder.markdown("<p style='text-align: center; color: #d97706; font-size: 1.1rem; font-weight: bold;'>⚡ Channeling the blunt prophecy...</p>", unsafe_allow_html=True)
     time.sleep(1.5)
     
     try:
@@ -145,7 +145,6 @@ if st.button("Consult the Oracle & Draw Cards"):
     except Exception as e:
         astrology_data = "API connection failed. Falling back to native cosmic calculations."
 
-    # 1. 메이저 아르카나 22장 전체 덱 세팅
     major_arcana_deck = [
         "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor", 
         "The Hierophant", "The Lovers", "The Chariot", "Strength", "The Hermit", 
@@ -154,39 +153,40 @@ if st.button("Consult the Oracle & Draw Cards"):
         "Judgement", "The World"
     ]
 
-    # 2. 22장 중 3장의 아르카나 무작위 추출
     drawn_keys = random.sample(major_arcana_deck, 3)
     question_context = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
 
-    # 3. 파일명 매핑 딕셔너리 (우측 경로 파일명 언더바 규칙 적용)
-    card_images = {
-        "The Fool": "images/The_Fool.jpg",
-        "The Magician": "images/The_Magician.jpg",
-        "The High Priestess": "images/The_High_Priestess.jpg",
-        "The Empress": "images/The_Empress.jpg",
-        "The Emperor": "images/The_Emperor.jpg",
-        "The Hierophant": "images/The_Hierophant.jpg",
-        "The Lovers": "images/The_Lovers.jpg",
-        "The Chariot": "images/The_Chariot.jpg",
-        "Strength": "images/Strength.jpg",
-        "The Hermit": "images/The_Hermit.jpg",
-        "Wheel of Fortune": "images/Wheel_of_Fortune.jpg",
-        "Justice": "images/Justice.jpg",
-        "The Hanged Man": "images/The_Hanged_Man.jpg",
-        "Death": "images/The_Death.jpg",
-        "Temperance": "images/Temperance.jpg",
-        "The Devil": "images/The_Devil.jpg",
-        "The Tower": "images/The_Tower.jpg",
-        "The Star": "images/The_Star.jpg",
-        "The Moon": "images/The_Moon.jpg",
-        "The Sun": "images/The_Sun.jpg",
-        "Judgement": "images/Judgement.jpg",
-        "The World": "images/The_World.jpg"
+    # 확장자 대응을 위한 베이스 파일명 딕셔너리
+    card_base_names = {
+        "The Fool": "The_Fool",
+        "The Magician": "The_Magician",
+        "The High Priestess": "The_High_Priestess",
+        "The Empress": "The_Empress",
+        "The Emperor": "The_Emperor",
+        "The Hierophant": "The_Hierophant",
+        "The Lovers": "The_Lovers",
+        "The Chariot": "The_Chariot",
+        "Strength": "Strength",
+        "The Hermit": "The_Hermit",
+        "Wheel of Fortune": "Wheel_of_Fortune",
+        "Justice": "Justice",
+        "The Hanged Man": "The_Hanged_Man",
+        "Death": "The_Death",
+        "Temperance": "Temperance",
+        "The Devil": "The_Devil",
+        "The Tower": "The_Tower",
+        "The Star": "The_Star",
+        "The Moon": "The_Moon",
+        "The Sun": "The_Sun",
+        "Judgement": "Judgement",
+        "The World": "The_World"
     }
 
-    # 100% 영문 출력: 태국 점성술사 + 만세력 팩트 폭행 프롬프트
+    # 프롬프트에 실시간 접속 날짜를 강제 주입하여 시간 오류 완벽 차단
     prompt = f"""You are a highly skilled, blunt, and slightly cynical traditional Thai fortune teller. 
 You speak directly, offering no comforting lies. Deliver cold, hard truths based on the cosmic data. Use a tone that is piercing, mystical, and authoritative.
+
+CURRENT DATE & TIME: {current_date} (Ensure all future predictions start strictly from this specific date onwards. Do not refer to past years as the future.)
 
 USER PROFILE
 Name: {user_name}
@@ -211,23 +211,30 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
         
         st.session_state["already_prophesied"][user_key] = count + 1
         
-        status.update(label="Prophecy manifested successfully.", state="complete", expanded=False)
+        # 로딩 텍스트 삭제
+        loading_placeholder.empty()
+        
         st.success("Prophecy manifested.")
         st.info(response.text)
 
-        # 4. 아르카나 카드 이미지 UI 렌더링
+        # 이미지 렌더링 (.jpg 및 .png 자동 이중 탐색)
         st.markdown("<h3 style='text-align: center; color: #1a1a2e; margin-top: 20px;'>🃏 The Drawn Arcanas</h3>", unsafe_allow_html=True)
         cols = st.columns(3)
         
         for i, card in enumerate(drawn_keys):
             with cols[i]:
-                img_path = card_images.get(card, "")
-                if os.path.exists(img_path):
-                    st.image(img_path, caption=card, use_container_width=True)
+                base_name = card_base_names.get(card, "")
+                img_path_jpg = f"images/{base_name}.jpg"
+                img_path_png = f"images/{base_name}.png"
+                
+                if os.path.exists(img_path_jpg):
+                    st.image(img_path_jpg, caption=card, use_container_width=True)
+                elif os.path.exists(img_path_png):
+                    st.image(img_path_png, caption=card, use_container_width=True)
                 else:
                     st.error(f"[{card} Image Missing]")
 
-        # 이메일 발송 (영문)
+        # 이메일 발송
         try:
             msg = MIMEText(f"Prophecy for {user_name}:\n\n{response.text}")
             msg['Subject'] = "👁️ Your Shadow Prophecy"
@@ -240,7 +247,8 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
             st.error("Email failed.")
             
     except Exception as e:
-        status.update(label="The astral gates are closed.", state="error", expanded=False)
+        # 에러 발생 시 로딩 텍스트 삭제
+        loading_placeholder.empty()
         error_msg = str(e)
         if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
             st.error("🌙 The astral energy is depleted. Today's complimentary prophecies (Limit: 20) have concluded. Return after midnight.")
