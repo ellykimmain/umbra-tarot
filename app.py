@@ -222,7 +222,7 @@ DRAWN ARCANAS
 Analyze the exact astrological data provided above, the Manse-ryeok elements, and the Tarot cards. 
 Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
-    try:
+try:
         response = client.models.generate_content(
             model="gemini-3.6-flash", 
             contents=prompt
@@ -233,6 +233,19 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
         status.update(label="Prophecy manifested successfully.", state="complete", expanded=False)
         st.success("Prophecy manifested.")
         st.info(response.text)
+
+        import os
+        # 4. 아르카나 카드 이미지 UI 렌더링
+        st.markdown("<h3 style='text-align: center; color: #1a1a2e; margin-top: 20px;'>🃏 The Drawn Arcanas</h3>", unsafe_allow_html=True)
+        cols = st.columns(3)
+        
+        for i, card in enumerate(drawn_keys):
+            with cols[i]:
+                img_path = card_images.get(card, "")
+                if os.path.exists(img_path):
+                    st.image(img_path, caption=card, use_container_width=True)
+                else:
+                    st.error(f"[{card} Image Missing]")
 
         # 이메일 발송 (영문)
         try:
@@ -249,7 +262,6 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
     except Exception as e:
         status.update(label="The astral gates are closed.", state="error", expanded=False)
         error_msg = str(e)
-        # 구글 할당량 초과 에러(429) 감지 시 선착순 마감 메시지 영문 출력
         if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
             st.error("🌙 The astral energy is depleted. Today's complimentary prophecies (Limit: 20) have concluded. Return after midnight.")
         else:
