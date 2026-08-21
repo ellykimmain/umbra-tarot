@@ -48,7 +48,7 @@ if "google_token" not in st.session_state:
     st.info("Google Login is required to begin your free trial and enter the astral realm.")
     
     # 샘플 티저 UI
-    st.markdown("<br><h4 style='text-align: center; color: #1a1a2e;'>👁️ Glimpse the Shadows (Sample Reading)</h4>", unsafe_allow_html=True)
+    st.markdown("<br><h4 style='text-align: center; color: #1a1a2e;'> Glimpse the Shadows (Sample Reading)</h4>", unsafe_allow_html=True)
     sample_cols = st.columns(3)
     with sample_cols[0]:
         st.image("images/The_Fool.png", caption="The Fool", use_container_width=True)
