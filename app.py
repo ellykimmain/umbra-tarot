@@ -95,7 +95,7 @@ if user_email:
     """, unsafe_allow_html=True)
 
 country_city_map = {
-    "South Korea": ["Seoul", "Busan", "Incheon", "Goyang-si", "Jeju", "Other"],
+    "South Korea": ["Seoul", "Daejeon", "Daegu", "Busan", "Jeju", "Other"],
     "United States": ["New York", "Los Angeles", "Chicago", "Seattle", "Other"],
     "United Kingdom": ["London", "Manchester", "Edinburgh", "Other"],
     "Japan": ["Tokyo", "Osaka", "Kyoto", "Other"],
