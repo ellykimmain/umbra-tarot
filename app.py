@@ -315,10 +315,25 @@ You MUST structure your response EXACTLY using the following delimiters. Do not 
                     else:
                         st.error(f"[{card} Image Missing]")
 
-        # 이메일 발송
+      # 이메일 발송
         try:
-            msg = MIMEText(f"Prophecy for {user_name}:\n\n{response.text.replace('@INTRO@', '').replace('@CARD_1@', '').replace('@CARD_2@', '').replace('@CARD_3@', '').replace('@CONCLUSION@', '')}")
-            msg['Subject'] = "👁️ Your Shadow Prophecy"
+            base_prophecy = response.text.replace('@INTRO@', '').replace('@CARD_1@', '').replace('@CARD_2@', '').replace('@CARD_3@', '').replace('@CONCLUSION@', '')
+            
+            email_body = f"""Prophecy for {user_name}:
+
+{base_prophecy}
+
+---
+🎧 FREQUENCY ALIGNMENT
+
+Have you faced the brutal truth? 
+The framework of your fate is now exposed. It is time to realign your shattered frequencies through cosmic geometry and forcefully attract physical wealth.
+
+Synchronize your vibration at SynchroVault.
+▶ https://www.youtube.com/@SynchroVault
+"""
+            msg = MIMEText(email_body)
+            msg['Subject'] = "Your Shadow Prophecy"
             msg['From'] = st.secrets["EMAIL_SENDER"]
             msg['To'] = user_email
             with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
