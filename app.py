@@ -82,7 +82,7 @@ if user_email:
 
 # 1. 국가/도시 매핑 데이터베이스 (주요 국가 및 도시 세팅)
 country_city_map = {
-    "South Korea": ["Seoul", "Busan", "Incheon", "Goyang-si", "Jeju", "Other"],
+    "South Korea": ["Seoul", "Daejeon", "Daegu", "Busan", "Jeju", "Other"],
     "United States": ["New York", "Los Angeles", "Chicago", "Seattle", "Other"],
     "United Kingdom": ["London", "Manchester", "Edinburgh", "Other"],
     "Japan": ["Tokyo", "Osaka", "Kyoto", "Other"],
