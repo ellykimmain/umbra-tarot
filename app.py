@@ -86,6 +86,12 @@ st.sidebar.warning("💎 **Pro Oracle** features will unlock on September 1st.")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔮 Oracle Mode")
 reading_mode = st.sidebar.radio("Choose Reading Focus", ["1. Who Am I? (Raw Shadow Discovery)", "2. Custom Oracle Query (Deep Question)"])
+# 기존 사이드바 코드 바로 아래에 이 줄들을 추가해라
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🎧 Frequency Alignment")
+st.sidebar.caption("Realign your shattered frequencies after the reading.")
+# 아래 주소는 네 채널의 실제 링크로 반드시 수정해라
+st.sidebar.link_button("Tune in at SynchroVault", "https://www.youtube.com/@SynchroVault")
 
 if user_email:
     st.markdown(f"""
