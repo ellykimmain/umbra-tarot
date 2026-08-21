@@ -4,6 +4,7 @@ import streamlit as st
 import random
 import time
 import requests
+import os
 from google import genai
 from streamlit_oauth import OAuth2Component
 from datetime import datetime
@@ -144,7 +145,7 @@ if st.button("Consult the Oracle & Draw Cards"):
     except Exception as e:
         astrology_data = "API connection failed. Falling back to native cosmic calculations."
 
-   # 1. 메이저 아르카나 22장 전체 덱 세팅
+    # 1. 메이저 아르카나 22장 전체 덱 세팅
     major_arcana_deck = [
         "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor", 
         "The Hierophant", "The Lovers", "The Chariot", "Strength", "The Hermit", 
@@ -156,10 +157,6 @@ if st.button("Consult the Oracle & Draw Cards"):
     # 2. 22장 중 3장의 아르카나 무작위 추출
     drawn_keys = random.sample(major_arcana_deck, 3)
     question_context = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
-
-    # (이 아래로 기존 prompt와 client.models.generate_content(...) 코드가 이어짐)
-    # ...
-    # st.info(response.text) 코드 바로 아래에 이미지 렌더링 로직 삽입
 
     # 3. 파일명 매핑 딕셔너리 (우측 경로 파일명 언더바 규칙 적용)
     card_images = {
@@ -187,22 +184,6 @@ if st.button("Consult the Oracle & Draw Cards"):
         "The World": "images/The_World.jpg"
     }
 
-import os
-
-    # 4. 아르카나 카드 이미지 UI 렌더링
-    st.markdown("<h3 style='text-align: center; color: #1a1a2e; margin-top: 20px;'>🃏 The Drawn Arcanas</h3>", unsafe_allow_html=True)
-    cols = st.columns(3)
-    
-    for i, card in enumerate(drawn_keys):
-        with cols[i]:
-            img_path = card_images.get(card, "")
-            # OS 단에서 파일 존재 여부를 먼저 확인하여 치명적 에러 원천 차단
-            if os.path.exists(img_path):
-                st.image(img_path, caption=card, use_container_width=True)
-            else:
-                # 파일명이나 확장자가 틀려서 못 찾은 경우 앱을 터뜨리지 않고 에러 텍스트만 출력
-                st.error(f"[{card} Image Missing]")
-                
     # 100% 영문 출력: 태국 점성술사 + 만세력 팩트 폭행 프롬프트
     prompt = f"""You are a highly skilled, blunt, and slightly cynical traditional Thai fortune teller. 
 You speak directly, offering no comforting lies. Deliver cold, hard truths based on the cosmic data. Use a tone that is piercing, mystical, and authoritative.
@@ -222,7 +203,7 @@ DRAWN ARCANAS
 Analyze the exact astrological data provided above, the Manse-ryeok elements, and the Tarot cards. 
 Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
 
-try:
+    try:
         response = client.models.generate_content(
             model="gemini-3.6-flash", 
             contents=prompt
@@ -234,7 +215,6 @@ try:
         st.success("Prophecy manifested.")
         st.info(response.text)
 
-        import os
         # 4. 아르카나 카드 이미지 UI 렌더링
         st.markdown("<h3 style='text-align: center; color: #1a1a2e; margin-top: 20px;'>🃏 The Drawn Arcanas</h3>", unsafe_allow_html=True)
         cols = st.columns(3)
