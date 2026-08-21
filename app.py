@@ -80,31 +80,64 @@ if user_email:
         </div>
     """, unsafe_allow_html=True)
 
-# 입력 폼
-user_name = st.text_input("Your Name / Alias", "")
+# 1. 국가/도시 매핑 데이터베이스 (주요 국가 및 도시 세팅)
+country_city_map = {
+    "South Korea": ["Seoul", "Busan", "Incheon", "Goyang-si", "Jeju", "Other"],
+    "United States": ["New York", "Los Angeles", "Chicago", "Seattle", "Other"],
+    "United Kingdom": ["London", "Manchester", "Edinburgh", "Other"],
+    "Japan": ["Tokyo", "Osaka", "Kyoto", "Other"],
+    "Australia": ["Sydney", "Melbourne", "Brisbane", "Other"],
+    "Canada": ["Toronto", "Vancouver", "Montreal", "Other"],
+    "Other": ["Other"]
+}
 
-# 국가/도시 분리 입력
+# 2. 관리자(본인) 퀵 자동 완성 로직
+# 아래 이메일을 실제 네 구글 계정 이메일로 수정해라.
+ADMIN_EMAIL = "ellykimmain@gmail.com" 
+
+if user_email == ADMIN_EMAIL:
+    default_name = "Kim Uyoun"
+    default_country_idx = 0  # South Korea
+    default_year = 1988      # 본인 출생년도
+else:
+    default_name = ""
+    default_country_idx = 1  # United States
+    default_year = 1988
+
+# 입력 폼
+user_name = st.text_input("Your Name / Alias", default_name)
+
+# 국가/도시 연동 드롭다운
 col1, col2 = st.columns(2)
 with col1:
-    birth_country = st.text_input("Country of Birth", "United States")
+    birth_country = st.selectbox("Country of Birth", list(country_city_map.keys()), index=default_country_idx)
 with col2:
-    birth_city = st.text_input("City of Birth", "")
+    birth_city = st.selectbox("City of Birth", country_city_map[birth_country])
+
+# 'Other' 선택 시 직접 입력할 수 있는 폼 제공
+if birth_city == "Other":
+    birth_city = st.text_input("Please specify your city", "")
 
 birth_place = f"{birth_city}, {birth_country}"
 
-birth_year = st.number_input("Year", min_value=1930, max_value=2026, value=1988)
+birth_year = st.number_input("Year", min_value=1930, max_value=2026, value=default_year)
 birth_month = st.number_input("Month", min_value=1, max_value=12, value=6)
 birth_day = st.number_input("Day", min_value=1, max_value=31, value=15)
 
 time_options = ["Unknown"] + [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 30)]
 birth_time = st.selectbox("Time of Birth", time_options)
 
+# 질문 프리셋 확장 및 직접 입력
 if "2." in reading_mode or "Custom" in reading_mode:
     question_options = [
         "When will this current financial hardship finally improve?",
         "What is the hidden block preventing my wealth and success?",
-        "What is the true intention of the person I am thinking about?",
+        "What is the brutal truth about my connection with my current partner?",
+        "I am single. When will authentic love pierce through my isolation?",
         "Am I on the right path with my current business or career?",
+        "Why do I keep repeating the same destructive patterns?",
+        "What truth am I aggressively avoiding right now?",
+        "What does my shadow self desperately want me to know?",
         "Direct Input (Write your own query)"
     ]
     selected_query = st.selectbox("Choose your query or select Direct Input", question_options)
@@ -115,7 +148,7 @@ if "2." in reading_mode or "Custom" in reading_mode:
         user_question = selected_query
 else:
     user_question = ""
-    
+
 # 메인 버튼 및 실행 로직
 if st.button("Consult the Oracle & Draw Cards"):
     current_date = datetime.now().strftime("%Y-%m-%d")
