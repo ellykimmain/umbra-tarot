@@ -187,17 +187,16 @@ if st.button("Consult the Oracle & Draw Cards"):
         "The World": "images/The_World.jpg"
     }
 
-    # 4. 아르카나 카드 이미지 UI 렌더링
+# 4. 아르카나 카드 이미지 UI 렌더링
     st.markdown("<h3 style='text-align: center; color: #1a1a2e; margin-top: 20px;'>🃏 The Drawn Arcanas</h3>", unsafe_allow_html=True)
     cols = st.columns(3)
     
     for i, card in enumerate(drawn_keys):
         with cols[i]:
             try:
-                st.image(card_images[card], caption=card, use_column_width=True)
+                st.image(card_images[card], caption=card, use_container_width=True)
             except FileNotFoundError:
                 st.error(f"[{card} Image Missing]")
-    question_context = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
 
     # 100% 영문 출력: 태국 점성술사 + 만세력 팩트 폭행 프롬프트
     prompt = f"""You are a highly skilled, blunt, and slightly cynical traditional Thai fortune teller. 
