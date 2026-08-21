@@ -144,7 +144,59 @@ if st.button("Consult the Oracle & Draw Cards"):
     except Exception as e:
         astrology_data = "API connection failed. Falling back to native cosmic calculations."
 
-    drawn_keys = random.sample(["The Fool", "The Magician", "The Hermit", "The Devil", "The Star"], 3)
+   # 1. 메이저 아르카나 22장 전체 덱 세팅
+    major_arcana_deck = [
+        "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor", 
+        "The Hierophant", "The Lovers", "The Chariot", "Strength", "The Hermit", 
+        "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance", 
+        "The Devil", "The Tower", "The Star", "The Moon", "The Sun", 
+        "Judgement", "The World"
+    ]
+
+    # 2. 22장 중 3장의 아르카나 무작위 추출
+    drawn_keys = random.sample(major_arcana_deck, 3)
+    question_context = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
+
+    # (이 아래로 기존 prompt와 client.models.generate_content(...) 코드가 이어짐)
+    # ...
+    # st.info(response.text) 코드 바로 아래에 이미지 렌더링 로직 삽입
+
+    # 3. 파일명 매핑 딕셔너리 (우측 경로 파일명 언더바 규칙 적용)
+    card_images = {
+        "The Fool": "images/The_Fool.jpg",
+        "The Magician": "images/The_Magician.jpg",
+        "The High Priestess": "images/The_High_Priestess.jpg",
+        "The Empress": "images/The_Empress.jpg",
+        "The Emperor": "images/The_Emperor.jpg",
+        "The Hierophant": "images/The_Hierophant.jpg",
+        "The Lovers": "images/The_Lovers.jpg",
+        "The Chariot": "images/The_Chariot.jpg",
+        "Strength": "images/Strength.jpg",
+        "The Hermit": "images/The_Hermit.jpg",
+        "Wheel of Fortune": "images/Wheel_of_Fortune.jpg",
+        "Justice": "images/Justice.jpg",
+        "The Hanged Man": "images/The_Hanged_Man.jpg",
+        "Death": "images/The_Death.jpg",
+        "Temperance": "images/Temperance.jpg",
+        "The Devil": "images/The_Devil.jpg",
+        "The Tower": "images/The_Tower.jpg",
+        "The Star": "images/The_Star.jpg",
+        "The Moon": "images/The_Moon.jpg",
+        "The Sun": "images/The_Sun.jpg",
+        "Judgement": "images/Judgement.jpg",
+        "The World": "images/The_World.jpg"
+    }
+
+    # 4. 아르카나 카드 이미지 UI 렌더링
+    st.markdown("<h3 style='text-align: center; color: #1a1a2e; margin-top: 20px;'>🃏 The Drawn Arcanas</h3>", unsafe_allow_html=True)
+    cols = st.columns(3)
+    
+    for i, card in enumerate(drawn_keys):
+        with cols[i]:
+            try:
+                st.image(card_images[card], caption=card, use_column_width=True)
+            except FileNotFoundError:
+                st.error(f"[{card} Image Missing]")
     question_context = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
 
     # 100% 영문 출력: 태국 점성술사 + 만세력 팩트 폭행 프롬프트
