@@ -45,7 +45,7 @@ st.markdown("<p class='sub-title'>Pierce the veil of your shadow self. Unearth t
 if "google_token" not in st.session_state:
     st.markdown("### ✨ Claim Your 3-Day Free Trial")
     st.markdown("Unlock the gates. Sign in now to receive your **complimentary 'Who Am I' shadow reading** and **1 deep custom query**.")
-    st.info("👁️ Google Login is required to begin your free trial and enter the astral realm.")
+    st.info("Google Login is required to begin your free trial and enter the astral realm.")
     
     # 샘플 티저 UI
     st.markdown("<br><h4 style='text-align: center; color: #1a1a2e;'>👁️ Glimpse the Shadows (Sample Reading)</h4>", unsafe_allow_html=True)
