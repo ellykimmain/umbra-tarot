@@ -47,6 +47,22 @@ if "google_token" not in st.session_state:
     st.markdown("Unlock the gates. Sign in now to receive your **complimentary 'Who Am I' shadow reading** and **1 deep custom query**.")
     st.info("👁️ Google Login is required to begin your free trial and enter the astral realm.")
     
+    # 샘플 티저 UI
+    st.markdown("<br><h4 style='text-align: center; color: #1a1a2e;'>👁️ Glimpse the Shadows (Sample Reading)</h4>", unsafe_allow_html=True)
+    sample_cols = st.columns(3)
+    with sample_cols[0]:
+        st.image("images/The_Fool.png", caption="The Fool", use_container_width=True)
+    with sample_cols[1]:
+        st.image("images/The_Tower.png", caption="The Tower", use_container_width=True)
+    with sample_cols[2]:
+        st.image("images/The_Devil.png", caption="The Devil", use_container_width=True)
+        
+    st.markdown("""
+    <div style="background-color: #e9ecef; padding: 15px; border-left: 4px solid #1a1a2e; border-radius: 4px; color: #212529; font-style: italic; font-size: 0.95rem; margin-bottom: 25px;">
+    "You ask about wealth, yet The Tower reveals your foundation is built on self-deception. The collapse is not a punishment, but a necessary clearing of your illusions. The Devil binds you to comfort, but true power requires you to step into the void..."
+    </div>
+    """, unsafe_allow_html=True)
+
     result = oauth2.authorize_button(name="Continue with Google", icon="https://www.google.com/favicon.ico", redirect_uri=REDIRECT_URI, scope="openid email profile", key="google_login", use_container_width=True)
     if result:
         st.session_state["google_token"] = result.get("token")
@@ -63,7 +79,6 @@ if "user_email" not in st.session_state:
 
 user_email = st.session_state["user_email"]
 
-# 사이드바
 st.sidebar.markdown("### 🪐 Membership Tiers")
 st.sidebar.radio("Select Your Plan", ["Free Trial (Active)", "Pro Oracle (Available Sept 1st)"], index=0, disabled=True)
 st.sidebar.info("✨ **Grand Opening!** Currently in Free Trial Period.")
@@ -72,7 +87,6 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔮 Oracle Mode")
 reading_mode = st.sidebar.radio("Choose Reading Focus", ["1. Who Am I? (Raw Shadow Discovery)", "2. Custom Oracle Query (Deep Question)"])
 
-# 환영 메시지
 if user_email:
     st.markdown(f"""
         <div style="background-color: #e9ecef; padding: 15px; border-radius: 8px; border: 1px solid #ced4da; color: #212529; margin-bottom: 20px;">
@@ -80,9 +94,8 @@ if user_email:
         </div>
     """, unsafe_allow_html=True)
 
-# 1. 국가/도시 매핑 데이터베이스 (주요 국가 및 도시 세팅)
 country_city_map = {
-    "South Korea": ["Seoul", "Daejeon", "Daegu", "Busan", "Jeju", "Other"],
+    "South Korea": ["Seoul", "Busan", "Incheon", "Goyang-si", "Jeju", "Other"],
     "United States": ["New York", "Los Angeles", "Chicago", "Seattle", "Other"],
     "United Kingdom": ["London", "Manchester", "Edinburgh", "Other"],
     "Japan": ["Tokyo", "Osaka", "Kyoto", "Other"],
@@ -91,30 +104,26 @@ country_city_map = {
     "Other": ["Other"]
 }
 
-# 2. 관리자(본인) 퀵 자동 완성 로직
-# 아래 이메일을 실제 네 구글 계정 이메일로 수정해라.
+# 네 계정 자동완성 (이메일 팩트 체크 후 수정할 것)
 ADMIN_EMAIL = "ellykimmain@gmail.com" 
 
 if user_email == ADMIN_EMAIL:
     default_name = "Kim Uyoun"
-    default_country_idx = 0  # South Korea
-    default_year = 1988      # 본인 출생년도
+    default_country_idx = 0 
+    default_year = 1988      
 else:
     default_name = ""
-    default_country_idx = 1  # United States
+    default_country_idx = 1 
     default_year = 1988
 
-# 입력 폼
 user_name = st.text_input("Your Name / Alias", default_name)
 
-# 국가/도시 연동 드롭다운
 col1, col2 = st.columns(2)
 with col1:
     birth_country = st.selectbox("Country of Birth", list(country_city_map.keys()), index=default_country_idx)
 with col2:
     birth_city = st.selectbox("City of Birth", country_city_map[birth_country])
 
-# 'Other' 선택 시 직접 입력할 수 있는 폼 제공
 if birth_city == "Other":
     birth_city = st.text_input("Please specify your city", "")
 
@@ -127,7 +136,6 @@ birth_day = st.number_input("Day", min_value=1, max_value=31, value=15)
 time_options = ["Unknown"] + [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 30)]
 birth_time = st.selectbox("Time of Birth", time_options)
 
-# 질문 프리셋 확장 및 직접 입력
 if "2." in reading_mode or "Custom" in reading_mode:
     question_options = [
         "When will this current financial hardship finally improve?",
@@ -149,7 +157,6 @@ if "2." in reading_mode or "Custom" in reading_mode:
 else:
     user_question = ""
 
-# 메인 버튼 및 실행 로직
 if st.button("Consult the Oracle & Draw Cards"):
     current_date = datetime.now().strftime("%Y-%m-%d")
     user_key = f"{user_email}_{current_date}"
@@ -161,9 +168,7 @@ if st.button("Consult the Oracle & Draw Cards"):
         st.error("🌙 The Oracle has already spoken to you for today. Return when the stars realign tomorrow.")
         st.stop()
 
-    # 테두리 없는 깔끔한 텍스트 애니메이션 로딩
     loading_placeholder = st.empty()
-    
     loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🌌 Tunnelling through the astral plane...</p>", unsafe_allow_html=True)
     time.sleep(1.5)
     loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🔮 Consulting the cosmic alignment & Manse-ryeok data...</p>", unsafe_allow_html=True)
@@ -189,52 +194,53 @@ if st.button("Consult the Oracle & Draw Cards"):
     drawn_keys = random.sample(major_arcana_deck, 3)
     question_context = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
 
-    # 확장자 대응을 위한 베이스 파일명 딕셔너리
     card_base_names = {
-        "The Fool": "The_Fool",
-        "The Magician": "The_Magician",
-        "The High Priestess": "The_High_Priestess",
-        "The Empress": "The_Empress",
-        "The Emperor": "The_Emperor",
-        "The Hierophant": "The_Hierophant",
-        "The Lovers": "The_Lovers",
-        "The Chariot": "The_Chariot",
-        "Strength": "Strength",
-        "The Hermit": "The_Hermit",
-        "Wheel of Fortune": "Wheel_of_Fortune",
-        "Justice": "Justice",
-        "The Hanged Man": "The_Hanged_Man",
-        "Death": "The_Death",
-        "Temperance": "Temperance",
-        "The Devil": "The_Devil",
-        "The Tower": "The_Tower",
-        "The Star": "The_Star",
-        "The Moon": "The_Moon",
-        "The Sun": "The_Sun",
-        "Judgement": "Judgement",
-        "The World": "The_World"
+        "The Fool": "The_Fool", "The Magician": "The_Magician", "The High Priestess": "The_High_Priestess",
+        "The Empress": "The_Empress", "The Emperor": "The_Emperor", "The Hierophant": "The_Hierophant",
+        "The Lovers": "The_Lovers", "The Chariot": "The_Chariot", "Strength": "Strength",
+        "The Hermit": "The_Hermit", "Wheel of Fortune": "Wheel_of_Fortune", "Justice": "Justice",
+        "The Hanged Man": "The_Hanged_Man", "Death": "The_Death", "Temperance": "Temperance",
+        "The Devil": "The_Devil", "The Tower": "The_Tower", "The Star": "The_Star",
+        "The Moon": "The_Moon", "The Sun": "The_Sun", "Judgement": "Judgement", "The World": "The_World"
     }
 
-    # 프롬프트에 실시간 접속 날짜를 강제 주입하여 시간 오류 완벽 차단
+    # 파싱을 위한 강제 구분자(@) 프롬프트 삽입
     prompt = f"""You are a highly skilled, blunt, and slightly cynical traditional Thai fortune teller. 
 You speak directly, offering no comforting lies. Deliver cold, hard truths based on the cosmic data. Use a tone that is piercing, mystical, and authoritative.
 
-CURRENT DATE & TIME: {current_date} (Ensure all future predictions start strictly from this specific date onwards. Do not refer to past years as the future.)
+CURRENT DATE & TIME: {current_date} (Ensure all future predictions start strictly from this specific date onwards.)
 
 USER PROFILE
 Name: {user_name}
 Origin: {birth_place}
 Birth: {birth_year}-{birth_month:02d}-{birth_day:02d} {birth_time}{question_context}
 
-ASTROLOGY API REAL-TIME DATA & MANSE-RYEOK
+ASTROLOGY & MANSE-RYEOK
 {astrology_data}
-Calculate the precise Eastern Manse-ryeok (Four Pillars) elemental dynamics based on the provided time and location.
 
 DRAWN ARCANAS
-{', '.join(drawn_keys)}
+1. {drawn_keys[0]}
+2. {drawn_keys[1]}
+3. {drawn_keys[2]}
 
-Analyze the exact astrological data provided above, the Manse-ryeok elements, and the Tarot cards. 
-Do not output raw data. Weave the exact cosmic alignments and the cards into a chillingly accurate, highly specific reading. Speak in English, reflecting the exact tone of a traditional, blunt Thai fortune teller."""
+CRITICAL FORMATTING INSTRUCTION:
+You MUST structure your response EXACTLY using the following delimiters. Do not add any text outside of these blocks.
+
+@INTRO@
+(Write the overall astrological and Manse-ryeok analysis here)
+
+@CARD_1@
+(Write the brutal interpretation for {drawn_keys[0]} here)
+
+@CARD_2@
+(Write the brutal interpretation for {drawn_keys[1]} here)
+
+@CARD_3@
+(Write the brutal interpretation for {drawn_keys[2]} here)
+
+@CONCLUSION@
+(Write the final, unvarnished advice here)
+"""
 
     try:
         response = client.models.generate_content(
@@ -243,33 +249,75 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
         )
         
         st.session_state["already_prophesied"][user_key] = count + 1
-        
-        # 로딩 텍스트 삭제
         loading_placeholder.empty()
-        
         st.success("Prophecy manifested.")
-        st.info(response.text)
-
-        # 이미지 렌더링 (.jpg 및 .png 자동 이중 탐색)
-        st.markdown("<h3 style='text-align: center; color: #1a1a2e; margin-top: 20px;'>🃏 The Drawn Arcanas</h3>", unsafe_allow_html=True)
-        cols = st.columns(3)
         
-        for i, card in enumerate(drawn_keys):
-            with cols[i]:
-                base_name = card_base_names.get(card, "")
-                img_path_jpg = f"images/{base_name}.jpg"
-                img_path_png = f"images/{base_name}.png"
+        res_text = response.text
+        
+        # 구분자를 활용한 텍스트 파싱 및 렌더링
+        if "@INTRO@" in res_text and "@CARD_1@" in res_text and "@CONCLUSION@" in res_text:
+            def extract_section(tag, next_tag, text):
+                try:
+                    return text.split(tag)[1].split(next_tag)[0].strip()
+                except:
+                    return ""
+                    
+            intro_text = extract_section("@INTRO@", "@CARD_1@", res_text)
+            card1_text = extract_section("@CARD_1@", "@CARD_2@", res_text)
+            card2_text = extract_section("@CARD_2@", "@CARD_3@", res_text)
+            card3_text = extract_section("@CARD_3@", "@CONCLUSION@", res_text)
+            conclusion_text = res_text.split("@CONCLUSION@")[1].strip() if "@CONCLUSION@" in res_text else ""
+            
+            # 1. 인트로 출력
+            st.markdown(f"<div style='background-color: #e9ecef; padding: 20px; border-radius: 5px; color: #1a1a2e; margin-bottom: 20px;'>{intro_text}</div>", unsafe_allow_html=True)
+            
+            cards_text = [card1_text, card2_text, card3_text]
+            
+            # 2. 카드 이미지와 해석 텍스트를 순차적으로 렌더링
+            for idx, card in enumerate(drawn_keys):
+                st.markdown(f"<h3 style='text-align: center; color: #1a1a2e; margin-top: 30px; margin-bottom: 15px;'>{idx+1}. {card}</h3>", unsafe_allow_html=True)
                 
-                if os.path.exists(img_path_jpg):
-                    st.image(img_path_jpg, caption=card, use_container_width=True)
-                elif os.path.exists(img_path_png):
-                    st.image(img_path_png, caption=card, use_container_width=True)
-                else:
-                    st.error(f"[{card} Image Missing]")
+                # 이미지가 화면을 다 덮지 않도록 중앙 정렬 컬럼 활용
+                c1, c2, c3 = st.columns([1, 1.5, 1])
+                with c2:
+                    base_name = card_base_names.get(card, "")
+                    img_path_jpg = f"images/{base_name}.jpg"
+                    img_path_png = f"images/{base_name}.png"
+                    
+                    if os.path.exists(img_path_jpg):
+                        st.image(img_path_jpg, use_container_width=True)
+                    elif os.path.exists(img_path_png):
+                        st.image(img_path_png, use_container_width=True)
+                    else:
+                        st.error(f"[{card} Image Missing]")
+                
+                # 카드별 예언 텍스트 출력
+                st.info(cards_text[idx])
+            
+            # 3. 결론 출력
+            st.markdown("<hr>", unsafe_allow_html=True)
+            st.warning(conclusion_text)
+            
+        else:
+            # AI가 포맷 지시를 무시했을 때를 대비한 안전망 (Fallback)
+            st.info(res_text)
+            st.markdown("<h3 style='text-align: center; color: #1a1a2e; margin-top: 20px;'>🃏 The Drawn Arcanas</h3>", unsafe_allow_html=True)
+            cols = st.columns(3)
+            for i, card in enumerate(drawn_keys):
+                with cols[i]:
+                    base_name = card_base_names.get(card, "")
+                    img_path_jpg = f"images/{base_name}.jpg"
+                    img_path_png = f"images/{base_name}.png"
+                    if os.path.exists(img_path_jpg):
+                        st.image(img_path_jpg, use_container_width=True)
+                    elif os.path.exists(img_path_png):
+                        st.image(img_path_png, use_container_width=True)
+                    else:
+                        st.error(f"[{card} Image Missing]")
 
         # 이메일 발송
         try:
-            msg = MIMEText(f"Prophecy for {user_name}:\n\n{response.text}")
+            msg = MIMEText(f"Prophecy for {user_name}:\n\n{response.text.replace('@INTRO@', '').replace('@CARD_1@', '').replace('@CARD_2@', '').replace('@CARD_3@', '').replace('@CONCLUSION@', '')}")
             msg['Subject'] = "👁️ Your Shadow Prophecy"
             msg['From'] = st.secrets["EMAIL_SENDER"]
             msg['To'] = user_email
@@ -280,7 +328,6 @@ Do not output raw data. Weave the exact cosmic alignments and the cards into a c
             st.error("Email failed.")
             
     except Exception as e:
-        # 에러 발생 시 로딩 텍스트 삭제
         loading_placeholder.empty()
         error_msg = str(e)
         if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
