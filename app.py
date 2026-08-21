@@ -321,30 +321,59 @@ You MUST structure your response EXACTLY using the following delimiters. Do not 
                     else:
                         st.error(f"[{card} Image Missing]")
 
-      # 이메일 발송
+# 이메일 발송 (HTML 포맷 및 복귀 버튼 추가)
         try:
             base_prophecy = response.text.replace('@INTRO@', '').replace('@CARD_1@', '').replace('@CARD_2@', '').replace('@CARD_3@', '').replace('@CONCLUSION@', '')
             
-            email_body = f"""Prophecy for {user_name}:
-
-{base_prophecy}
-
----
-🎧 FREQUENCY ALIGNMENT
-
-Have you faced the brutal truth? 
-The framework of your fate is now exposed. It is time to realign your shattered frequencies through cosmic geometry and forcefully attract physical wealth.
-
-Synchronize your vibration at SynchroVault.
-▶ https://www.youtube.com/@SynchroVault
-"""
-            msg = MIMEText(email_body)
-            msg['Subject'] = "Your Shadow Prophecy"
+            # 파이썬 줄바꿈(\n)을 HTML 줄바꿈(<br>)으로 변환
+            html_prophecy = base_prophecy.replace('\n', '<br>')
+            
+            # 프리미엄 다크 테마 HTML 구조 및 듀얼 버튼 세팅
+            html_body = f"""
+            <html>
+            <body style="background-color: #050505; color: #d4d4d4; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; line-height: 1.6; margin: 0;">
+                <div style="max-width: 600px; margin: 0 auto; border: 1px solid #222222; padding: 40px; background-color: #0a0a0a;">
+                    <h2 style="text-align: center; color: #ffffff; letter-spacing: 4px; border-bottom: 1px solid #333333; padding-bottom: 20px; font-weight: normal;">THE RAW TAROT</h2>
+                    <p style="font-size: 14px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Prophecy for <strong>{user_name}</strong></p>
+                    <div style="font-size: 15px; margin-top: 30px; color: #cccccc;">
+                        {html_prophecy}
+                    </div>
+                    <hr style="border: 0; border-top: 1px solid #222222; margin: 40px 0;">
+                    <div style="text-align: center;">
+                        <h3 style="color: #ffffff; letter-spacing: 2px; font-weight: normal;">🎧 FREQUENCY ALIGNMENT</h3>
+                        <p style="font-size: 13px; color: #888888; margin-bottom: 30px;">
+                            Have you faced the brutal truth?<br>
+                            The framework of your fate is now exposed.<br>It is time to realign your shattered frequencies through cosmic geometry and forcefully attract physical wealth.
+                        </p>
+                        
+                        <!-- 복귀 및 채널 이동 버튼 영역 -->
+                        <div style="margin-bottom: 15px;">
+                            <a href="https://buly.kr/3u5ctxV" style="display: inline-block; padding: 12px 24px; border: 1px solid #555555; background-color: transparent; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; width: 220px; text-align: center;">
+                                Return to Prophecy
+                            </a>
+                        </div>
+                        <div>
+                            <a href="https://www.youtube.com/@SynchroVault" style="display: inline-block; padding: 12px 24px; background-color: #ffffff; color: #000000; text-decoration: none; font-size: 12px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; width: 220px; text-align: center;">
+                                Synchronize Vibration
+                            </a>
+                        </div>
+                        
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # 두 번째 인자로 'html'을 명시하여 HTML 메일로 인식하게 만듦
+            msg = MIMEText(html_body, 'html')
+            msg['Subject'] = "👁️ Your Shadow Prophecy"
             msg['From'] = st.secrets["EMAIL_SENDER"]
             msg['To'] = user_email
+            
             with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
                 server.login(st.secrets["EMAIL_SENDER"], st.secrets["EMAIL_PASSWORD"])
                 server.send_message(msg)
+                
         except Exception as e: 
             st.error("Email failed.")
             
