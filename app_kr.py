@@ -22,7 +22,7 @@ REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke"
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_ENDPOINT, TOKEN_ENDPOINT, REVOKE_ENDPOINT)
 
-st.set_page_config(page_title="THE RAW TAROT: 그림자 예언", layout="centered", initial_sidebar_state="expanded")
+st.set_page_config(page_title="THE RAW TAROT: 그림자 자아", layout="centered", initial_sidebar_state="expanded")
 
 # 화이트 배경 및 깔끔한 가독성을 위한 커스텀 CSS
 st.markdown("""
@@ -39,16 +39,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 class='main-title'> THE RAW TAROT (그림자 예언)</h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-title'>당신의 그림자 자아를 꿰뚫어라. 심연 속에 숨겨진 잔혹한 진실을 마주할 시간이다.</p>", unsafe_allow_html=True)
+st.markdown("<p class='sub-title'>당신의 숨겨진 자아를 꿰뚫어라. 심연 속에 숨겨진 잔혹한 진실을 마주할 시간이다.</p>", unsafe_allow_html=True)
 
 # 로그인 세션 관리
 if "google_token" not in st.session_state:
-    st.markdown("### ✨ 3일 무료 통행권 발급")
-    st.markdown("빗장을 열어라. 구글로 로그인하여 당신의 **'그림자 자아 분석'**과 **단 1개의 심층 커스텀 질문** 권한을 획득하라.")
-    st.info("무료 체험을 시작하고 예언의 공간에 입장하려면 구글 로그인이 필수입니다.")
+    st.markdown("### ✨ 3일 무료권 발급")
+    st.markdown("구글 로그인으로 당신의 **'숨겨진 자아 분석'**과 **단 1개의 심층 커스텀 질문** 권한을 획득하라.")
+    st.info("무료 체험을 시작하고 비밀의 공간에 입장하려면 구글 로그인이 필수입니다.")
     
     # 샘플 티저 UI
-    st.markdown("<br><h4 style='text-align: center; color: #1a1a2e;'> 그림자 엿보기 (샘플 예언)</h4>", unsafe_allow_html=True)
+    st.markdown("<br><h4 style='text-align: center; color: #1a1a2e;'> 그림자 엿보기 (샘플 타로)</h4>", unsafe_allow_html=True)
     sample_cols = st.columns(3)
     with sample_cols[0]:
         st.image("images/The_Fool.png", caption="The Fool", use_container_width=True)
@@ -59,7 +59,7 @@ if "google_token" not in st.session_state:
         
     st.markdown("""
     <div style="background-color: #e9ecef; padding: 15px; border-left: 4px solid #1a1a2e; border-radius: 4px; color: #212529; font-style: italic; font-size: 0.95rem; margin-bottom: 25px;">
-    "당신은 부를 묻지만, 탑(The Tower) 카드는 당신의 기반이 자기 기만 위에 세워져 있음을 폭로합니다. 이 붕괴는 형벌이 아니라 환상을 부수는 필수적인 과정입니다. 악마(The Devil)는 당신을 안락함에 묶어두려 하지만, 진짜 힘을 원한다면 허공으로 몸을 던져야만 합니다..."
+    "당신은 부를 탐하지만, 탑(The Tower) 카드는 당신의 기반이 자기 기만 위에 세워져 있음을 폭로한다. 이 붕괴는 형벌이 아니라 환상을 부수는 필수적인 과정이다. 악마(The Devil)는 당신을 안락함에 묶어두려 하지만, 진짜 힘을 원한다면 허공으로 몸을 던져야만 한다..."
     </div>
     """, unsafe_allow_html=True)
 
@@ -84,11 +84,11 @@ st.sidebar.radio("플랜 선택", ["무료 체험 (활성화됨)", "Pro Oracle (
 st.sidebar.info("✨ **그랜드 오픈!** 현재 무료 체험 기간입니다.")
 st.sidebar.warning("💎 **Pro Oracle** 기능은 9월 1일에 잠금 해제됩니다.")
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 🔮 예언 모드")
+st.sidebar.markdown("### 🔮 점쟁이 모드")
 reading_mode = st.sidebar.radio("질문 테마 선택", ["1. 나는 누구인가? (그림자 자아 발견)", "2. 커스텀 예언 (심층 질문)"])
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎧 주파수 동기화")
-st.sidebar.caption("예언을 마주한 후 산산조각 난 주파수를 재정렬하십시오.")
+st.sidebar.caption("예언을 마주한 후 산산조각 난 주파수를 재정렬하세요.")
 st.sidebar.link_button("SynchroVault 접속하기", "https://www.youtube.com/@SynchroVault")
 
 if user_email:
@@ -128,7 +128,7 @@ with col2:
     birth_city = st.selectbox("출생 도시", country_city_map[birth_country])
 
 if birth_city == "기타":
-    birth_city = st.text_input("도시를 직접 입력하십시오", "")
+    birth_city = st.text_input("도시를 직접 입력하세요", "")
 
 birth_place = f"{birth_city}, {birth_country}"
 
@@ -145,20 +145,20 @@ birth_time = st.selectbox("태어난 시간", time_options)
 
 if "2." in reading_mode or "커스텀" in reading_mode:
     question_options = [
-        "지금 겪고 있는 이 끔찍한 재정적 고통은 언제쯤 끝나는가?",
-        "나의 부와 성공을 가로막고 있는 숨겨진 장애물은 무엇인가?",
+        "지금 겪고 있는 재정적 고통은 언제쯤 끝날까?",
+        "나의 부와 성공을 가로막고 있는 숨겨진 장애물은 무엇일까?",
         "현재 만나는 사람(연인/파트너)과의 관계에 숨겨진 잔혹한 진실은 무엇인가?",
-        "나는 언제쯤 이 고립을 뚫고 진짜 인연을 만날 수 있는가?",
-        "내가 현재 추진 중인 사업(혹은 커리어)은 올바른 길인가?",
-        "왜 나는 항상 똑같은 파괴적인 패턴(실수/관계)을 반복하는가?",
-        "내가 현재 필사적으로 외면하고 있는 팩트는 무엇인가?",
-        "나의 그림자 자아가 나에게 미친듯이 경고하고 싶은 것은 무엇인가?",
-        "직접 입력 (당신의 깊은 질문을 적으세요)"
+        "나는 언제쯤 진짜 인연을 만날 수 있을까?",
+        "내가 현재 추진 중인 사업(혹은 커리어)은 올바른 길일까?",
+        "왜 나는 항상 똑같은 파괴적인 패턴(실수/관계)을 반복할까?",
+        "내가 현재 필사적으로 외면하고 있는 것은 무엇인가?",
+        "나의 숨겨진 자아가 나에게 미친듯이 경고하고 싶은 것은 무엇인가?",
+        "직접 입력 (당신의 질문을 적으세요)"
     ]
     selected_query = st.selectbox("질문을 선택하거나 직접 입력하십시오", question_options)
     
-    if selected_query == "직접 입력 (당신의 깊은 질문을 적으세요)":
-        user_question = st.text_area("당신의 심층 질문", placeholder="예: 올해 새로 시작한 사업이 성공할 수 있겠습니까?")
+    if selected_query == "직접 입력 (당신의 질문을 적으세요)":
+        user_question = st.text_area("당신의 심층 질문", placeholder="예: 올해 새로 시작한 사업이 성공할 수 있을까?")
     else:
         user_question = selected_query
 else:
@@ -212,9 +212,9 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
     }
 
     # 파싱을 위한 강제 구분자(@) 프롬프트 삽입
-    prompt = f"""당신은 만세력(명리학)과 서양 타로를 결합하여 운명을 꿰뚫어보는 직설적이고 냉소적인 마스터입니다. 
+    prompt = f"""당신은 만세력(명리학), 태국점 및 서양 타로를 결합하여 운명을 꿰뚫어보는 직설적이고 냉소적인 마스터입니다. 
 어떠한 위로나 따뜻한 거짓말도 제공하지 마십시오. 오직 만세력 데이터와 타로 카드를 교차 검증하여 도출된 차갑고 잔혹한 진실만을 한국어(Korean)로 출력하십시오. 
-어조는 뼈를 때리듯 날카롭고, 신비로우며, 거부할 수 없는 권위를 가져야 합니다. 존댓말을 쓰되, 건조하고 서늘한 '~습니다', '~하십시오' 체를 사용하십시오.
+어조는 뼈를 때리듯 날카롭고, 신비로우며, 거부할 수 없는 권위를 가져야 합니다. 존댓말을 쓰되, 건조하고 서늘한 '~습니다', '~하십시오' 체를 사용하고, 중간중간 반말을 거칠게 섞어서 사용하십시오.
 
 현재 날짜 & 시간: {current_date} (모든 미래 예측은 반드시 이 날짜를 기준으로 시작하십시오.)
 
@@ -344,8 +344,8 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
                     <div style="text-align: center;">
                         <h3 style="color: #ffffff; letter-spacing: 2px; font-weight: normal;">🎧 주파수 동기화</h3>
                         <p style="font-size: 13px; color: #888888; margin-bottom: 30px;">
-                            잔혹한 진실을 마주하셨습니까?<br>
-                            당신 운명의 뼈대가 드러났습니다.<br>이제 산산조각 난 주파수를 우주적 기하학으로 재정렬하고, 물리적 부를 강력하게 끌어당길 시간입니다.
+                            잔혹한 진실과 마주하셨습니까?<br>
+                            당신 운명의 뼈대가 드러났습니다.<br>이제 산산조각 나 있는 당신의 주파수를 우주적 기하학으로 재정렬하고, 물리적 부를 강력하게 끌어당길 시간입니다.
                         </p>
                         
                         <!-- 복귀 및 채널 이동 버튼 영역 -->
@@ -368,7 +368,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
             
             # 두 번째 인자로 'html'을 명시하여 HTML 메일로 인식하게 만듦
             msg = MIMEText(html_body, 'html')
-            msg['Subject'] = "👁️ 당신의 그림자 예언이 도착했습니다"
+            msg['Subject'] = "👁️ 당신의 그림자 자아가 도착했습니다"
             msg['From'] = st.secrets["EMAIL_SENDER"]
             msg['To'] = user_email
             
@@ -383,6 +383,6 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
         loading_placeholder.empty()
         error_msg = str(e)
         if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
-            st.error("🌙 아스트랄 에너지가 고갈되었습니다. 오늘의 무료 예언(제한: 20회)이 종료되었습니다. 자정 이후 다시 방문하십시오.")
+            st.error("🌙 아스트랄 에너지가 고갈되었습니다. 오늘의 무료(제한: 20회)시간이 종료되었습니다. 자정 이후 다시 방문하십시오.")
         else:
             st.error("아스트랄 연결이 끊어졌습니다. 잠시 후 다시 시도하십시오.")
