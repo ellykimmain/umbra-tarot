@@ -88,13 +88,13 @@ st.sidebar.markdown("### 🔮 점쟁이 모드")
 reading_mode = st.sidebar.radio("질문 테마 선택", ["1. 나는 누구인가? (그림자 자아 발견)", "2. 커스텀 예언 (심층 질문)"])
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎧 주파수 동기화")
-st.sidebar.caption("예언을 마주한 후 산산조각 난 주파수를 재정렬하세요.")
+st.sidebar.caption("결과와 마주한 후 산산조각 난 주파수를 재정렬하세요.")
 st.sidebar.link_button("SynchroVault 접속하기", "https://www.youtube.com/@SynchroVault")
 
 if user_email:
     st.markdown(f"""
         <div style="background-color: #e9ecef; padding: 15px; border-radius: 8px; border: 1px solid #ced4da; color: #212529; margin-bottom: 20px;">
-            🌌 <b>환영합니다, 여행자여.</b> 예언이 발송될 이메일: <span style="color: #d97706; font-weight: bold;">{user_email}</span>
+            🌌 <b>환영합니다, 여행자여.</b> 결과가 발송될 이메일: <span style="color: #d97706; font-weight: bold;">{user_email}</span>
         </div>
     """, unsafe_allow_html=True)
 
