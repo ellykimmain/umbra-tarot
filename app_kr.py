@@ -22,7 +22,7 @@ REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke"
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_ENDPOINT, TOKEN_ENDPOINT, REVOKE_ENDPOINT)
 
-st.set_page_config(page_title="THE RAW TAROT: 그림자 자아", layout="centered", initial_sidebar_state="expanded")
+st.set_page_config(page_title="THE RAW TAROT", layout="centered", initial_sidebar_state="expanded")
 
 # 화이트 배경 및 깔끔한 가독성을 위한 커스텀 CSS
 st.markdown("""
