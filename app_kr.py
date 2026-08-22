@@ -88,13 +88,13 @@ st.sidebar.markdown("### 🔮 진단 모드")
 reading_mode = st.sidebar.radio("질문 테마 선택", ["1. 나는 누구인가? (그림자 자아 진단)", "2. 커스텀 진단 (심층 질문)"])
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎧 주파수 동기화")
-st.sidebar.caption("진단을 마주한 후 산산조각 난 주파수를 재정렬하십시오.")
+st.sidebar.caption("불안정한 주파수를 재정렬하십시오.")
 st.sidebar.link_button("SynchroVault 접속하기", "https://www.youtube.com/@SynchroVault")
 
 if user_email:
     st.markdown(f"""
         <div style="background-color: #e9ecef; padding: 15px; border-radius: 8px; border: 1px solid #ced4da; color: #212529; margin-bottom: 20px;">
-            🌌 <b>환영합니다, 여행자여.</b> 진단서가 발송될 이메일: <span style="color: #d97706; font-weight: bold;">{user_email}</span>
+            🌌 <b>환영합니다, 여행자여.</b> 결과가 발송될 이메일: <span style="color: #d97706; font-weight: bold;">{user_email}</span>
         </div>
     """, unsafe_allow_html=True)
 
@@ -216,8 +216,9 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
 어떠한 위로나 따뜻한 거짓말도 제공하지 마십시오. 오직 만세력 데이터와 타로 카드를 교차 검증하여 도출된 차갑고 잔혹한 진실만을 한국어(Korean) 무당체로 출력하십시오. 
 
 [매우 중요한 문체 지시]
-어조는 뼈를 때리듯 날카롭고, 신비로우며, 거부할 수 없는 권위를 가져야 합니다. 
-절대로 한 문단 내에서 존댓말과 반말을 섞어 쓰지 마십시오. 처음부터 끝까지 감정을 철저히 배제하고, 내담자와 거리를 두는 차갑고 건조한 무당체로만 완벽하게 일관성을 유지하십시오.
+1. 어조는 뼈를 때리듯 날카롭고, 신비로우며, 거부할 수 없는 권위를 가져야 합니다. 
+2. 절대로 한 문단 내에서 존댓말과 반말을 섞어 쓰지 마십시오. 처음부터 끝까지 감정을 철저히 배제하고, 내담자와 거리를 두는 차갑고 건조한 무당체로만 완벽하게 일관성을 유지하십시오.
+3. [금지어 규정]: '네놈', '네년', '너' 등 저급하거나 모욕적인 호칭은 절대 사용하지 마십시오. 대신 '너', '당신'라는 호칭을 사용하거나, 아예 주어를 생략하여 차갑고 압도적인 품격을 유지하십시오.
 
 현재 날짜 & 시간: {current_date} (모든 미래 예측은 반드시 이 날짜를 기준으로 시작하십시오.)
 
@@ -261,7 +262,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
         
         st.session_state["already_prophesied"][user_key] = count + 1
         loading_placeholder.empty()
-        st.success("진단이 완료되었습니다.")
+        st.success("카드를 뒤짚었습니다.")
         
         res_text = response.text
         
@@ -371,7 +372,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
             
             # 두 번째 인자로 'html'을 명시하여 HTML 메일로 인식하게 만듦
             msg = MIMEText(html_body, 'html')
-            msg['Subject'] = "당신의 그림자 진단서가 도착했습니다"
+            msg['Subject'] = "당신의 카드가 도착했습니다"
             msg['From'] = st.secrets["EMAIL_SENDER"]
             msg['To'] = user_email
             
