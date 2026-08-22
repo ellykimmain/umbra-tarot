@@ -44,7 +44,7 @@ st.markdown("<p class='sub-title'>당신의 숨겨진 자아를 꿰뚫어라. �
 # 로그인 세션 관리
 if "google_token" not in st.session_state:
     st.markdown("### ✨ 3일 무료권 발급")
-    st.markdown("구글 로그인으로 당신의 **'숨겨진 자아 분석'**과 **단 1개의 심층 커스텀 질문** 권한을 획득하라.")
+    st.markdown("구글 로그인으로 당신의 '숨겨진 자아 분석'과 단 1개의 심층 커스텀 질문 권한을 획득하세요.")
     st.info("무료 체험을 시작하고 비밀의 공간에 입장하려면 구글 로그인이 필수입니다.")
     
     # 샘플 티저 UI
