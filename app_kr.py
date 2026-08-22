@@ -157,7 +157,8 @@ if "2." in reading_mode or "커스텀" in reading_mode:
     ]
     selected_query = st.selectbox("질문을 선택하거나 직접 입력하십시오", question_options)
     
-    if selected_query == "직접 입력 (당신의 질문을 적으세요)":
+    # 💡 핵심 타격점: 조건문 텍스트를 위 리스트의 마지막 문구와 완벽하게 일치시켰다.
+    if selected_query == "직접 입력 (심층 질문 작성)":
         user_question = st.text_area("당신의 심층 질문", placeholder="예: 올해 새로 시작한 사업이 성공할 수 있을까?")
     else:
         user_question = selected_query
