@@ -22,7 +22,7 @@ REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke"
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_ENDPOINT, TOKEN_ENDPOINT, TOKEN_ENDPOINT, REVOKE_ENDPOINT)
 
-st.set_page_config(page_title="THE RAW TAROT", layout="centered", initial_sidebar_state="expanded")
+st.set_page_config(page_title="THE RAW TAROT: 그림자 진단", layout="centered", initial_sidebar_state="expanded")
 
 # 화이트 배경 및 깔끔한 가독성을 위한 커스텀 CSS
 st.markdown("""
@@ -39,16 +39,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 class='main-title'> THE RAW TAROT </h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-title'>당신의 숨겨진 자아를 꿰뚫어라. 심연 속에 숨겨진 잔혹한 진실을 마주할 시간이다.</p>", unsafe_allow_html=True)
+st.markdown("<p class='sub-title'>당신의 숨겨진 자아를 꿰뚫어라. 심연 속에 숨겨진 잔혹한 진실을 마주할 시간입니다.</p>", unsafe_allow_html=True)
 
 # 로그인 세션 관리
 if "google_token" not in st.session_state:
     st.markdown("### ✨ 3일 무료권 발급")
-    st.markdown("구글 로그인으로 당신의 '숨겨진 자아 분석'과 단 1개의 심층 커스텀 질문 권한을 획득하세요.")
-    st.info("무료 체험을 시작하고 비밀의 공간에 입장하려면 구글 로그인이 필수입니다.")
+    st.markdown("구글 로그인으로 당신의 '숨겨진 자아 진단'과 단 1개의 심층 커스텀 질문 권한을 획득하세요.")
+    st.info("무료 체험을 시작하고 진단의 방에 입장하려면 구글 로그인이 필수입니다.")
     
     # 샘플 티저 UI
-    st.markdown("<br><h4 style='text-align: center; color: #1a1a2e;'> 그림자 엿보기 (샘플 타로)</h4>", unsafe_allow_html=True)
+    st.markdown("<br><h4 style='text-align: center; color: #1a1a2e;'> 진단서 엿보기 (샘플 타로)</h4>", unsafe_allow_html=True)
     sample_cols = st.columns(3)
     with sample_cols[0]:
         st.image("images/The_Fool.png", caption="The Fool", use_container_width=True)
@@ -59,7 +59,7 @@ if "google_token" not in st.session_state:
         
     st.markdown("""
     <div style="background-color: #e9ecef; padding: 15px; border-left: 4px solid #1a1a2e; border-radius: 4px; color: #212529; font-style: italic; font-size: 0.95rem; margin-bottom: 25px;">
-    "당신은 부를 탐하지만, 탑(The Tower) 카드는 당신의 기반이 자기 기만 위에 세워져 있음을 폭로한다. 이 붕괴는 형벌이 아니라 환상을 부수는 필수적인 과정이다. 악마(The Devil)는 당신을 안락함에 묶어두려 하지만, 진짜 힘을 원한다면 허공으로 몸을 던져야만 한다..."
+    "당신은 부를 탐하지만, 탑(The Tower) 카드는 당신의 기반이 자기 기만 위에 세워져 있음을 폭로합니다. 이 붕괴는 형벌이 아니라 환상을 부수는 필수적인 과정입니다. 악마(The Devil)는 당신을 안락함에 묶어두려 하지만, 진짜 힘을 원한다면 허공으로 몸을 던져야만 합니다..."
     </div>
     """, unsafe_allow_html=True)
 
@@ -84,17 +84,17 @@ st.sidebar.radio("플랜 선택", ["무료 체험 (활성화됨)", "Pro Oracle (
 st.sidebar.info("✨ **그랜드 오픈!** 현재 무료 체험 기간입니다.")
 st.sidebar.warning("💎 **Pro Oracle** 기능은 9월 1일에 잠금 해제됩니다.")
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 🔮 점쟁이 모드")
-reading_mode = st.sidebar.radio("질문 테마 선택", ["1. 나는 누구인가? (그림자 자아 발견)", "2. 커스텀 예언 (심층 질문)"])
+st.sidebar.markdown("### 🔮 진단 모드")
+reading_mode = st.sidebar.radio("질문 테마 선택", ["1. 나는 누구인가? (그림자 자아 진단)", "2. 커스텀 진단 (심층 질문)"])
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎧 주파수 동기화")
-st.sidebar.caption("결과와 마주한 후 산산조각 난 주파수를 재정렬하세요.")
+st.sidebar.caption("진단을 마주한 후 산산조각 난 주파수를 재정렬하십시오.")
 st.sidebar.link_button("SynchroVault 접속하기", "https://www.youtube.com/@SynchroVault")
 
 if user_email:
     st.markdown(f"""
         <div style="background-color: #e9ecef; padding: 15px; border-radius: 8px; border: 1px solid #ced4da; color: #212529; margin-bottom: 20px;">
-            🌌 <b>환영합니다, 여행자여.</b> 결과가 발송될 이메일: <span style="color: #d97706; font-weight: bold;">{user_email}</span>
+            🌌 <b>환영합니다, 여행자여.</b> 진단서가 발송될 이메일: <span style="color: #d97706; font-weight: bold;">{user_email}</span>
         </div>
     """, unsafe_allow_html=True)
 
@@ -128,7 +128,7 @@ with col2:
     birth_city = st.selectbox("출생 도시", country_city_map[birth_country])
 
 if birth_city == "기타":
-    birth_city = st.text_input("도시를 직접 입력하세요", "")
+    birth_city = st.text_input("도시를 직접 입력하십시오", "")
 
 birth_place = f"{birth_city}, {birth_country}"
 
@@ -182,7 +182,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
     time.sleep(1.5)
     loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🃏 그림자 아르카나 카드 추출 중...</p>", unsafe_allow_html=True)
     time.sleep(1.5)
-    loading_placeholder.markdown("<p style='text-align: center; color: #d97706; font-size: 1.1rem; font-weight: bold;'>⚡ 잔혹한 예언을 수신하고 있습니다...</p>", unsafe_allow_html=True)
+    loading_placeholder.markdown("<p style='text-align: center; color: #d97706; font-size: 1.1rem; font-weight: bold;'>⚡ 잔혹한 진단을 수신하고 있습니다...</p>", unsafe_allow_html=True)
     time.sleep(1.5)
     
     try:
@@ -212,8 +212,8 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
     }
 
     # 파싱을 위한 강제 구분자(@) 프롬프트 삽입
-    prompt = f"""당신은 만세력(명리학), 태국점성술 및 서양 타로를 결합하여 운명을 꿰뚫어보는 직설적이고 냉소적인 마스터입니다. 
-어떠한 위로나 따뜻한 거짓말도 제공하지 마십시오. 오직 만세력 데이터와 타로 카드를 교차 검증하여 도출된 차갑고 잔혹한 진실만을 한국어(Korean)로 무당말투로 출력하십시오. 
+    prompt = f"""당신은 만세력(명리학), 태국점 및 서양 타로를 결합하여 운명을 꿰뚫어보는 직설적이고 냉소적인 마스터입니다. 
+어떠한 위로나 따뜻한 거짓말도 제공하지 마십시오. 오직 만세력 데이터와 타로 카드를 교차 검증하여 도출된 차갑고 잔혹한 진실만을 한국어(Korean) 무당체로 출력하십시오. 
 
 [매우 중요한 문체 지시]
 어조는 뼈를 때리듯 날카롭고, 신비로우며, 거부할 수 없는 권위를 가져야 합니다. 
@@ -253,8 +253,6 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
 (위선을 벗겨낸 최종적이고 가감 없는 경고와 조언을 작성하십시오)
 """
 
-"""
-
     try:
         response = client.models.generate_content(
             model="gemini-3.6-flash", 
@@ -263,7 +261,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
         
         st.session_state["already_prophesied"][user_key] = count + 1
         loading_placeholder.empty()
-        st.success("예언이 발현되었습니다.")
+        st.success("진단이 완료되었습니다.")
         
         res_text = response.text
         
@@ -304,7 +302,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
                     else:
                         st.error(f"[{card} 이미지 누락]")
                 
-                # 카드별 예언 텍스트 출력
+                # 카드별 진단 텍스트 출력
                 st.info(cards_text[idx])
             
             # 3. 결론 출력
@@ -328,7 +326,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
                     else:
                         st.error(f"[{card} 이미지 누락]")
 
-# 이메일 발송 (HTML 포맷 및 복귀 버튼 추가)
+        # 이메일 발송 (HTML 포맷 및 복귀 버튼 추가)
         try:
             base_prophecy = response.text.replace('@INTRO@', '').replace('@CARD_1@', '').replace('@CARD_2@', '').replace('@CARD_3@', '').replace('@CONCLUSION@', '')
             
@@ -340,8 +338,8 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
             <html>
             <body style="background-color: #050505; color: #d4d4d4; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; line-height: 1.6; margin: 0;">
                 <div style="max-width: 600px; margin: 0 auto; border: 1px solid #222222; padding: 40px; background-color: #0a0a0a;">
-                    <h2 style="text-align: center; color: #ffffff; letter-spacing: 4px; border-bottom: 1px solid #333333; padding-bottom: 20px; font-weight: normal;">THE RAW TAROT (그림자 예언)</h2>
-                    <p style="font-size: 14px; color: #888888; text-transform: uppercase; letter-spacing: 1px;"><strong>{user_name}</strong>님을 위한 예언 기록</p>
+                    <h2 style="text-align: center; color: #ffffff; letter-spacing: 4px; border-bottom: 1px solid #333333; padding-bottom: 20px; font-weight: normal;">THE RAW TAROT (그림자 진단)</h2>
+                    <p style="font-size: 14px; color: #888888; text-transform: uppercase; letter-spacing: 1px;"><strong>{user_name}</strong>님을 위한 진단 기록</p>
                     <div style="font-size: 15px; margin-top: 30px; color: #cccccc;">
                         {html_prophecy}
                     </div>
@@ -356,7 +354,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
                         <!-- 복귀 및 채널 이동 버튼 영역 -->
                         <div style="margin-bottom: 15px;">
                             <a href="https://buly.kr/3u5ctxV" style="display: inline-block; padding: 12px 24px; border: 1px solid #555555; background-color: transparent; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; width: 220px; text-align: center;">
-                                예언의 방으로 복귀
+                                진단의 방으로 복귀
                             </a>
                         </div>
                         <div>
@@ -373,7 +371,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
             
             # 두 번째 인자로 'html'을 명시하여 HTML 메일로 인식하게 만듦
             msg = MIMEText(html_body, 'html')
-            msg['Subject'] = "👁️ 당신의 그림자 자아가 도착했습니다"
+            msg['Subject'] = "당신의 그림자 진단서가 도착했습니다"
             msg['From'] = st.secrets["EMAIL_SENDER"]
             msg['To'] = user_email
             
