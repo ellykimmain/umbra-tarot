@@ -38,7 +38,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 class='main-title'> THE RAW TAROT (그림자 예언)</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='main-title'> THE RAW TAROT </h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-title'>당신의 숨겨진 자아를 꿰뚫어라. 심연 속에 숨겨진 잔혹한 진실을 마주할 시간이다.</p>", unsafe_allow_html=True)
 
 # 로그인 세션 관리
