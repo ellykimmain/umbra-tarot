@@ -59,7 +59,7 @@ if "google_token" not in st.session_state:
         
     st.markdown("""
     <div style="background-color: #e9ecef; padding: 15px; border-left: 4px solid #1a1a2e; border-radius: 4px; color: #212529; font-style: italic; font-size: 0.95rem; margin-bottom: 25px;">
-    "당신은 부를 탐하지만, 탑(The Tower) 카드는 당신의 기반이 자기 기만 위에 세워져 있음을 폭로합니다. 이 붕괴는 형벌이 아니라 환상을 부수는 필수적인 과정입니다. 악마(The Devil)는 당신을 안락함에 묶어두려 하지만, 진짜 힘을 원한다면 허공으로 몸을 던져야만 합니다..."
+    "당신은 재물과 안정을 묻고 있으나, 탑(The Tower) 카드는 당신의 기반이 지독한 자기 기만 위에 세워져 있음을 폭로하느라. 다가오는 붕괴는 형벌이 아니라 허상을 박살내는 필수적인 정화의 과정이다. 악마(The Devil) 카드는 당신을 알량한 안락함과 변명 속에 묶어두려 하니, 진정한 통제권을 쥐고 싶다면 썩어가는 동아줄을 놓고 미련 없이 허공으로 몸을 던져라..."
     </div>
     """, unsafe_allow_html=True)
 
