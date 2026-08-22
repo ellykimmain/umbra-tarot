@@ -39,12 +39,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 class='main-title'> THE RAW TAROT </h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-title'>당신의 숨겨진 자아를 꿰뚫어라. 심연 속에 숨겨진 잔혹한 진실을 마주할 시간입니다.</p>", unsafe_allow_html=True)
+st.markdown("<p class='sub-title'>당신의 숨겨진 그림자 자아를 직시하십시오. 잔혹한 진실을 마주할 시간입니다.</p>", unsafe_allow_html=True)
 
 # 로그인 세션 관리
 if "google_token" not in st.session_state:
-    st.markdown("### ✨ 3일 무료권 발급")
-    st.markdown("구글 로그인으로 당신의 '숨겨진 자아 진단'과 단 1개의 심층 커스텀 질문 권한을 획득하세요.")
+    st.markdown("### ✨ 3일 무료 통행권 발급")
+    st.markdown("구글 로그인으로 당신의 '숨겨진 그림자 자아 진단'과 1개의 심층 커스텀 질문 권한을 획득하십시오.")
     st.info("무료 체험을 시작하고 진단의 방에 입장하려면 구글 로그인이 필수입니다.")
     
     # 샘플 티저 UI
@@ -152,12 +152,11 @@ if "2." in reading_mode or "커스텀" in reading_mode:
         "현재 사업(커리어)은 올바른 길인가?",
         "반복되는 파괴적 패턴의 진짜 이유",
         "내가 필사적으로 외면하고 있는 진실",
-        "하늘이 나에게 보내는 경고는?",
+        "내 그림자 자아의 미친듯한 경고",
         "직접 입력 (심층 질문 작성)"
     ]
     selected_query = st.selectbox("질문을 선택하거나 직접 입력하십시오", question_options)
     
-    # 💡 핵심 타격점: 조건문 텍스트를 위 리스트의 마지막 문구와 완벽하게 일치시켰다.
     if selected_query == "직접 입력 (심층 질문 작성)":
         user_question = st.text_area("당신의 심층 질문", placeholder="예: 올해 새로 시작한 사업이 성공할 수 있을까?")
     else:
@@ -181,9 +180,9 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
     time.sleep(1.5)
     loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🔮 우주적 배열 및 만세력 데이터 교차 검증 중...</p>", unsafe_allow_html=True)
     time.sleep(1.5)
-    loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🃏 그림자 아르카나 카드 추출 중...</p>", unsafe_allow_html=True)
+    loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🃏 4장의 그림자 아르카나 카드 추출 중...</p>", unsafe_allow_html=True)
     time.sleep(1.5)
-    loading_placeholder.markdown("<p style='text-align: center; color: #d97706; font-size: 1.1rem; font-weight: bold;'>⚡ 잔혹한 진단을 수신하고 있습니다...</p>", unsafe_allow_html=True)
+    loading_placeholder.markdown("<p style='text-align: center; color: #d97706; font-size: 1.1rem; font-weight: bold;'>⚡ 잔혹한 진단과 구원의 열쇠를 수신하고 있습니다...</p>", unsafe_allow_html=True)
     time.sleep(1.5)
     
     try:
@@ -199,7 +198,8 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
         "Judgement", "The World"
     ]
 
-    drawn_keys = random.sample(major_arcana_deck, 3)
+    # 💡 4장의 카드를 뽑도록 수정됨
+    drawn_keys = random.sample(major_arcana_deck, 4)
     question_context = f"\n[내담자의 심층 질문]: {user_question}" if user_question else ""
 
     card_base_names = {
@@ -212,14 +212,14 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
         "The Moon": "The_Moon", "The Sun": "The_Sun", "Judgement": "Judgement", "The World": "The_World"
     }
 
-    # 파싱을 위한 강제 구분자(@) 프롬프트 삽입
-    prompt = f"""당신은 만세력(명리학), 태국점 및 서양 타로를 결합하여 운명을 꿰뚫어보는 직설적이고 냉소적인 마스터입니다. 
-어떠한 위로나 따뜻한 거짓말도 제공하지 마십시오. 오직 만세력 데이터와 타로 카드를 교차 검증하여 도출된 차갑고 잔혹한 진실만을 한국어(Korean) 무당체로 출력하십시오. 
+    # 파싱을 위한 강제 구분자(@) 프롬프트 삽입 (4번째 구원 카드 추가)
+    prompt = f"""당신은 만세력(명리학), 태국점성술(호라삿, โหราศาสตร์) 및 서양 타로를 결합하여 운명을 꿰뚫어보는 무자비하고 압도적인 마스터입니다. 
+어떠한 헛된 위로나 따뜻한 거짓말도 제공하지 마십시오. 오직 만세력 데이터와 타로 카드를 교차 검증하여 도출된 차갑고 잔혹한 진실만을 한국어(Korean)로 출력하십시오. 
 
-[매우 중요한 문체 지시]
-1. 어조는 뼈를 때리듯 날카롭고, 신비로우며, 거부할 수 없는 권위를 가져야 합니다. 
-2. 절대로 한 문단 내에서 존댓말과 반말을 섞어 쓰지 마십시오. 처음부터 끝까지 감정을 철저히 배제하고, 내담자와 거리를 두는 차갑고 건조한 무당체로만 완벽하게 일관성을 유지하십시오.
-3. [금지어 규정]: '네놈', '네년', '너' 등 저급하거나 모욕적인 호칭은 절대 사용하지 마십시오. 대신 '너', '당신'라는 호칭을 사용하거나, 아예 주어를 생략하여 차갑고 압도적인 품격을 유지하십시오.
+[매우 중요한 문체 및 호칭 지시]
+1. 어조는 뼈를 때리듯 날카롭고, 신비로우며, 거부할 수 없는 압도적인 무당(도사)의 권위를 가져야 합니다. 
+2. 말투는 반드시 '~다', '~어라(마라)', '~느라(느니라)' 등의 단호하고 거친 종결어미로 완벽하게 통일하십시오. 절대 '~습니다', '~해요' 같은 부드러운 존댓말을 쓰지 마십시오.
+3. [금지어 규정]: '네놈', '네년'등 저급하거나 모욕적인 호칭은 절대 사용하지 마십시오. 대신 '당신' 혹은 '너' 라는 호칭을 사용하거나 주어를 생략하여, 거칠지만 차갑고 묵직한 품격을 유지하십시오.
 
 현재 날짜 & 시간: {current_date} (모든 미래 예측은 반드시 이 날짜를 기준으로 시작하십시오.)
 
@@ -232,9 +232,10 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
 {astrology_data}
 
 [뽑힌 그림자 아르카나]
-1. {drawn_keys[0]}
-2. {drawn_keys[1]}
-3. {drawn_keys[2]}
+1. (잔혹한 현실): {drawn_keys[0]}
+2. (외면한 진실): {drawn_keys[1]}
+3. (파괴적 결과): {drawn_keys[2]}
+4. [구원의 열쇠 (해결책)]: {drawn_keys[3]}
 
 [중요한 포맷 지시사항]
 반드시 아래의 구분자를 정확히 사용하여 답변을 구조화하십시오. 이 블록 밖에는 어떠한 텍스트도 추가하지 마십시오.
@@ -251,8 +252,11 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
 @CARD_3@
 ({drawn_keys[2]} 카드에 대한 잔혹하고 뼈아픈 해석을 작성하십시오)
 
+@CARD_4@
+({drawn_keys[3]} 카드를 기반으로, 이 파멸적인 상황을 뚫고 나가기 위해 내담자가 정확히 무엇을 버리고 어떻게 행동해야 하는지 '조건부 희망과 구체적 해결책'을 제시하십시오. "이렇게 행동한다면 살길이 열릴 것이다"라는 식으로 구원의 문을 열어주어라.)
+
 @CONCLUSION@
-(위선을 벗겨낸 최종적이고 가감 없는 경고와 조언을 작성하십시오)
+(4장의 카드를 종합하여, 뼈를 때리는 마지막 경고와 함께 최종적인 팩트를 요약하여 던지십시오.)
 """
 
     try:
@@ -263,11 +267,11 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
         
         st.session_state["already_prophesied"][user_key] = count + 1
         loading_placeholder.empty()
-        st.success("카드를 뒤짚었습니다.")
+        st.success("카드가 열렸습니다.")
         
         res_text = response.text
         
-        # 구분자를 활용한 텍스트 파싱 및 렌더링
+        # 구분자를 활용한 텍스트 파싱 및 렌더링 (4번째 카드 추가)
         if "@INTRO@" in res_text and "@CARD_1@" in res_text and "@CONCLUSION@" in res_text:
             def extract_section(tag, next_tag, text):
                 try:
@@ -278,17 +282,22 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
             intro_text = extract_section("@INTRO@", "@CARD_1@", res_text)
             card1_text = extract_section("@CARD_1@", "@CARD_2@", res_text)
             card2_text = extract_section("@CARD_2@", "@CARD_3@", res_text)
-            card3_text = extract_section("@CARD_3@", "@CONCLUSION@", res_text)
+            card3_text = extract_section("@CARD_3@", "@CARD_4@", res_text)
+            card4_text = extract_section("@CARD_4@", "@CONCLUSION@", res_text)
             conclusion_text = res_text.split("@CONCLUSION@")[1].strip() if "@CONCLUSION@" in res_text else ""
             
             # 1. 인트로 출력
             st.markdown(f"<div style='background-color: #e9ecef; padding: 20px; border-radius: 5px; color: #1a1a2e; margin-bottom: 20px;'>{intro_text}</div>", unsafe_allow_html=True)
             
-            cards_text = [card1_text, card2_text, card3_text]
+            cards_text = [card1_text, card2_text, card3_text, card4_text]
             
             # 2. 카드 이미지와 해석 텍스트를 순차적으로 렌더링
             for idx, card in enumerate(drawn_keys):
-                st.markdown(f"<h3 style='text-align: center; color: #1a1a2e; margin-top: 30px; margin-bottom: 15px;'>{idx+1}. {card}</h3>", unsafe_allow_html=True)
+                # 💡 4번째 카드는 '구원의 열쇠'로 특별하게 시각적 강조
+                if idx == 3:
+                    st.markdown(f"<h3 style='text-align: center; color: #d97706; margin-top: 40px; margin-bottom: 15px;'>🌟 4. 구원의 열쇠 ({card})</h3>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<h3 style='text-align: center; color: #1a1a2e; margin-top: 30px; margin-bottom: 15px;'>{idx+1}. {card}</h3>", unsafe_allow_html=True)
                 
                 # 이미지가 화면을 다 덮지 않도록 중앙 정렬 컬럼 활용
                 c1, c2, c3 = st.columns([1, 1.5, 1])
@@ -315,7 +324,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
             # AI가 포맷 지시를 무시했을 때를 대비한 안전망 (Fallback)
             st.info(res_text)
             st.markdown("<h3 style='text-align: center; color: #1a1a2e; margin-top: 20px;'>🃏 뽑힌 아르카나 카드</h3>", unsafe_allow_html=True)
-            cols = st.columns(3)
+            cols = st.columns(4)
             for i, card in enumerate(drawn_keys):
                 with cols[i]:
                     base_name = card_base_names.get(card, "")
@@ -330,7 +339,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
 
         # 이메일 발송 (HTML 포맷 및 복귀 버튼 추가)
         try:
-            base_prophecy = response.text.replace('@INTRO@', '').replace('@CARD_1@', '').replace('@CARD_2@', '').replace('@CARD_3@', '').replace('@CONCLUSION@', '')
+            base_prophecy = response.text.replace('@INTRO@', '').replace('@CARD_1@', '').replace('@CARD_2@', '').replace('@CARD_3@', '').replace('@CARD_4@', '').replace('@CONCLUSION@', '')
             
             # 파이썬 줄바꿈(\n)을 HTML 줄바꿈(<br>)으로 변환
             html_prophecy = base_prophecy.replace('\n', '<br>')
@@ -349,7 +358,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
                     <div style="text-align: center;">
                         <h3 style="color: #ffffff; letter-spacing: 2px; font-weight: normal;">🎧 주파수 동기화</h3>
                         <p style="font-size: 13px; color: #888888; margin-bottom: 30px;">
-                            잔혹한 진실과 마주하셨습니까?<br>
+                            잔혹한 진실과 구원의 열쇠를 마주하셨습니까?<br>
                             당신 운명의 뼈대가 드러났습니다.<br>이제 산산조각 나 있는 당신의 주파수를 우주적 기하학으로 재정렬하고, 물리적 부를 강력하게 끌어당길 시간입니다.
                         </p>
                         
