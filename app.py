@@ -384,7 +384,7 @@ if st.button("Consult the Oracle & Draw Cards"):
     )
 
     # 카드 드로우
-    drawn_keys    = random.sample(MAJOR_ARCANA, 3)
+    drawn_keys    = random.sample(MAJOR_ARCANA, 4)
     current_date  = datetime.now().strftime("%Y-%m-%d")
     question_ctx  = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
 
