@@ -249,7 +249,8 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
 
     card_base_names = {k: k.replace(" ", "_") for k in major_arcana_deck}
     card_base_names["Wheel of Fortune"] = "Wheel_of_Fortune" # 예외 처리
-
+    card_base_names["Death"] = "The_Death" # 💡 여기에 예외 처리를 하나 더 추가해라.
+    
     prompt = f"""당신은 만세력(명리학), 수리학, 태국점성술(호라삿, โหราศาสตร์) 및 서양 타로를 결합하여 운명을 꿰뚫어보는 무자비하고 압도적인 마스터입니다. 
 어떠한 헛된 위로나 따뜻한 거짓말도 제공하지 마십시오. 오직 만세력 데이터와 타로 카드를 교차 검증하여 도출된 차갑고 잔혹한 진실만을 한국어(Korean)로 출력하십시오. 
 
