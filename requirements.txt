@@ -2,3 +2,5 @@ streamlit
 google-genai>=1.0.0
 streamlit-oauth
 requests
+sxtwl
+py-iztro
