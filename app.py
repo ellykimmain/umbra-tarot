@@ -213,6 +213,15 @@ st.markdown("<p class='sub-title'>Pierce the veil of your shadow self. Unearth t
 # ── Google 로그인 ───────────────────────────────────────────────────────────
 if "google_token" not in st.session_state:
     st.markdown("### ✨ Claim Your 3-Day Free Trial")
+
+    # 💡 [경고 문구 추가]
+    st.error("""
+    **⚠️ WARNING : ENTER AT YOUR OWN RISK**  
+    This oracle does not provide comfort, false hope, or gentle healing.  
+    It is designed to tear down your illusions and deliver brutal, unvarnished cosmic truths.  
+    If you are emotionally fragile or seeking sweet lies, **DO NOT PROCEED**.
+    """)
+    
     st.markdown("Unlock the gates. Sign in now to receive your **complimentary 'Who Am I' shadow reading** and **1 deep custom query**.")
     st.info("Google Login is required to begin your free trial and enter the astral realm.")
 
