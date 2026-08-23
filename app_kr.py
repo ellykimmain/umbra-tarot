@@ -304,7 +304,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
             contents=prompt
         )
         
-        st.session_state["already_prophesied"][user_key] = count + 1
+        st.session_state["already_prophesied"][user_key] = 1
         loading_placeholder.empty()
         st.success("카드가 열렸습니다.")
         
