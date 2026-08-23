@@ -430,7 +430,7 @@ Structure your response EXACTLY using the delimiters below. No text outside thes
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash",   # ✅ 수정된 모델명
+            model="gemini-3.6-flash",   # ✅ 수정된 모델명
             contents=prompt
         )
         st.session_state["prophesied"][today_key] = 1
