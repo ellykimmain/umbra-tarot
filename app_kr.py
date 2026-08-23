@@ -413,4 +413,5 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
         if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
             st.error("🌙 아스트랄 에너지가 고갈되었습니다. 오늘의 무료 시간이 종료되었습니다. 자정 이후 다시 방문하십시오.")
         else:
-            st.error("아스트랄 연결이 끊어졌습니다. 잠시 후 다시 시도하십시오.")
+            # 💡 아래 줄을 수정하여 실제 에러 원인을 화면에 출력하도록 만든다.
+            st.error(f"아스트랄 연결이 끊어졌습니다. 상세 에러: {error_msg}")
