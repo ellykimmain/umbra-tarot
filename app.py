@@ -424,6 +424,9 @@ Structure your response EXACTLY using the delimiters below. No text outside thes
 @CARD_3@
 (Interpretation for {drawn_keys[2]} — 4-6 sentences, no mercy)
 
+@CARD_4@
+(Based on {drawn_keys[3]}, provide the 'Conditional Hope & Specific Solution'. Tell them EXACTLY what they must discard and how they must act in the real world to survive this ruin. Deliver it coldly but with a clear path out.)
+
 @CONCLUSION@
 (Final unvarnished advice — 3-4 sentences)
 """
@@ -445,20 +448,30 @@ Structure your response EXACTLY using the delimiters below. No text outside thes
             except Exception:
                 return ""
 
+        # 💡 [핵심 수정] 4번째 카드(CARD_4) 파싱 및 렌더링 추가
         if "@INTRO@" in res_text and "@CARD_1@" in res_text and "@CONCLUSION@" in res_text:
             intro_text      = extract("@INTRO@",      "@CARD_1@",      res_text)
             card1_text      = extract("@CARD_1@",     "@CARD_2@",      res_text)
             card2_text      = extract("@CARD_2@",     "@CARD_3@",      res_text)
-            card3_text      = extract("@CARD_3@",     "@CONCLUSION@",  res_text)
+            card3_text      = extract("@CARD_3@",     "@CARD_4@",      res_text)
+            card4_text      = extract("@CARD_4@",     "@CONCLUSION@",  res_text)
             conclusion_text = res_text.split("@CONCLUSION@")[1].strip() if "@CONCLUSION@" in res_text else ""
 
             st.markdown(f"""<div style='background-color:#e9ecef;padding:20px;
                             border-radius:5px;color:#1a1a2e;margin-bottom:20px;'>
                             {intro_text}</div>""", unsafe_allow_html=True)
 
-            for idx, (card, card_text) in enumerate(zip(drawn_keys, [card1_text, card2_text, card3_text])):
-                st.markdown(f"<h3 style='text-align:center;color:#1a1a2e;margin-top:30px;'>{idx+1}. {card}</h3>",
-                            unsafe_allow_html=True)
+            cards_text = [card1_text, card2_text, card3_text, card4_text]
+
+            for idx, (card, card_text) in enumerate(zip(drawn_keys, cards_text)):
+                # 4번째 카드는 구원의 열쇠로 오렌지색 렌더링
+                if idx == 3:
+                    st.markdown(f"<h3 style='text-align:center;color:#d97706;margin-top:40px;'>🌟 4. The Key ({card})</h3>",
+                                unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<h3 style='text-align:center;color:#1a1a2e;margin-top:30px;'>{idx+1}. {card}</h3>",
+                                unsafe_allow_html=True)
+                
                 c1, c2, c3 = st.columns([1, 1.5, 1])
                 with c2:
                     base = CARD_FILES.get(card, "")
@@ -477,7 +490,7 @@ Structure your response EXACTLY using the delimiters below. No text outside thes
             st.warning(conclusion_text)
         else:
             st.info(res_text)
-            cols = st.columns(3)
+            cols = st.columns(4)
             for i, card in enumerate(drawn_keys):
                 with cols[i]:
                     base = CARD_FILES.get(card, "")
