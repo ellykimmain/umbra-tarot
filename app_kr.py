@@ -104,7 +104,7 @@ st.markdown("<p class='sub-title'>당신의 숨겨진 그림자 자아를 직시
 
 # ── 구글 로그인 및 강력한 경고문 ───────────────────────────────────────────────
 if "google_token" not in st.session_state:
-    st.markdown("### ✨ 3일 무료 통행권 발급")
+    st.markdown("### ✨ 오픈 이벤트! 3일 무료 ")
     
     # 💡 핏빛 경고문 추가
     st.error("""
