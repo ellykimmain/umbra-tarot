@@ -1336,48 +1336,79 @@ if selected_product_id == "FREE":
                     int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
                 )
                 
-                initial_prompt = f"""
-                당신은 THE RAW TAROT의 수석 분석가다. 보안 채널을 통해 내담자의 명식을 분석한다.
+                # 💡 단계별 순차 출력을 위한 프롬프트 분할 정의
+                steps = [
+                    ("사주 명식의 구조를 해부하는 중...", f"""
+                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
+                    [점술 데이터] {astrology_data}
+                    [상담 주제] {user_question}
+                    [지시] 사주 명식의 관점에서 내담자의 핵심 기질과 돈줄의 흐름을 딱 2줄로 서늘하게 요약하라. 한문이나 전문 용어는 배제할 것.
+                    """),
+                    ("운명의 타로 카드 4장을 뒤집는 중...", f"""
+                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
+                    [점술 데이터] {astrology_data}
+                    [상담 주제] {user_question}
+                    [지시] 타로 카드가 드러내는 현재의 숨겨진 함정과 그림자를 딱 2줄로 압축하여 타격하라.
+                    """),
+                    ("베딕 점성술의 행성 배치를 대조하는 중...", f"""
+                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
+                    [점술 데이터] {astrology_data}
+                    [상담 주제] {user_question}
+                    [지시] 베딕 점성술의 행성 궤도에서 드러나는 거대한 흐름과 피해야 할 위기를 딱 2줄로 서늘하게 진단하라.
+                    """),
+                    ("자미두수 및 수비학 코드를 교차 검증하는 중...", f"""
+                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
+                    [점술 데이터] {astrology_data}
+                    [상담 주제] {user_question}
+                    [지시] 자미두수와 수비학 숫자가 가리키는 현실적 돌파구와 행동 원칙을 딱 2줄로 짚어라.
+                    """),
+                    ("오라클의 최종 종합 선언을 조립하는 중...", f"""
+                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
+                    [점술 데이터] {astrology_data}
+                    [상담 주제] {user_question}
+                    [지시] 앞선 모든 데이터를 종합하여, 내담자가 나아갈 단 하나의 현실적 비즈니스 방향과 전략을 딱 4줄로 묵직하게 선언하라. 마지막 문장은 반드시 방위(예: 북서쪽), 특정 띠, 성씨 등의 디테일을 포함한 단호한 선언으로 마무리하고 절대 물음표로 끝내지 마라.
+                    """)
+                ]
+
+                # 터미널 박스를 미리 띄우고 순차적으로 채워나감
+                full_reply = ""
                 
-                [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-                [점술 데이터] {astrology_data}
-                [상담 주제] {user_question}
+                terminal_placeholder = st.empty()
 
-                [절대 철칙 및 언어 순화 가이드]
-                1. **한문, 사주 명식 용어(예: 丁巳, 癸酉, 편관, 겁재, 壬寅 등), 복잡한 점성술 전문 용어는 단 한 글자도 쓰지 마라.** 유저가 한자 사전을 찾지 않아도 단번에 이해할 수 있도록 100% 현대적이고 직관적인 비즈니스 언어로만 풀어내라.
-                2. 분석의 근거는 사주·베딕·자미두수에서 가져오되, 표현은 "당신의 기질은~", "타고난 데이터는~", "시장의 흐름은~" 같은 세련된 언어로 변환하라.
-                3. 돈을 벌어야 하는 방향과 방법, 피해야 할 점을 서늘하고 지적인 톤으로 압축해서 전달하라.
-                4. [중요] 절대 물음표(?)로 끝내지 마라. 문장은 명식의 디테일(방위, 특정 띠, 성씨 등)을 언급하며 단호하고 무게감 있는 선언으로 마무리하라.
-                """
-
-                # 💡 [복구] API 호출 대기 시간 동안 빙글빙글 돌아가는 스피너와 안내 문구를 띄워 멈춘 느낌을 완벽히 해소
                 try:
-                    with st.spinner("🌌 사주·베딕·자미두수 데이터를 교차 검증하며 오라클 채널을 조율 중입니다..."):
-                        response_stream = client.models.generate_content_stream(
+                    for loading_msg, prompt_text in steps:
+                        # 각 단계별 로딩 스피너 느낌을 주는 UI 업데이트
+                        terminal_placeholder.markdown(f"""
+                        <div class="luxury-terminal">
+                            <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE · SYSTEM RUNNING ]</div>
+                            <div style="color:#94a3b8; font-style:italic; margin-bottom:10px;">⚡ {loading_msg}</div>
+                            <div style="line-height:1.8; opacity: 0.6;">{full_reply.replace(chr(10), '<br>')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        time.sleep(0.8) # 딜레이를 주어 긴장감 조성
+
+                        # 모델 호출
+                        response = client.models.generate_content(
                             model="gemini-3.6-flash",
-                            contents=initial_prompt,
+                            contents=prompt_text,
                         )
                         
-                        full_reply = ""
-                        # 데이터가 들어오는 순간 빈 박스 대신 실시간 타이핑 효과 출력
-                        placeholder = st.empty()
-                        for chunk in response_stream:
-                            if chunk.text:
-                                full_reply += chunk.text
-                                placeholder.markdown(f"""
-                                <div class="luxury-terminal">
-                                    <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>
-                                    <div style="line-height:1.8;">{full_reply.replace(chr(10), '<br>') + '▌'}</div>
-                                </div>
-                                """, unsafe_allow_html=True)
-                        
-                        # 완성된 최종 텍스트 렌더링
-                        placeholder.markdown(f"""
+                        step_result = response.text.strip()
+                        if full_reply:
+                            full_reply += "\n\n" + step_result
+                        else:
+                            full_reply = step_result
+
+                        # 결과 실시간 갱신
+                        terminal_placeholder.markdown(f"""
                         <div class="luxury-terminal">
                             <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>
                             <div style="line-height:1.8;">{full_reply.replace(chr(10), '<br>')}</div>
                         </div>
                         """, unsafe_allow_html=True)
+                        
+                        time.sleep(0.5)
 
                     st.session_state["chat_messages"] = [{"role": "assistant", "content": full_reply}]
                     st.session_state["chat_initialized"] = True
@@ -1390,8 +1421,8 @@ if selected_product_id == "FREE":
                 <div class="luxury-terminal" style="text-align:center; padding: 30px;">
                     <div style="color:#d4af37; font-size:1.1rem; margin-bottom:10px;">SECURE CHANNEL READY</div>
                     <div style="color:#94a3b8; font-size:0.9rem; line-height:1.7;">
-                        입력된 프로필과 질문을 바탕으로 오라클과의 단 한 번의 정밀 분석 세션을 엽니다.<br>
-                        사주, 베딕, 자미두수의 교차 검증 결과가 타자기 형식으로 출력됩니다.
+                        입력된 프로필과 질문을 바탕으로 오라클의 4단계 정밀 교차 검증 세션을 엽니다.<br>
+                        사주, 타로, 베딕, 자미두수의 데이터가 순차적으로 해부되어 출력됩니다.
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
