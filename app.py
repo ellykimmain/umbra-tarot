@@ -242,7 +242,7 @@ def build_astrology_block(year, month, day, hour_str, birth_place, gender):
     if not lines:
         lines.append("Cosmic calculation unavailable — reading based on birth data only.")
 
-    return "\n".join(lines))
+    return "\n".join(lines)
 
 # ── Streamlit 시크릿 로드 ───────────────────────────────────────────────────
 api_key       = st.secrets["GEMINI_API_KEY"]
