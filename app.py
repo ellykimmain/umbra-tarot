@@ -351,7 +351,7 @@ user_email = st.session_state["user_email"]
 st.sidebar.markdown("### 🪐 Membership Tiers")
 st.sidebar.radio("Select Your Plan", ["Free Trial (Active)", "Pro Oracle (Available Sept 20th)"], index=0, disabled=True)
 st.sidebar.info("✨ **Grand Opening!** Currently in Free Trial Period.")
-st.sidebar.warning("💎 **Pro Oracle** features will unlock on September 1st.")
+st.sidebar.warning("💎 **Pro Oracle** features will unlock on September 20st.")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔮 Oracle Mode")
 reading_mode = st.sidebar.radio(
@@ -479,8 +479,8 @@ if st.button("Consult the Oracle & Draw Cards"):
     question_ctx  = f"\nUSER'S DEEP QUERY: {user_question}" if user_question else ""
 
     prompt = f"""You are a highly skilled, blunt, and slightly cynical traditional Thai fortune teller.
-You speak directly, offering no comforting lies. Deliver cold, hard truths based on the cosmic data.
-Use a tone that is piercing, mystical, and authoritative.
+You speak directly, offering no comforting lies, yet you NEVER end in despair. Deliver cold, hard truths based on the cosmic data, but ALWAYS provide a calculated, positive breakthrough and concrete survival strategies.
+Use a tone that is piercing, mystical, and authoritative, acting as a stern but deeply empowering mentor.
 
 [CRITICAL INSTRUCTION]
 You MUST read the provided [Vedic Astrology (Jyotisha)] data. Cross-reference the client's karmic traits and planetary positions with their BaZi/Ziwei data, and include this analysis in at least one sentence in your response.
@@ -498,31 +498,31 @@ COSMIC CALCULATIONS (BaZi · Purple Star Astrology · Vedic · Numerology)
 {astrology_data}
 
 DRAWN ARCANAS
-1. {drawn_keys[0]}
-2. {drawn_keys[1]}
-3. {drawn_keys[2]}
-4. {drawn_keys[3]}
+1. (Current Situation): {drawn_keys[0]}
+2. (Obstacle/Harsh Truth): {drawn_keys[1]}
+3. (Hidden Strength/Opportunity): {drawn_keys[2]}
+4. (The Key/Solution): {drawn_keys[3]}
 
 CRITICAL FORMATTING INSTRUCTION:
 Structure your response EXACTLY using the delimiters below. No text outside these blocks.
 
 @INTRO@
-(Overall cosmic/BaZi/Ziwei analysis — 3-4 sentences, brutally honest)
+(Analyze the current situation and face the harsh reality using BaZi, Ziwei, and Vedic data. Brutally honest but objective — 3-4 sentences)
 
 @CARD_1@
-(Interpretation for {drawn_keys[0]} — 4-6 sentences, no mercy)
+(Objective analysis of the current problem and crisis reflected in {drawn_keys[0]} — 4-5 sentences)
 
 @CARD_2@
-(Interpretation for {drawn_keys[1]} — 4-6 sentences, no mercy)
+(Point out the obstacles or the painful truth the client is avoiding, based on {drawn_keys[1]} — 4-5 sentences)
 
 @CARD_3@
-(Interpretation for {drawn_keys[2]} — 4-6 sentences, no mercy)
+(MANDATORY POSITIVITY: Find and highlight the client's unique hidden strengths, positive cosmic energy, and opportunity for a turnaround based on {drawn_keys[2]}. Do not just criticize; show them their hidden weapon — 4-5 sentences)
 
 @CARD_4@
-(Based on {drawn_keys[3]}, provide the 'Conditional Hope & Specific Solution'. Tell them EXACTLY what they must discard and how they must act in the real world to survive this ruin. Deliver it coldly but with a clear path out.)
+(Based on {drawn_keys[3]}, use the positive energy identified in Card 3 as a lever to provide a realistic, concrete, and highly actionable solution they can execute TODAY. Open the door to a calculated hope and salvation — 4-5 sentences)
 
 @CONCLUSION@
-(Final unvarnished advice — 3-4 sentences)
+(Summarize the combined cosmic data and cards, leaving them with powerful, firm, and positively empowering behavioral guidelines to take immediate action — 10-11 sentences)
 """
 
     try:
