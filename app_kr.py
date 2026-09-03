@@ -1433,6 +1433,7 @@ if selected_product_id == "FREE":
                 if st.button(">> RESET SESSION (새로 시작)"):
                     st.session_state["chat_messages"] = []
                     st.session_state["chat_initialized"] = False
+                    # 💡 세션 상태를 깔끔하게 비우고 새로고침 유도
                     st.rerun()
 
     # 2. 기존 무료 SHADOW READING 모드
