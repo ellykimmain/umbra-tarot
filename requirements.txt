@@ -4,3 +4,4 @@ streamlit-oauth
 requests
 sxtwl
 jyotishganit
+supabase
