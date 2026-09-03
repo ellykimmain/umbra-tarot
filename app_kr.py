@@ -286,6 +286,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
     
     # 💡 동적 만세력/수리학 데이터 생성
     astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
+    st.info(astrology_data)
 
     major_arcana_deck = [
         "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor", 
