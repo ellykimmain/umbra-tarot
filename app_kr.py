@@ -54,8 +54,11 @@ except ImportError:
     VEDIC_AVAILABLE = False
 
 def get_vedic_data(year, month, day, hour_str, city_name):
-    if not VEDIC_AVAILABLE or city_name not in CITY_COORDS:
-        return ""
+    if not VEDIC_AVAILABLE:
+        return "\n[베딕 오류: 라이브러리 인식 불가. requirements.txt 수정 후 Streamlit Cloud에서 'Reboot app'을 실행해야 설치됩니다.]"
+    
+    if city_name not in CITY_COORDS:
+        return f"\n[베딕 오류: 선택한 도시('{city_name}')의 위도/경도 데이터가 CITY_COORDS에 없습니다. 코드에 좌표를 추가하십시오.]"
     
     hr, mn = 12, 0
     if hour_str != "모름":
@@ -82,7 +85,7 @@ def get_vedic_data(year, month, day, hour_str, city_name):
                 if p_name and p_sign:
                     lines.append(f"- {p_name}: {p_sign}")
         
-        return "\n".join(lines) if len(lines) > 1 else "\n[베딕 점성술 (Jyotisha) 데이터 연산 완료]"
+        return "\n".join(lines) if len(lines) > 1 else "\n[베딕 연산 오류: 행성 데이터 파싱 실패]"
         
     except Exception as e:
         return f"\n[베딕 연산 오류: {e}]"
