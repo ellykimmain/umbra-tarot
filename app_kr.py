@@ -76,17 +76,8 @@ def get_vedic_data(year, month, day, hour_str, city_name):
             timezone_offset=coords["tz"]
         )
         
-        lines = ["\n[베딕 점성술 (Jyotisha) 주요 행성 위치]"]
-        if hasattr(chart, 'd1_chart') and hasattr(chart.d1_chart, 'planets'):
-            for p in chart.d1_chart.planets:
-                # 딕셔너리(dict)와 객체(object) 형태를 모두 커버하는 안전한 파싱
-                p_name = p.get('name', '') if isinstance(p, dict) else getattr(p, 'name', '')
-                p_sign = p.get('sign', '') if isinstance(p, dict) else getattr(p, 'sign', '')
-                
-                if p_name and p_sign:
-                    lines.append(f"- {p_name}: {p_sign}")
-        
-        return "\n".join(lines) if len(lines) > 1 else "\n[베딕 점성술 (Jyotisha) 차트 연산 완료]"
+        # 원본 데이터 구조를 500자까지만 화면에 강제로 찍어보는 디버깅 코드
+        return f"\n[베딕 원본 구조 확인]: {str(chart)[:500]}"
         
     except Exception as e:
         return f"\n[베딕 연산 오류: {e}]"
