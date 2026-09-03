@@ -343,7 +343,7 @@ PRODUCTS = {
     },
     "RAW_ONE": {
         "name": "RAW ONE 심층 리포트",
-        "price": 9900,
+        "price": 990,  # 💡 9900에서 990으로 변경
         "cards": 5,
         "is_pro": True
     }
@@ -362,38 +362,84 @@ MAJOR_ARCANA = [
     "Judgement", "The World"
 ]
 
-# ── 오라클 버튼 실행 로직 ───────────────────────────────────────────────────
-if st.button(f"{current_product['name']} 시작하기"):
-    current_date = datetime.now().strftime("%Y-%m-%d")
+# ── 오라클 버튼 실행 및 결제 대기(Checkout) 분기 ────────────────────────────────
+if selected_product_id == "FREE":
+    if st.button("무료 체험 시작하기"):
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        upsert_user(user_email, user_name)
+        
+        if user_email != ADMIN_EMAIL: 
+            if has_used_free_today(user_email, current_date):
+                st.error("🌙 오늘 오라클은 이미 당신에게 응답했습니다. 자정 이후 다시 방문하십시오.")
+                st.stop()
+
+        ph = st.empty()
+        ph.info("🌌 무료 체험 우주적 데이터를 동기화합니다...")
+
+        gender_str = "Male" if gender == "남성" else "Female"
+        astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
+        drawn_keys = random.sample(MAJOR_ARCANA, current_product["cards"])
+        question_ctx = f"\n[내담자 질문]: {user_question}" if user_question else ""
+
+        prompt = f"""당신은 냉철한 운명 전략가입니다.
+        아래 데이터와 {current_product["cards"]}장의 타로 카드를 바탕으로 '무료 체험용' 짧은 핵심 메시지를 작성하십시오. 상세 예측은 금지합니다.
+        
+        [데이터]
+        {astrology_data}
+        {question_ctx}
+        뽑힌 카드: {', '.join(drawn_keys)}
+        
+        반드시 다음 구조로 작성:
+        1. 짧고 강렬한 현재 상황 진단
+        2. 핵심 경고 메시지
+        """
+
+        try:
+            res = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
+            ph.empty()
+            st.success("무료 체험 렌더링 완료.")
+            st.info(res.text)
+            
+            save_free_usage(user_email, current_date)
+            save_report_to_db(user_email, "FREE", user_question, res.text)
+
+            st.markdown("---")
+            st.markdown("""
+            <div style='background-color:#e9ecef; padding:20px; text-align:center;'>
+                <h3 style='color:#1a1a2e;'>여기서부터가 RAW입니다</h3>
+                <p style='color:#212529;'>단 하나의 질문을 4개의 시스템으로 교차분석한 전체 리포트를 확인하세요.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("RAW ONE 심층 리포트 보기 — 990원"):
+                st.session_state["checkout_product"] = "RAW_ONE"
+                st.rerun()
+        except Exception as e:
+            ph.empty()
+            st.error(f"아스트랄 연결 오류: {str(e)}")
+
+elif selected_product_id == "RAW_ONE":
+    st.markdown("---")
+    st.markdown("## 💳 RAW ONE 결제 데스크")
+    st.markdown("""
+    당신의 단 하나의 질문을 **타로(5장) × 사주 × 수비학 × 베딕 점성술**로 교차 검증합니다.
+    - **결제 금액:** 990원
+    - **제공 내용:** 현재 상황, 충돌 신호 분석, 숨겨진 장애물, 단호한 행동 전략
+    """)
     
-    # 1. 유저 DB 등록
-    upsert_user(user_email, user_name)
-    
-    # 2. 무료 사용량 검증 (휘발성 세션 폐기, DB 직접 조회)
-    if not current_product["is_pro"]:
-        if has_used_free_today(user_email, current_date):
-            st.error("🌙 오늘 오라클은 이미 당신에게 응답했습니다. 자정 이후 다시 방문하십시오.")
-            st.stop()
+    # [TO-DO] 이 버튼을 누르면 실제 토스페이먼츠 결제창으로 넘어가도록 다음 단계에서 구현합니다.
+    # 현재는 결제가 완료되었다고 가정하고 심층 프롬프트를 즉시 실행하는 테스트용입니다.
+    if st.button("990원 결제하기 (현재는 클릭 시 즉시 생성)"):
+        ph = st.empty()
+        ph.info("🌌 RAW ONE 심층 우주적 데이터를 동기화합니다...")
+        
+        gender_str = "Male" if gender == "남성" else "Female"
+        astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
+        drawn_keys = random.sample(MAJOR_ARCANA, current_product["cards"])
+        question_ctx = f"\n[내담자 질문]: {user_question}" if user_question else ""
 
-    # 3. 로딩 UI
-    ph = st.empty()
-    ph.info(f"🌌 {current_product['name']} 우주적 데이터를 동기화합니다...")
-
-    # 4. 우주적 데이터 구성 (사주, 수비학, 베딕)
-    gender_str = "Male" if gender == "남성" else "Female"
-    astrology_data = build_astrology_block(
-        int(birth_year), int(birth_month), int(birth_day),
-        birth_time, birth_city
-    )
-
-    # 5. 상품에 따른 카드 드로우 및 프롬프트 분기
-    draw_count = current_product["cards"]
-    drawn_keys = random.sample(MAJOR_ARCANA, draw_count)
-    question_ctx = f"\n[내담자 질문]: {user_question}" if user_question else ""
-
-    if current_product["is_pro"]:
         prompt = f"""당신은 냉철하고 분석적인 운명 전략가입니다.
-        아래 우주적 데이터와 {draw_count}장의 타로 카드를 '교차 검증'하여 심층 리포트를 작성하십시오.
+        아래 데이터와 {current_product["cards"]}장의 타로 카드를 '교차 검증'하여 심층 리포트를 작성하십시오.
         
         [데이터]
         {astrology_data}
@@ -406,51 +452,16 @@ if st.button(f"{current_product['name']} 시작하기"):
         3. 당신을 가로막는 숨겨진 장애물
         4. 즉각적으로 실행해야 할 단호한 행동 전략
         """
-    else:
-        prompt = f"""당신은 냉철한 운명 전략가입니다.
-        아래 데이터와 {draw_count}장의 타로 카드를 바탕으로 '무료 체험용' 짧은 핵심 메시지를 작성하십시오.
-        상세한 예측이나 행동 전략은 공개하지 마십시오.
-        
-        [데이터]
-        {astrology_data}
-        {question_ctx}
-        뽑힌 카드: {', '.join(drawn_keys)}
-        
-        반드시 다음 구조로 작성:
-        1. 짧고 강렬한 현재 상황 진단
-        2. 핵심 경고 메시지
-        """
-
-    # 6. Gemini API 호출
-    try:
-        response = client.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=prompt
-        )
-        res_text = response.text
-        
-        ph.empty()
-        st.success(f"{current_product['name']} 렌더링 완료.")
-        st.info(res_text)
-
-        # 7. 진단이 무사히 완료된 직후 무료 이용 기록을 DB에 저장 (핵심)
-        if not current_product["is_pro"]:
-            save_free_usage(user_email, current_date)
-
-        # 8. 결제 유도(CTA) 버튼 렌더링
-        if not current_product["is_pro"]:
-            st.markdown("---")
-            st.markdown("""
-            <div style='background-color:#e9ecef; padding:20px; text-align:center;'>
-                <h3 style='color:#1a1a2e;'>여기서부터가 RAW입니다</h3>
-                <p style='color:#212529;'>단 하나의 질문을 타로 × 사주 × 수비학 × 베딕으로 교차분석한 전체 리포트를 확인하세요.</p>
-            </div>
-            """, unsafe_allow_html=True)
+        try:
+            res = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
+            ph.empty()
+            st.success("RAW ONE 심층 리포트 렌더링 완료.")
+            st.info(res.text)
+            save_report_to_db(user_email, "RAW_ONE", user_question, res.text)
             
-            if st.button("RAW ONE 심층 리포트 보기 — 9,900원"):
-                st.session_state["checkout_product"] = "RAW_ONE"
+            if st.button("돌아가기"):
+                st.session_state["checkout_product"] = "FREE"
                 st.rerun()
-
-    except Exception as e:
-        ph.empty()
-        st.error(f"아스트랄 연결 오류: {str(e)}")
+        except Exception as e:
+            ph.empty()
+            st.error(f"오류: {str(e)}")
