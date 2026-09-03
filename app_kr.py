@@ -1287,7 +1287,7 @@ def send_result_email(user_email, user_name, result_text, product_name):
 
 if selected_product_id == "FREE":
 
-    # 1. 실시간 상담 모드 (RAW CHAT - 1회성 단호한 오라클 선언 / 입력창 원천 차단)
+    # 1. 실시간 상담 모드 (RAW CHAT - 1일 1회 제한 및 단호한 오라클 선언)
     if reading_mode.startswith("RAW CHAT"):
         
         st.markdown("""
@@ -1326,17 +1326,25 @@ if selected_product_id == "FREE":
         # 아직 상담을 시작하지 않은 경우
         if not st.session_state["chat_initialized"]:
             if st.button(">> INITIALIZE ORACLE CHAT (상담 채널 열기)"):
+                current_date = today_kst()
+
                 if not user_name.strip():
                     st.warning("이름 또는 닉네임을 입력하십시오.")
                     st.stop()
                 
                 upsert_user(user_email, user_name)
 
+                # 💡 [추가] 관리자 계정이 아닐 경우 오늘 이미 사용했는지 체크
+                if user_email != ADMIN_EMAIL:
+                    if has_used_free_today(user_email, current_date):
+                        st.error("오늘의 오라클 세션은 이미 사용했습니다. 내일 다시 새로운 세션을 시작할 수 있습니다.")
+                        st.stop()
+
                 astrology_data = build_astrology_block(
                     int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
                 )
                 
-                # 4단계 순차 분석 정의 (안정적인 마크다운 기반 렌더링)
+                # 4단계 순차 분석 정의
                 steps = [
                     ("🪐 사주 명식 구조 분석", f"""
                     [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
@@ -1372,8 +1380,7 @@ if selected_product_id == "FREE":
 
                 try:
                     for title, prompt_text, loading_msg in steps:
-                        # 현재까지 완성된 내용을 마크다운으로 깔끔하게 조합하여 출력
-                        current_display = "### [ ORACLE · SECURE CHANNEL ]\n\n"
+                        current_display = "### [ ORACLE · SYSTEM RUNNING ]\n\n"
                         for res_title, res_text in saved_results:
                             current_display += f"**{res_title}**\n{res_text}\n\n---\n\n"
                         
@@ -1381,7 +1388,6 @@ if selected_product_id == "FREE":
                         terminal_placeholder.markdown(current_display)
                         time.sleep(0.6)
 
-                        # 모델 호출
                         response = client.models.generate_content(
                             model="gemini-3.6-flash",
                             contents=prompt_text,
@@ -1391,10 +1397,12 @@ if selected_product_id == "FREE":
                         saved_results.append((title, step_result))
                         time.sleep(0.4)
 
-                    # 최종 완성된 결과 마크다운 생성
-                    final_markdown = "### [ ORACLE · SECURE CHANNEL ]\n\n"
+                    final_markdown = ""
                     for res_title, res_text in saved_results:
                         final_markdown += f"**{res_title}**\n{res_text}\n\n---\n\n"
+
+                    # 💡 [추가] 정상 완료 시 DB에 오늘 사용 기록 저장
+                    save_free_usage(user_email, current_date)
 
                     st.session_state["chat_messages"] = [{"role": "assistant", "content": final_markdown}]
                     st.session_state["chat_initialized"] = True
@@ -1414,7 +1422,6 @@ if selected_product_id == "FREE":
                 """, unsafe_allow_html=True)
         
         else:
-            # 💡 [수정] 세션에 저장된 메시지를 안전하게 렌더링하고 잔여 HTML 태그 찌꺼기를 원천 차단
             for message in st.session_state["chat_messages"]:
                 content_clean = message["content"].replace("</div>", "").replace("<div>", "")
                 st.markdown(f"""
