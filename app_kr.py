@@ -45,7 +45,38 @@ def get_saju_data(year, month, day, hour_index=0):
             "day_master": GAN_H[dg.tg]
         }
     except: return None
+from datetime import datetime
 
+try:
+    from jyotishganit import calculate_birth_chart
+    VEDIC_AVAILABLE = True
+except ImportError:
+    VEDIC_AVAILABLE = False
+
+def get_vedic_data(year, month, day, hour_str, city_name):
+    if not VEDIC_AVAILABLE or city_name not in CITY_COORDS:
+        return ""
+    
+    # 시간 파싱 (모름일 경우 12:00 기준)
+    hr, mn = 12, 0
+    if hour_str != "모름":
+        hr, mn = map(int, hour_str.split(":"))
+        
+    coords = CITY_COORDS.get(city_name)
+    birth_dt = datetime(year, month, day, hr, mn, 0)
+    
+    try:
+        # 베딕 차트 계산
+        chart = calculate_birth_chart(
+            birth_date=birth_dt,
+            latitude=coords["lat"],
+            longitude=coords["lon"],
+            timezone_offset=coords["tz"]
+        )
+        # 예시로 Rasi(D1 차트)나 주요 행성의 별자리 위치를 문자열로 조합
+        return f"\n[베딕 점성술 (Jyotisha) 데이터]\n기준 차트 정상 연산 완료. 행성 기운 추가 분석 요망."
+    except Exception as e:
+        return f"\n[베딕 연산 오류: {e}]"
 def reduce_num(n):
     while n > 9 and n not in (11, 22, 33):
         n = sum(int(d) for d in str(n))
@@ -69,6 +100,11 @@ def build_astrology_block(year, month, day, hour_str):
     num = get_numerology(year, month, day)
     lines.append("\n[수리학(Numerology) 데이터]")
     lines.append(f"운명수(Life Path): {num['life_path']} / 올해의 수: {num['personal_year']} / 이번 달의 수: {num['personal_month']}")
+    # 💡 베딕 데이터 추가
+    vedic_text = get_vedic_data(year, month, day, hour_str, birth_city)
+    if vedic_text:
+        lines.append(vedic_text)
+        
     return "\n".join(lines) if lines else "우주적 데이터 계산 불가. 입력된 정보만으로 판단하십시오."
 
 # ── Streamlit 및 API 설정 ───────────────────────────────────────────────────
@@ -172,7 +208,13 @@ country_city_map = {
     "캐나다": ["토론토", "밴쿠버", "몬트리올", "기타"],
     "기타": ["기타"]
 }
-
+# 도시별 위도, 경도, 타임존 오프셋 맵핑
+CITY_COORDS = {
+    "서울": {"lat": 37.5665, "lon": 126.9780, "tz": 9.0},
+    "부산": {"lat": 35.1796, "lon": 129.0756, "tz": 9.0},
+    "뉴욕": {"lat": 40.7128, "lon": -74.0060, "tz": -5.0},
+    # 필요한 도시 좌표를 점진적으로 추가
+}
 ADMIN_EMAIL = "ellykimmain@gmail.com" 
 
 if user_email == ADMIN_EMAIL:
