@@ -1421,6 +1421,20 @@ if selected_product_id == "FREE":
 </div>
 """, unsafe_allow_html=True)
 
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # 메인 유료 결제 버튼 (전체 너비로 묵직하게 강조)
+            if st.button("🔓 THE RAW DEEP ANALYSIS · 990원", use_container_width=True, key="go_deep_chat_wide"):
+                st.session_state["checkout_product"] = "RAW_DEEP"
+                st.rerun()
+
+            # 새로 시작 버튼은 눈에 띄지 않게 아주 작고 미니멀한 보조 형태로 하단에 배치
+            st.markdown("<div style='text-align: center; margin-top: 15px;'>", unsafe_allow_html=True)
+            if st.button("↺ 처음부터 다시 시작하기", key="reset_session_sub"):
+                st.session_state["chat_messages"] = []
+                st.session_state["chat_initialized"] = False
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
             col_a, col_b = st.columns(2)
             with col_a:
                 if st.button("🔓 THE RAW DEEP ANALYSIS · 990원", key="go_deep_chat"):
