@@ -1287,7 +1287,7 @@ def send_result_email(user_email, user_name, result_text, product_name):
 
 if selected_product_id == "FREE":
 
-    # 1. 실시간 상담 모드 (RAW CHAT - Luxury Dark Terminal / 1회 제한 및 단호한 결말)
+    # 1. 실시간 상담 모드 (RAW CHAT - 1회성 단호한 오라클 선언 / 입력창 원천 차단)
     if reading_mode.startswith("RAW CHAT"):
         
         st.markdown("""
@@ -1336,19 +1336,18 @@ if selected_product_id == "FREE":
                     int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
                 )
                 
-                # 물음표가 아닌 서늘한 선언과 자미두수/방위/띠 디테일을 담은 단호한 프롬프트
                 initial_prompt = f"""
-                당신은 THE RAW TAROT의 수석 분석가다. 보안 채널을 통해 내담자와 실시간 대화 중이다.
+                당신은 THE RAW TAROT의 수석 분석가다. 보안 채널을 통해 내담자의 명식을 분석한다.
                 
                 [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
                 [점술 데이터] {astrology_data}
                 [상담 주제] {user_question}
 
                 [절대 철칙 및 직업 분석 가이드]
-                1. 단순한 공포심을 조장하거나 "무조건 파멸한다, 목을 벤다" 같은 과격하고 극단적인 협박성 표현을 절대 사용하지 마라.
-                2. 내담자의 직업적 잠재력을 사주 명식(일간, 십신, 오행), 베딕 점성술, 자미두수의 구조에서 정확히 도출하되, 현대 사회에서 실제로 가치 있게 발휘될 수 있는 **고도의 분석력, 콘텐츠 크리에이팅, 전략적 기획, 독립적 전문 비즈니스, 혹은 구조적 문제 해결 직무**로 연결하여 품격 있고 설득력 있게 해석하라.
+                1. 단순한 공포심 조장이나 극단적인 협박성 표현을 절대 사용하지 마라.
+                2. 내담자의 잠재력을 사주 명식(일간, 십신, 오행), 베딕 점성술, 자미두수의 구조에서 정확히 도출하되, 현대 사회에서 가치 있게 발휘될 수 있는 고도의 분석력, 콘텐츠 크리에이팅, 전략적 기획, 독립적 전문 비즈니스, 혹은 구조적 문제 해결 직무로 연결하여 품격 있고 설득력 있게 해석하라.
                 3. 분량은 기존의 절반으로 압축하고 서늘하되 지적(知的)인 톤을 유지하라.
-                4. **절대 물음표(?)로 끝내지 마라.** 문장은 반드시 명식의 디테일(방위, 특정 띠, 성씨, 자미두수의 궁)을 언급하며 단호하고 무게감 있는 선언으로 마무리하라.
+                4. [중요] 절대 물음표(?)로 끝내지 마라. 문장은 반드시 명식의 디테일(방위, 특정 띠, 성씨, 자미두수의 궁)을 언급하며 단호하고 무게감 있는 선언으로 마무리하라.
                 """
 
                 ph = st.empty()
@@ -1374,7 +1373,7 @@ if selected_product_id == "FREE":
                         box_placeholder.markdown(full_reply)
                         st.markdown('</div>', unsafe_allow_html=True)
 
-                    st.session_state["chat_messages"].append({"role": "assistant", "content": full_reply})
+                    st.session_state["chat_messages"] = [{"role": "assistant", "content": full_reply}]
                     st.session_state["chat_initialized"] = True
                     st.rerun()
                     
@@ -1386,24 +1385,23 @@ if selected_product_id == "FREE":
                 <div class="luxury-terminal" style="text-align:center; padding: 30px;">
                     <div style="color:#d4af37; font-size:1.1rem; margin-bottom:10px;">SECURE CHANNEL READY</div>
                     <div style="color:#94a3b8; font-size:0.9rem; line-height:1.7;">
-                        입력된 프로필과 질문을 바탕으로 오라클과의 단 한 번의 강력한 팩트 폭행 세션을 엽니다.<br>
-                        사주, 베딕, 자미두수의 정밀 교차 검증 결과가 타자기 형식으로 출력됩니다.
+                        입력된 프로필과 질문을 바탕으로 오라클과의 단 한 번의 정밀 분석 세션을 엽니다.<br>
+                        사주, 베딕, 자미두수의 교차 검증 결과가 타자기 형식으로 출력됩니다.
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
         
         else:
-            # 첫 번째 답변 출력
+            # 출력된 결과물 표시
             for message in st.session_state["chat_messages"]:
-                if message["role"] == "assistant":
-                    st.markdown(f"""
-                    <div class="luxury-terminal">
-                        <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>
-                        <div style="line-height:1.8;">{message["content"].replace(chr(10), '<br>')}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class="luxury-terminal">
+                    <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>
+                    <div style="line-height:1.8;">{message["content"].replace(chr(10), '<br>')}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            # 💡 [티키타카 차단 및 유료 전환 유도] 무료 채팅은 1회로 제한하고 DEEP ANALYSIS 결제로 강제 유도
+            # 💡 입력창 코드를 아예 제거하여 추가 질문을 원천 차단하고 결제 유도만 배치
             st.markdown("---")
             st.markdown("""
 <div class="raw-dark-card" style="text-align:center; border: 1px solid #d4af37; padding: 25px; border-radius: 12px; background: #0d0e12;">
@@ -1411,11 +1409,11 @@ if selected_product_id == "FREE":
         SECURE CHANNEL LOCKED
     </div>
     <div style="font-size:1.35rem; font-weight:700; margin-top:10px; color:#f1f5f9;">
-        무료 오라클 프리뷰 세션이 종료되었습니다.
+        오라클 프리뷰 세션이 종료되었습니다.
     </div>
     <p style="color:#94a3b8; line-height:1.8; margin-top:10px; font-size:0.95rem;">
-        자미두수 궁(宮) 분석, 방위와 띠에 얽힌 인과, 그리고 돈과 형사 리스크를 끊어내는<br>
-        실전 전술과 시기적 흐름의 전체 기록은 DEEP ANALYSIS에서 개방됩니다.
+        자미두수 궁(宮) 분석, 방위와 띠에 얽힌 인과, 그리고 구체적인 커리어 전략과 시기적 흐름의<br>
+        전체 기록은 DEEP ANALYSIS에서 개방됩니다.
     </p>
     <div class="deep-price" style="color:#f3e5ab; margin-top:15px; font-size:1.5rem; font-weight:bold;">
         990원
@@ -1432,9 +1430,8 @@ if selected_product_id == "FREE":
                 if st.button(">> RESET SESSION (새로 시작)"):
                     st.session_state["chat_messages"] = []
                     st.session_state["chat_initialized"] = False
-                    # 💡 세션 상태를 깔끔하게 비우고 새로고침 유도
                     st.rerun()
-
+                    
     # 2. 기존 무료 SHADOW READING 모드
     else:
         if st.button("오늘의 SHADOW READING 시작하기"):
