@@ -90,7 +90,7 @@ def get_numerology(year, month, day):
     pd = reduce_num(pm + now.day)
     return {"life_path": lp, "personal_year": py, "personal_month": pm, "personal_day": pd}
 
-def build_astrology_block(year, month, day, hour_str):
+def build_astrology_block(year, month, day, hour_str, birth_city):
     lines = []
     zhi_idx = TIME_TO_ZHI.get(hour_str, 0)
     saju = get_saju_data(year, month, day, zhi_idx)
@@ -276,7 +276,7 @@ if st.button("오라클 연결 및 아르카나 뽑기"):
     loading_placeholder.markdown("<p style='text-align: center; color: #d97706; font-size: 1.1rem; font-weight: bold;'>⚡ 잔혹한 진단과 구원의 열쇠를 수신하고 있습니다...</p>", unsafe_allow_html=True)
     
     # 💡 동적 만세력/수리학 데이터 생성
-    astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time)
+    astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
 
     major_arcana_deck = [
         "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor", 
