@@ -9,6 +9,12 @@ import os
 from google import genai
 from streamlit_oauth import OAuth2Component
 from datetime import datetime
+from supabase import create_client, Client
+
+# ── Supabase DB 초기화 ───────────────────────────────────────────────────────
+SUPABASE_URL = st.secrets["https://hrobdpqhvjaplzoeqbao.supabase.co/rest/v1/"]
+SUPABASE_KEY = st.secrets["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhyb2JkcHFodmphcGx6b2VxYmFvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODQxOTYyMCwiZXhwIjoyMTAzOTk1NjIwfQ.TbDBKnY8M9HBC-7DkGtq0ShaLYanYFM2f5omtv2yelM"]
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ── 사주 라이브러리 (py-iztro 제외, sxtwl만 유지) ──────────────────────────────
 try:
@@ -119,6 +125,41 @@ def build_astrology_block(year, month, day, hour_str, birth_city):
         lines.append(vedic_text)
         
     return "\n".join(lines) if lines else "우주적 데이터 계산 불가. 입력된 정보만으로 판단하십시오."
+
+# ── DB 및 상태 검증 함수 ─────────────────────────────────────────────────────
+def upsert_user(email, name):
+    """구글 로그인 시 users 테이블에 사용자 등록 (최초 1회)"""
+    try:
+        # 이미 존재하는지 확인
+        res = supabase.table("users").select("id").eq("email", email).execute()
+        if not res.data:
+            supabase.table("users").insert({"email": email, "name": name}).execute()
+    except Exception as e:
+        print(f"DB Error (upsert_user): {e}")
+
+def get_today_free_count(email, date_str):
+    """오늘 날짜 기준 무료(FREE) 리포트 생성 횟수 조회"""
+    try:
+        res = supabase.table("reports").select("id", count="exact")\
+            .eq("email", email)\
+            .eq("product_id", "FREE")\
+            .like("created_at", f"%{date_str}%")\
+            .execute()
+        return res.count if res.count else 0
+    except:
+        return 1 # 에러 시 방어적으로 1 반환하여 남용 방지
+
+def save_report_to_db(email, product_id, question, result_text):
+    """분석 완료 후 reports 테이블에 결과 저장"""
+    try:
+        supabase.table("reports").insert({
+            "email": email,
+            "product_id": product_id,
+            "question": question,
+            "result": result_text
+        }).execute()
+    except Exception as e:
+        print(f"DB Error (save_report): {e}")
 
 # ── Streamlit 및 API 설정 ───────────────────────────────────────────────────
 api_key = st.secrets["GEMINI_API_KEY"]
@@ -287,209 +328,116 @@ if "2." in reading_mode or "커스텀" in reading_mode:
 else:
     user_question = ""
 
-if st.button("오라클 연결 및 아르카나 뽑기"):
+# ── 상품(Product) 정의 ──────────────────────────────────────────────────────
+PRODUCTS = {
+    "FREE": {
+        "name": "무료 체험",
+        "price": 0,
+        "cards": 3,
+        "is_pro": False
+    },
+    "RAW_ONE": {
+        "name": "RAW ONE 심층 리포트",
+        "price": 9900,
+        "cards": 5,
+        "is_pro": True
+    }
+}
+
+# (임시) 현재 선택된 상품 상태. 추후 결제 시스템 연동 시 PAID 상태 확인 후 'RAW_ONE'으로 전환
+selected_product_id = st.session_state.get("checkout_product", "FREE")
+current_product = PRODUCTS[selected_product_id]
+
+# ── 오라클 버튼 실행 로직 ───────────────────────────────────────────────────
+if st.button(f"{current_product['name']} 시작하기"):
     current_date = datetime.now().strftime("%Y-%m-%d")
-    user_key = f"{user_email}_{current_date}"
-    if "already_prophesied" not in st.session_state: 
-        st.session_state["already_prophesied"] = {}
     
-    if st.session_state["already_prophesied"].get(user_key, 0) >= 1:
-        st.error("🌙 오늘 오라클은 이미 당신에게 응답했습니다. 자정 이후 별들이 재정렬되면 다시 방문하십시오.")
-        st.stop()
-
-    loading_placeholder = st.empty()
-    loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🌌 아스트랄 차원으로 터널링 중...</p>", unsafe_allow_html=True)
-    time.sleep(1.5)
-    loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🔮 우주적 배열 및 만세력 데이터 교차 검증 중...</p>", unsafe_allow_html=True)
-    time.sleep(1.5)
-    loading_placeholder.markdown("<p style='text-align: center; color: #6c757d; font-size: 1.1rem; font-weight: bold;'>🃏 4장의 그림자 아르카나 카드 추출 중...</p>", unsafe_allow_html=True)
-    time.sleep(1.5)
-    loading_placeholder.markdown("<p style='text-align: center; color: #d97706; font-size: 1.1rem; font-weight: bold;'>⚡ 잔혹한 진단과 구원의 열쇠를 수신하고 있습니다...</p>", unsafe_allow_html=True)
+    # 1. 유저 DB 등록 및 무료 사용량 검증
+    upsert_user(user_email, user_name)
     
-    # 💡 동적 만세력/수리학 데이터 생성
-    astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
-    st.info(astrology_data)
+    if not current_product["is_pro"]:
+        usage_count = get_today_free_count(user_email, current_date)
+        if usage_count >= 1:
+            st.error("🌙 오늘 오라클은 이미 당신에게 응답했습니다. 자정 이후 다시 방문하십시오.")
+            st.stop()
 
-    major_arcana_deck = [
-        "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor", 
-        "The Hierophant", "The Lovers", "The Chariot", "Strength", "The Hermit", 
-        "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance", 
-        "The Devil", "The Tower", "The Star", "The Moon", "The Sun", 
-        "Judgement", "The World"
-    ]
+    # 2. 로딩 UI
+    ph = st.empty()
+    ph.info(f"🌌 {current_product['name']} 우주적 데이터를 동기화합니다...")
 
-    drawn_keys = random.sample(major_arcana_deck, 4)
-    question_context = f"\n[내담자의 심층 질문]: {user_question}" if user_question else ""
+    # 3. 우주적 데이터 구성 (사주, 수비학, 베딕)
+    gender_str = "Male" if gender == "Male" else "Female"
+    astrology_data = build_astrology_block(
+        int(birth_year), int(birth_month), int(birth_day),
+        birth_time, birth_place, "M" if gender == "Male" else "F"
+    )
 
-    card_base_names = {k: k.replace(" ", "_") for k in major_arcana_deck}
-    card_base_names["Wheel of Fortune"] = "Wheel_of_Fortune" # 예외 처리
-    card_base_names["Death"] = "The_Death" # 💡 여기에 예외 처리를 하나 더 추가해라.
-    
-    prompt = f"""당신은 만세력(명리학), 수리학, 베딕 점성술(Jyotisha), 태국점성술(호라삿, โหราศาสตร์) 및 서양 타로를 결합하여 내담자의 잠재력을 끝까지 찾아내 구체적인 생존 전략을 쥐여주는 냉철하고 유능한 타로 전략가입니다. 
-아무리 나쁜 카드 배열이 나와도 절대 절망으로 끝내지 말고, 반드시 긍정적인 돌파구와 구체적인 행동 지침을 한국어(Korean)로 출력하십시오.
+    # 4. 상품에 따른 카드 드로우 및 프롬프트 분기
+    draw_count = current_product["cards"]
+    drawn_keys = random.sample(MAJOR_ARCANA, draw_count)
+    question_ctx = f"\n[내담자 질문]: {user_question}" if user_question else ""
 
-[매우 중요한 문체 및 호칭 지시]
-1. 어조는 뼈를 때리듯 날카롭고 객관적이되, 마지막에는 반드시 길을 열어주는 멘토의 권위를 가져야 합니다. 
-2. 말투는 반드시 '~다', '~어라(마라)', '~느라(느니라)' 등의 단호한 종결어미로 통일하십시오.
-3. [금지어 규정]: 저급한 호칭 대신 '당신' 혹은 '너' 라는 호칭을 사용하거나 주어를 생략하십시오.
-4. [현실 직시 및 전략 규정 (가장 중요)]: 위기와 문제를 심리적 나약함으로 매도하지 않고 현실의 제약으로 인정합니다. 그 후 반드시 내담자가 가진 장점과 숨겨진 무기를 짚어주고, 현실에서 당장 실천할 수 있는 생존 타개책을 차갑지만 희망적으로 제시하십시오.
+    if current_product["is_pro"]:
+        # RAW ONE (PRO) 전용 프롬프트
+        prompt = f"""당신은 냉철하고 분석적인 운명 전략가입니다.
+        아래 우주적 데이터와 {draw_count}장의 타로 카드를 '교차 검증'하여 심층 리포트를 작성하십시오.
+        
+        [데이터]
+        {astrology_data}
+        {question_ctx}
+        뽑힌 카드: {', '.join(drawn_keys)}
+        
+        반드시 다음 구조로 작성:
+        1. 질문의 본질과 현재 상황 (팩트 폭행)
+        2. 점술 시스템 간 일치하는 신호와 충돌하는 신호 분석
+        3. 당신을 가로막는 숨겨진 장애물
+        4. 즉각적으로 실행해야 할 단호한 행동 전략
+        """
+    else:
+        # FREE 전용 프롬프트
+        prompt = f"""당신은 냉철한 운명 전략가입니다.
+        아래 데이터와 {draw_count}장의 타로 카드를 바탕으로 '무료 체험용' 짧은 핵심 메시지를 작성하십시오.
+        상세한 예측이나 행동 전략은 공개하지 마십시오.
+        
+        [데이터]
+        {astrology_data}
+        {question_ctx}
+        뽑힌 카드: {', '.join(drawn_keys)}
+        
+        반드시 다음 구조로 작성:
+        1. 짧고 강렬한 현재 상황 진단
+        2. 핵심 경고 메시지
+        """
 
-[매우 중요한 분석 지시]
-반드시 제공된 [베딕 점성술 (Jyotisha) 주요 행성 위치] 데이터를 읽고, 내담자의 카르마적 특징이나 행성의 위치를 사주 만세력과 교차 검증하여 분석 결과에 1문장 이상 필수로 포함시키십시오.
-
-현재 날짜: {current_date}
-
-[내담자 프로필]
-이름: {user_name}
-성별: {gender}
-출생지: {birth_place}
-생년월일시: {birth_year}년 {birth_month:02d}월 {birth_day:02d}일 {birth_time}{question_context}
-
-[만세력 및 우주적 데이터]
-{astrology_data}
-
-[뽑힌 그림자 아르카나]
-1. (현재 상황): {drawn_keys[0]}
-2. (문제와 장애물): {drawn_keys[1]}
-3. (숨겨진 무기와 기회): {drawn_keys[2]}
-4. [구원의 열쇠 (해결책)]: {drawn_keys[3]}
-
-[중요한 포맷 지시사항]
-반드시 아래의 구분자를 정확히 사용하여 답변을 구조화하십시오.
-
-@INTRO@
-(내담자의 만세력 기운, 베딕을 통해서 현재 상황에 대한 냉철한 분석 및 직면한 현실 직시 - 3~4문장)
-
-@CARD_1@
-({drawn_keys[0]} 카드에 비친 현재의 문제점과 위기 상황을 객관적으로 분석 - 4~5문장)
-
-@CARD_2@
-({drawn_keys[1]} 카드에 나타난 장애물, 혹은 내담자가 외면하고 있는 뼈아픈 진실을 지적 - 4~5문장)
-
-@CARD_3@
-({drawn_keys[2]} 카드에서 발견할 수 있는 내담자만의 숨겨진 장점, 긍정적 기운, 반전의 기회를 반드시 찾아내어 서술 - 4~5문장)
-
-@CARD_4@
-({drawn_keys[3]} 카드를 기반으로, 앞서 찾은 긍정적 기운을 지렛대 삼아 당장 오늘부터 실천할 수 있는 현실적이고 구체적인 타개책 제시. 철저히 계산된 희망과 구원의 문을 열어줄 것 - 4~5문장)
-
-@CONCLUSION@
-(최종적으로 카드를 다 합친 결과와 만세력, 베딕, 수리학, 호라삿을 합친 결과를 함께 요약해주고,  긍정적인 에너지를 불어넣는 단호하고 힘 있는 행동 지침으로 마무리 - 10문장)
-"""
-
+    # 5. Gemini API 호출
     try:
         response = client.models.generate_content(
-            model="gemini-3.6-flash", 
+            model="gemini-3.6-flash",
             contents=prompt
         )
-        
-        st.session_state["already_prophesied"][user_key] = 1
-        loading_placeholder.empty()
-        st.success("카드가 열렸습니다.")
-        
         res_text = response.text
         
-        if "@INTRO@" in res_text and "@CARD_1@" in res_text and "@CONCLUSION@" in res_text:
-            def extract_section(tag, next_tag, text):
-                try: return text.split(tag)[1].split(next_tag)[0].strip()
-                except: return ""
-                    
-            intro_text = extract_section("@INTRO@", "@CARD_1@", res_text)
-            card1_text = extract_section("@CARD_1@", "@CARD_2@", res_text)
-            card2_text = extract_section("@CARD_2@", "@CARD_3@", res_text)
-            card3_text = extract_section("@CARD_3@", "@CARD_4@", res_text)
-            card4_text = extract_section("@CARD_4@", "@CONCLUSION@", res_text)
-            conclusion_text = res_text.split("@CONCLUSION@")[1].strip() if "@CONCLUSION@" in res_text else ""
-            
-            st.markdown(f"<div style='background-color: #e9ecef; padding: 20px; border-radius: 5px; color: #1a1a2e; margin-bottom: 20px;'>{intro_text}</div>", unsafe_allow_html=True)
-            
-            cards_text = [card1_text, card2_text, card3_text, card4_text]
-            
-            for idx, card in enumerate(drawn_keys):
-                if idx == 3:
-                    st.markdown(f"<h3 style='text-align: center; color: #d97706; margin-top: 40px; margin-bottom: 15px;'>🌟 4. 구원의 열쇠 ({card})</h3>", unsafe_allow_html=True)
-                else:
-                    st.markdown(f"<h3 style='text-align: center; color: #1a1a2e; margin-top: 30px; margin-bottom: 15px;'>{idx+1}. {card}</h3>", unsafe_allow_html=True)
-                
-                c1, c2, c3 = st.columns([1, 1.5, 1])
-                with c2:
-                    base_name = card_base_names.get(card, "")
-                    img_path_jpg = f"images/{base_name}.jpg"
-                    img_path_png = f"images/{base_name}.png"
-                    
-                    if os.path.exists(img_path_jpg): st.image(img_path_jpg, use_container_width=True)
-                    elif os.path.exists(img_path_png): st.image(img_path_png, use_container_width=True)
-                    else: st.error(f"[{card} 이미지 누락]")
-                st.info(cards_text[idx])
-            
-            st.markdown("<hr>", unsafe_allow_html=True)
-            st.warning(conclusion_text)
-            
-        else:
-            st.info(res_text)
-            st.markdown("<h3 style='text-align: center; color: #1a1a2e; margin-top: 20px;'>🃏 뽑힌 아르카나 카드</h3>", unsafe_allow_html=True)
-            cols = st.columns(4)
-            for i, card in enumerate(drawn_keys):
-                with cols[i]:
-                    base_name = card_base_names.get(card, "")
-                    img_path_jpg = f"images/{base_name}.jpg"
-                    img_path_png = f"images/{base_name}.png"
-                    if os.path.exists(img_path_jpg): st.image(img_path_jpg, use_container_width=True)
-                    elif os.path.exists(img_path_png): st.image(img_path_png, use_container_width=True)
-                    else: st.error(f"[{card} 이미지 누락]")
+        ph.empty()
+        st.success(f"{current_product['name']} 렌더링 완료.")
+        st.info(res_text) # 임시 결과 출력 UI (추후 파싱 로직 적용 필요)
 
-        try:
-            base_prophecy = response.text.replace('@INTRO@', '').replace('@CARD_1@', '').replace('@CARD_2@', '').replace('@CARD_3@', '').replace('@CARD_4@', '').replace('@CONCLUSION@', '')
-            html_prophecy = base_prophecy.replace('\n', '<br>')
+        # 6. DB에 결과 저장
+        save_report_to_db(user_email, selected_product_id, user_question, res_text)
+
+        # 7. 무료 버전일 경우 결제 유도(CTA) 버튼 렌더링
+        if not current_product["is_pro"]:
+            st.markdown("---")
+            st.markdown("""
+            <div style='background-color:#e9ecef; padding:20px; text-align:center;'>
+                <h3 style='color:#1a1a2e;'>여기서부터가 RAW입니다</h3>
+                <p style='color:#212529;'>단 하나의 질문을 타로 × 사주 × 수비학 × 베딕으로 교차분석한 전체 리포트를 확인하세요.</p>
+            </div>
+            """, unsafe_allow_html=True)
             
-            html_body = f"""
-            <html>
-            <body style="background-color: #050505; color: #d4d4d4; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; line-height: 1.6; margin: 0;">
-                <div style="max-width: 600px; margin: 0 auto; border: 1px solid #222222; padding: 40px; background-color: #0a0a0a;">
-                    <h2 style="text-align: center; color: #ffffff; letter-spacing: 4px; border-bottom: 1px solid #333333; padding-bottom: 20px; font-weight: normal;">THE RAW TAROT (그림자 진단)</h2>
-                    <p style="font-size: 14px; color: #888888; text-transform: uppercase; letter-spacing: 1px;"><strong>{user_name}</strong>님을 위한 진단 기록</p>
-                    <div style="font-size: 15px; margin-top: 30px; color: #cccccc;">
-                        {html_prophecy}
-                    </div>
-                    <hr style="border: 0; border-top: 1px solid #222222; margin: 40px 0;">
-                    <div style="text-align: center;">
-                        <h3 style="color: #ffffff; letter-spacing: 2px; font-weight: normal;">🎧 주파수 동기화</h3>
-                        <p style="font-size: 13px; color: #888888; margin-bottom: 30px;">
-                            잔혹한 진실과 구원의 열쇠를 마주하셨습니까?<br>
-                            당신 운명의 뼈대가 드러났습니다.<br>이제 산산조각 나 있는 당신의 주파수를 우주적 기하학으로 재정렬하고, 물리적 부를 강력하게 끌어당길 시간입니다.
-                        </p>
-                        <div style="margin-bottom: 15px;">
-                            <a href="https://buly.kr/3u5ctxV" style="display: inline-block; padding: 12px 24px; border: 1px solid #555555; background-color: transparent; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; width: 220px; text-align: center;">
-                                진단의 방으로 복귀
-                            </a>
-                        </div>
-                        <div>
-                            <a href="https://www.youtube.com/@SynchroVault" style="display: inline-block; padding: 12px 24px; background-color: #ffffff; color: #000000; text-decoration: none; font-size: 12px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; width: 220px; text-align: center;">
-                                주파수 동기화 시작
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
-            
-            msg = MIMEText(html_body, 'html')
-            msg['Subject'] = "당신의 카드가 도착했습니다"
-            msg['From'] = st.secrets["EMAIL_SENDER"]
-            msg['To'] = user_email
-            
-            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-                server.login(st.secrets["EMAIL_SENDER"], st.secrets["EMAIL_PASSWORD"])
-                server.send_message(msg)
-                
-        except Exception as e: 
-            st.error("이메일 발송에 실패했습니다.")
-            
+            if st.button("RAW ONE 심층 리포트 보기 — 9,900원"):
+                st.session_state["checkout_product"] = "RAW_ONE"
+                st.rerun()
+
     except Exception as e:
-        loading_placeholder.empty()
-        error_msg = str(e)
-        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
-            st.error("🌙 아스트랄 에너지가 고갈되었습니다. 오늘의 무료 시간이 종료되었습니다. 자정 이후 다시 방문하십시오.")
-        else:
-            # 💡 아래 줄을 수정하여 실제 에러 원인을 화면에 출력하도록 만든다.
-            st.error(f"아스트랄 연결이 끊어졌습니다. 상세 에러: {error_msg}")
+        ph.empty()
+        st.error(f"아스트랄 연결 오류: {str(e)}")
