@@ -237,14 +237,16 @@ user_email = st.session_state["user_email"]
 # ── 사용자 DB 등록 ─────────────────────────────────────────────
 if user_email:
     try:
-        supabase.table("users").upsert(
-            {
-                "email": user_email
-            },
-            on_conflict="email"
-        ).execute()
+        # 1. 이미 DB에 이메일이 존재하는지 안전하게 조회
+        res = supabase.table("users").select("id").eq("email", user_email).execute()
+        
+        # 2. 존재하지 않는 신규 유저일 경우에만 Insert 실행
+        if not res.data:
+            supabase.table("users").insert({"email": user_email}).execute()
+            
     except Exception as e:
-        st.error("사용자 정보 저장에 실패했습니다.")
+        # 에러가 발생할 경우, 숨기지 않고 화면에 실제 원인(e)을 출력하여 즉각 대응
+        st.error(f"사용자 정보 저장에 실패했습니다. 상세 에러: {e}")
 
 st.sidebar.markdown("### 🪐 멤버십 등급")
 st.sidebar.radio("플랜 선택", ["무료 체험 (활성화됨)", "Pro Oracle (9월 20일 오픈)"], index=0, disabled=True)
