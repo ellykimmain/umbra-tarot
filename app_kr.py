@@ -1350,35 +1350,40 @@ if selected_product_id == "FREE":
                 4. [중요] 절대 물음표(?)로 끝내지 마라. 문장은 반드시 명식의 디테일(방위, 특정 띠, 성씨, 자미두수의 궁)을 언급하며 단호하고 무게감 있는 선언으로 마무리하라.
                 """
 
-                ph = st.empty()
-                with ph.container():
-                    st.markdown('<div class="luxury-terminal"><div style="color:#d4af37; text-align:center;">우주 주파수와 명식 데이터를 조율하는 중입니다...</div></div>', unsafe_allow_html=True)
-                
+                # 💡 [복구] API 호출 대기 시간 동안 빙글빙글 돌아가는 스피너와 안내 문구를 띄워 멈춘 느낌을 완벽히 해소
                 try:
-                    response_stream = client.models.generate_content_stream(
-                        model="gemini-3.6-flash",
-                        contents=initial_prompt,
-                    )
-                    
-                    ph.empty()
-                    
-                    full_reply = ""
-                    with st.container():
-                        st.markdown('<div class="luxury-terminal"><div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>', unsafe_allow_html=True)
-                        box_placeholder = st.empty()
+                    with st.spinner("🌌 사주·베딕·자미두수 데이터를 교차 검증하며 오라클 채널을 조율 중입니다..."):
+                        response_stream = client.models.generate_content_stream(
+                            model="gemini-3.6-flash",
+                            contents=initial_prompt,
+                        )
+                        
+                        full_reply = ""
+                        # 데이터가 들어오는 순간 빈 박스 대신 실시간 타이핑 효과 출력
+                        placeholder = st.empty()
                         for chunk in response_stream:
                             if chunk.text:
                                 full_reply += chunk.text
-                                box_placeholder.markdown(full_reply + "▌")
-                        box_placeholder.markdown(full_reply)
-                        st.markdown('</div>', unsafe_allow_html=True)
+                                placeholder.markdown(f"""
+                                <div class="luxury-terminal">
+                                    <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>
+                                    <div style="line-height:1.8;">{full_reply.replace(chr(10), '<br>') + '▌'}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
+                        
+                        # 완성된 최종 텍스트 렌더링
+                        placeholder.markdown(f"""
+                        <div class="luxury-terminal">
+                            <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>
+                            <div style="line-height:1.8;">{full_reply.replace(chr(10), '<br>')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
                     st.session_state["chat_messages"] = [{"role": "assistant", "content": full_reply}]
                     st.session_state["chat_initialized"] = True
                     st.rerun()
                     
                 except Exception as e:
-                    ph.empty()
                     st.error(f"채널 연결 오류: {e}")
             else:
                 st.markdown("""
