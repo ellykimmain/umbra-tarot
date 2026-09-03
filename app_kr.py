@@ -1349,15 +1349,30 @@ if selected_product_id == "FREE":
 
                 try:
                     for title, prompt_text, loading_msg in steps:
-                        current_display = "### [ ORACLE · SECURE CHANNEL ]\n\n"
+                        # 누적된 결과를 하이엔드 터미널 디자인 컨테이너 안에 깔끔하게 포맷팅
+                        accumulated_body = ""
                         for res_title, res_text in saved_results:
-                            current_display += f"**{res_title}**\n{res_text}\n\n---\n\n"
-                        
-                        current_display += f"> ⚡ *{loading_msg} ({title} 진행 중...)*"
+                            accumulated_body += f"""
+                            <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding-bottom: 15px;">
+                                <div style="color: #d4af37; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase;">{res_title}</div>
+                                <div style="line-height: 1.8; color: #f1f5f9;">{res_text.replace(chr(10), '<br>')}</div>
+                            </div>
+                            """
 
-                        terminal_placeholder.markdown(current_display)
+                        # 현재 진행 중인 단계 표시
+                        terminal_placeholder.markdown(f"""
+                        <div class="luxury-terminal">
+                            <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:12px;">[ ORACLE · SYSTEM RUNNING ]</div>
+                            {accumulated_body}
+                            <div style="color: #94a3b8; font-style: italic; border-left: 2px solid #d4af37; padding-left: 10px; margin-top: 10px;">
+                                ⚡ {loading_msg}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
                         time.sleep(0.6)
 
+                        # 모델 호출
                         response = client.models.generate_content(
                             model="gemini-3.6-flash",
                             contents=f"""
@@ -1371,13 +1386,9 @@ if selected_product_id == "FREE":
                         step_result = response.text.strip()
                         saved_results.append((title, step_result))
 
-                        updated_display = "### [ ORACLE · SECURE CHANNEL ]\n\n"
-                        for res_title, res_text in saved_results:
-                            updated_display += f"**{res_title}**\n{res_text}\n\n---\n\n"
-
-                        terminal_placeholder.markdown(updated_display)
                         time.sleep(0.4)
 
+                    # 최종 완성된 결과물 HTML 스토리지 생성
                     final_html_storage = ""
                     for res_title, res_text in saved_results:
                         final_html_storage += f"""
@@ -1405,6 +1416,7 @@ if selected_product_id == "FREE":
                 """, unsafe_allow_html=True)
         
         else:
+            # 💡 [수정] HTML 태그가 그대로 노출되지 않도록 unsafe_allow_html=True를 반드시 적용합니다.
             for message in st.session_state["chat_messages"]:
                 st.markdown(f"""
                 <div class="luxury-terminal">
