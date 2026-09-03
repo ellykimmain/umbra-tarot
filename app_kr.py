@@ -1282,130 +1282,226 @@ def send_result_email(user_email, user_name, result_text, product_name):
 
 
 # =========================================================
-# FREE SHADOW READING
+# FREE SHADOW READING & RAW CHAT
 # =========================================================
 
 if selected_product_id == "FREE":
 
-    if st.button("오늘의 SHADOW READING 시작하기"):
+    # 1. 실시간 상담 모드 (RAW CHAT)
+    if reading_mode.startswith("RAW CHAT"):
+        st.markdown("<h2 style='text-align:center; color:#1a1a2e;'>THE RAW · 실시간 오라클 상담</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center; color:#6c757d;'>사주와 수비학 데이터를 바탕으로 오라클과 실시간으로 대화를 이어갑니다.</p>", unsafe_allow_html=True)
 
-        current_date = today_kst()
+        # 세션에 대화 기록이 없으면 초기화 및 사주 데이터 생성
+        if "chat_messages" not in st.session_state:
+            st.session_state["chat_messages"] = []
+            st.session_state["chat_initialized"] = False
 
-        if not user_name.strip():
-            st.warning("이름 또는 닉네임을 입력하십시오.")
-            st.stop()
+        # 첫 시작 버튼 또는 초기화
+        if not st.session_state["chat_initialized"]:
+            if st.button("실시간 상담 세션 시작하기"):
+                if not user_name.strip():
+                    st.warning("이름 또는 닉네임을 입력하십시오.")
+                    st.stop()
+                
+                upsert_user(user_email, user_name)
 
-        upsert_user(user_email, user_name)
-
-        if user_email != ADMIN_EMAIL:
-            if has_used_free_today(
-                user_email,
-                current_date,
-            ):
-                st.error(
-                    "오늘의 무료 SHADOW READING은 이미 사용했습니다. "
-                    "내일 다시 새로운 리딩을 시작할 수 있습니다."
+                # 초기 사주/점술 데이터 계산
+                astrology_data = build_astrology_block(
+                    int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
                 )
+                
+                initial_prompt = f"""
+                당신은 THE RAW TAROT의 차갑고 예리한 수석 분석가입니다.
+                내담자와의 실시간 상담을 시작합니다. 내담자의 프로필과 데이터는 다음과 같습니다.
+                
+                [프로필]
+                이름: {user_name} / 성별: {gender} / 출생지: {birth_place} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
+                [점술 데이터]
+                {astrology_data}
+                [상담 주제]
+                {user_question}
+
+                위 데이터를 바탕으로, 내담자의 첫 번째 질문이나 주제에 대해 차갑고 뼈를 때리는 현실적인 오라클 진단을 내리고, 대화를 이어갈 수 있도록 날카로운 질문 1개를 던지며 첫 답변을 시작하라.
+                """
+
+                with st.spinner("🌌 오라클과 주파수를 동기화하고 있습니다..."):
+                    try:
+                        response = client.models.generate_content(
+                            model="gemini-3.6-flash",
+                            contents=initial_prompt,
+                        )
+                        initial_reply = response.text or "연결이 원활하지 않습니다."
+                        st.session_state["chat_messages"].append({"role": "assistant", "content": initial_reply})
+                        st.session_state["chat_initialized"] = True
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"상담 초기화 중 오류 발생: {e}")
+            else:
+                st.info("위 버튼을 누르면 사주 데이터가 연동된 실시간 오라클 대화가 시작됩니다.")
+        
+        else:
+            # 기존 대화 기록 출력
+            for message in st.session_state["chat_messages"]:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
+
+            # 유저 입력창 (티키타카)
+            if user_input := st.chat_input("오라클에게 추가로 따져묻거나 질문하세요..."):
+                st.session_state["chat_messages"].append({"role": "user", "content": user_input})
+                with st.chat_message("user"):
+                    st.markdown(user_input)
+
+                # Gemini 대화 맥락 구성
+                history_prompt = f"당신은 THE RAW TAROT의 차갑고 예리한 오라클 분석가입니다. 앞선 대화 맥락과 내담자 데이터({user_name}, {birth_year}년생)를 바탕으로 냉정하고 뼈 때리는 팩트 위주로 실시간 답변을 이어가세요.\n\n[대화 기록]\n"
+                for m in st.session_state["chat_messages"]:
+                    role_name = "내담자" if m["role"] == "user" else "오라클"
+                    history_prompt += f"{role_name}: {m['content']}\n"
+
+                with st.chat_message("assistant"):
+                    message_placeholder = st.empty()
+                    full_reply = ""
+                    try:
+                        response_stream = client.models.generate_content_stream(
+                            model="gemini-3.6-flash",
+                            contents=history_prompt,
+                        )
+                        for chunk in response_stream:
+                            if chunk.text:
+                                full_reply += chunk.text
+                                message_placeholder.markdown(full_reply + "▌")
+                        message_placeholder.markdown(full_reply)
+                        st.session_state["chat_messages"].append({"role": "assistant", "content": full_reply})
+                    except Exception as e:
+                        st.error(f"답변 생성 중 오류: {e}")
+
+            # 상담 초기화 버튼
+            if st.button("상담 세션 초기화하기"):
+                st.session_state["chat_messages"] = []
+                st.session_state["chat_initialized"] = False
+                st.rerun()
+
+    # 2. 기존 무료 SHADOW READING 모드 (Money Shadow 또는 Raw Question)
+    else:
+        if st.button("오늘의 SHADOW READING 시작하기"):
+
+            current_date = today_kst()
+
+            if not user_name.strip():
+                st.warning("이름 또는 닉네임을 입력하십시오.")
                 st.stop()
 
-        ph = st.empty()
+            upsert_user(user_email, user_name)
 
-        loading_steps = [
-            ("🌌 운명 데이터 동기화 중...", 0.1),
-            ("🪐 사주 명식과 수비학 구조 교차 분석 중...", 0.3),
-            ("☽ 베딕 점성술 행성 배치 대조 중...", 0.5),
-            ("🎴 타로 덱에서 운명의 카드를 뽑는 중...", 0.7),
-            ("⚡ 카드를 뒤집어 오늘의 그림자를 조합하는 중...", 0.9)
-        ]
+            if user_email != ADMIN_EMAIL:
+                if has_used_free_today(
+                    user_email,
+                    current_date,
+                ):
+                    st.error(
+                        "오늘의 무료 SHADOW READING은 이미 사용했습니다. "
+                        "내일 다시 새로운 리딩을 시작할 수 있습니다."
+                    )
+                    st.stop()
 
-        bar = st.progress(0.0)
-        for msg, progress_val in loading_steps:
-            ph.info(msg)
-            bar.progress(progress_val)
-            time.sleep(0.5)
+            ph = st.empty()
 
-        bar.progress(1.0)
-        time.sleep(0.3)
-        bar.empty()
-        ph.empty()
+            loading_steps = [
+                ("🌌 운명 데이터 동기화 중...", 0.1),
+                ("🪐 사주 명식과 수비학 구조 교차 분석 중...", 0.3),
+                ("☽ 베딕 점성술 행성 배치 대조 중...", 0.5),
+                ("🎴 타로 덱에서 운명의 카드를 뽑는 중...", 0.7),
+                ("⚡ 카드를 뒤집어 오늘의 그림자를 조합하는 중...", 0.9)
+            ]
 
-        astrology_data = build_astrology_block(
-            int(birth_year),
-            int(birth_month),
-            int(birth_day),
-            birth_time,
-            birth_city,
-        )
+            bar = st.progress(0.0)
+            for msg, progress_val in loading_steps:
+                ph.info(msg)
+                bar.progress(progress_val)
+                time.sleep(0.5)
 
-        drawn_keys = random.sample(
-            MAJOR_ARCANA,
-            PRODUCTS["FREE"]["cards"],
-        )
+            bar.progress(1.0)
+            time.sleep(0.3)
+            bar.empty()
+            ph.empty()
 
-        prompt = build_prompt(
-            user_name=user_name,
-            gender=gender,
-            birth_place=birth_place,
-            birth_year=int(birth_year),
-            birth_month=int(birth_month),
-            birth_day=int(birth_day),
-            birth_time=birth_time,
-            user_question=user_question,
-            astrology_data=astrology_data,
-            drawn_keys=drawn_keys,
-            product_id="FREE",
-        )
+            astrology_data = build_astrology_block(
+                int(birth_year),
+                int(birth_month),
+                int(birth_day),
+                birth_time,
+                birth_city,
+            )
 
-        try:
-            with st.spinner("🌌 사주·수비학·베딕 데이터를 교차 검증하며 리포트를 실시간으로 조립 중입니다..."):
-                response_stream = client.models.generate_content_stream(
-                    model="gemini-3.6-flash",
-                    contents=prompt,
+            drawn_keys = random.sample(
+                MAJOR_ARCANA,
+                PRODUCTS["FREE"]["cards"],
+            )
+
+            prompt = build_prompt(
+                user_name=user_name,
+                gender=gender,
+                birth_place=birth_place,
+                birth_year=int(birth_year),
+                birth_month=int(birth_month),
+                birth_day=int(birth_day),
+                birth_time=birth_time,
+                user_question=user_question,
+                astrology_data=astrology_data,
+                drawn_keys=drawn_keys,
+                product_id="FREE",
+            )
+
+            try:
+                with st.spinner("🌌 사주·수비학·베딕 데이터를 교차 검증하며 팩트 폭행 리포트를 실시간으로 조립 중입니다..."):
+                    response_stream = client.models.generate_content_stream(
+                        model="gemini-3.6-flash",
+                        contents=prompt,
+                    )
+
+                    full_result_text = ""
+                    result_placeholder = st.empty()
+
+                    for chunk in response_stream:
+                        if chunk.text:
+                            full_result_text += chunk.text
+                            result_placeholder.markdown(full_result_text + "▌")
+
+                    result_placeholder.empty()
+                    result_text = full_result_text
+
+                st.success("오늘의 SHADOW READING이 완성되었습니다.")
+
+                display_free_result(
+                    result_text,
+                    drawn_keys,
                 )
 
-                full_result_text = ""
-                result_placeholder = st.empty()
+                save_free_usage(
+                    user_email,
+                    current_date,
+                )
 
-                for chunk in response_stream:
-                    if chunk.text:
-                        full_result_text += chunk.text
-                        result_placeholder.markdown(full_result_text + "▌")
+                save_report_to_db(
+                    user_email,
+                    "FREE",
+                    user_question,
+                    result_text,
+                )
 
-                result_placeholder.empty()
-                result_text = full_result_text
+                email_sent = send_result_email(
+                    user_email,
+                    user_name,
+                    result_text,
+                    "무료 SHADOW READING",
+                )
 
-            st.success("오늘의 SHADOW READING이 완성되었습니다.")
+                if email_sent:
+                    st.caption("리딩 결과를 이메일로도 보내드렸습니다.")
 
-            display_free_result(
-                result_text,
-                drawn_keys,
-            )
+                st.markdown("---")
 
-            save_free_usage(
-                user_email,
-                current_date,
-            )
-
-            save_report_to_db(
-                user_email,
-                "FREE",
-                user_question,
-                result_text,
-            )
-
-            email_sent = send_result_email(
-                user_email,
-                user_name,
-                result_text,
-                "무료 SHADOW READING",
-            )
-
-            if email_sent:
-                st.caption("리딩 결과를 이메일로도 보내드렸습니다.")
-
-            st.markdown("---")
-
-            st.markdown("""
+                st.markdown("""
 <div class="raw-dark-card" style="text-align:center;">
     <div class="raw-label" style="color:#d4af37;">
         GO DEEPER
@@ -1426,159 +1522,15 @@ if selected_product_id == "FREE":
 </div>
 """, unsafe_allow_html=True)
 
-            if st.button(
-                "🔓 THE RAW DEEP ANALYSIS · 990원",
-                key="go_deep",
-            ):
-                st.session_state["checkout_product"] = "RAW_DEEP"
-                st.rerun()
+                if st.button(
+                    "🔓 THE RAW DEEP ANALYSIS · 990원",
+                    key="go_deep",
+                ):
+                    st.session_state["checkout_product"] = "RAW_DEEP"
+                    st.rerun()
 
-        except Exception as e:
-            ph.empty()
-            st.error(
-                f"리딩 생성 중 오류가 발생했습니다: {str(e)}"
-            )
-
-# =========================================================
-# RAW DEEP ANALYSIS
-# =========================================================
-
-elif selected_product_id == "RAW_DEEP":
-
-    st.markdown(
-        "<h2 style='text-align:center; color:#1a1a2e;'>"
-        "THE RAW DEEP ANALYSIS</h2>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("""
-    <div class="raw-card">
-        <div class="raw-label">ONE QUESTION · FULL ANALYSIS</div>
-
-        <div class="raw-heading">
-            당신의 질문 하나를 깊게 파고듭니다.
-        </div>
-
-        <p class="raw-muted">
-            사주 · 수비학 · 베딕 점성술 · 타로를 함께 놓고
-            서로 일치하는 부분과 충돌하는 부분을 구분합니다.
-        </p>
-
-        <hr>
-
-        <p>
-            <b>제공 내용</b><br>
-            · 5장 타로 스프레드<br>
-            · 돈과 현실적인 성과 분석<br>
-            · 점술 체계 간 교차 검증<br>
-            · 현실적인 행동 전략<br>
-            · 결과 이메일 발송
-        </p>
-
-        <div class="deep-price">
-            990원
-        </div>
-
-        <p style="color:#868e96; font-size:0.85rem;">
-            현재는 결제 연동 전 테스트 모드입니다.
-            사업자 및 결제 설정이 완료되면 이 버튼을
-            토스페이먼츠 결제로 교체합니다.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    if st.button(
-        "990원 결제 및 DEEP 리포트 생성 · 테스트",
-        key="deep_test",
-    ):
-
-        if not user_name.strip():
-            st.warning("이름 또는 닉네임을 입력하십시오.")
-            st.stop()
-
-        ph = st.empty()
-        ph.info(
-            "🌌 당신의 데이터를 심층 분석하고 있습니다..."
-        )
-
-        time.sleep(0.8)
-
-        astrology_data = build_astrology_block(
-            int(birth_year),
-            int(birth_month),
-            int(birth_day),
-            birth_time,
-            birth_city,
-        )
-
-        drawn_keys = random.sample(
-            MAJOR_ARCANA,
-            PRODUCTS["RAW_DEEP"]["cards"],
-        )
-
-        prompt = build_prompt(
-            user_name=user_name,
-            gender=gender,
-            birth_place=birth_place,
-            birth_year=int(birth_year),
-            birth_month=int(birth_month),
-            birth_day=int(birth_day),
-            birth_time=birth_time,
-            user_question=user_question,
-            astrology_data=astrology_data,
-            drawn_keys=drawn_keys,
-            product_id="RAW_DEEP",
-        )
-
-        try:
-            response = client.models.generate_content(
-                model="gemini-3.6-flash",
-                contents=prompt,
-            )
-
-            result_text = response.text or ""
-
-            ph.empty()
-
-            st.success(
-                "THE RAW DEEP ANALYSIS가 완성되었습니다."
-            )
-
-            display_deep_result(
-                result_text,
-                drawn_keys,
-            )
-
-            save_report_to_db(
-                user_email,
-                "RAW_DEEP",
-                user_question,
-                result_text,
-            )
-
-            email_sent = send_result_email(
-                user_email,
-                user_name,
-                result_text,
-                "THE RAW DEEP ANALYSIS",
-            )
-
-            if email_sent:
-                st.success(
-                    "심층 리포트를 이메일로도 발송했습니다."
+            except Exception as e:
+                ph.empty()
+                st.error(
+                    f"리딩 생성 중 오류가 발생했습니다: {str(e)}"
                 )
-
-        except Exception as e:
-            ph.empty()
-            st.error(
-                f"DEEP 분석 중 오류가 발생했습니다: {str(e)}"
-            )
-
-    st.markdown("---")
-
-    if st.button(
-        "← 무료 SHADOW READING으로 돌아가기",
-        key="back_free",
-    ):
-        st.session_state["checkout_product"] = "FREE"
-        st.rerun()
