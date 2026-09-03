@@ -1414,12 +1414,13 @@ if selected_product_id == "FREE":
                 """, unsafe_allow_html=True)
         
         else:
-            # 💡 [수정] HTML 태그가 그대로 노출되지 않도록 unsafe_allow_html=True를 반드시 적용합니다.
+            # 💡 [수정] 세션에 저장된 메시지를 안전하게 렌더링하고 잔여 HTML 태그 찌꺼기를 원천 차단
             for message in st.session_state["chat_messages"]:
+                content_clean = message["content"].replace("</div>", "").replace("<div>", "")
                 st.markdown(f"""
                 <div class="luxury-terminal">
                     <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:12px;">[ ORACLE · SECURE CHANNEL ]</div>
-                    {message["content"]}
+                    <div style="line-height: 1.8; color: #f1f5f9;">{content_clean}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
