@@ -1336,81 +1336,64 @@ if selected_product_id == "FREE":
                     int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
                 )
                 
-                # 💡 단계별 순차 출력을 위한 프롬프트 분할 정의
+                # 💡 단계별 타이틀과 명확한 지시가 담긴 4단계 순차 분석 정의
                 steps = [
-                    ("사주 명식의 구조를 해부하는 중...", f"""
-                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-                    [점술 데이터] {astrology_data}
-                    [상담 주제] {user_question}
-                    [지시] 사주 명식의 관점에서 내담자의 핵심 기질과 돈줄의 흐름을 딱 2줄로 서늘하게 요약하라. 한문이나 전문 용어는 배제할 것.
-                    """),
-                    ("운명의 타로 카드 4장을 뒤집는 중...", f"""
-                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-                    [점술 데이터] {astrology_data}
-                    [상담 주제] {user_question}
-                    [지시] 타로 카드가 드러내는 현재의 숨겨진 함정과 그림자를 딱 2줄로 압축하여 타격하라.
-                    """),
-                    ("베딕 점성술의 행성 배치를 대조하는 중...", f"""
-                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-                    [점술 데이터] {astrology_data}
-                    [상담 주제] {user_question}
-                    [지시] 베딕 점성술의 행성 궤도에서 드러나는 거대한 흐름과 피해야 할 위기를 딱 2줄로 서늘하게 진단하라.
-                    """),
-                    ("자미두수 및 수비학 코드를 교차 검증하는 중...", f"""
-                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-                    [점술 데이터] {astrology_data}
-                    [상담 주제] {user_question}
-                    [지시] 자미두수와 수비학 숫자가 가리키는 현실적 돌파구와 행동 원칙을 딱 2줄로 짚어라.
-                    """),
-                    ("오라클의 최종 종합 선언을 조립하는 중...", f"""
-                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-                    [점술 데이터] {astrology_data}
-                    [상담 주제] {user_question}
-                    [지시] 앞선 모든 데이터를 종합하여, 내담자가 나아갈 단 하나의 현실적 비즈니스 방향과 전략을 딱 4줄로 묵직하게 선언하라. 마지막 문장은 반드시 방위(예: 북서쪽), 특정 띠, 성씨 등의 디테일을 포함한 단호한 선언으로 마무리하고 절대 물음표로 끝내지 마라.
-                    """)
+                    ("🪐 사주 명식 구조 분석", "사주 명식의 관점에서 내담자의 핵심 기질과 돈줄의 흐름을 딱 2줄로 서늘하게 요약하라. 한문이나 전문 용어는 배제할 것.", "사주 명식의 구조를 해부하는 중..."),
+                    ("🎴 운명의 타로 4장 개방", "타로 카드가 드러내는 현재의 숨겨진 함정과 그림자를 딱 2줄로 압축하여 타격하라.", "운명의 타로 카드 4장을 뒤집는 중..."),
+                    ("☽ 베딕 점성술 행성 궤도 대조", "베딕 점성술의 행성(토성, 라후, 금성 등) 궤도에서 드러나는 거대한 흐름과 피해야 할 위기를 딱 2줄로 서늘하게 진단하라.", "베딕 점성술의 행성 배치를 대조하는 중..."),
+                    ("⚡ 자미두수 및 최종 오라클 선언", "자미두수와 수비학 숫자가 가리키는 현실적 돌파구를 짚고, 마지막 문장은 반드시 방위(예: 북서쪽), 특정 띠, 성씨 등의 디테일을 포함한 단호한 선언으로 마무리하라. 절대 물음표로 끝내지 마라.", "자미두수 및 수비학 코드를 교차 검증하는 중...")
                 ]
 
-                # 터미널 박스를 미리 띄우고 순차적으로 채워나감
-                full_reply = ""
-                
                 terminal_placeholder = st.empty()
+                accumulated_html = ""
 
                 try:
-                    for loading_msg, prompt_text in steps:
-                        # 각 단계별 로딩 스피너 느낌을 주는 UI 업데이트
+                    for title, prompt_text, loading_msg in steps:
+                        # 로딩 중 연출
                         terminal_placeholder.markdown(f"""
                         <div class="luxury-terminal">
                             <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE · SYSTEM RUNNING ]</div>
-                            <div style="color:#94a3b8; font-style:italic; margin-bottom:10px;">⚡ {loading_msg}</div>
-                            <div style="line-height:1.8; opacity: 0.6;">{full_reply.replace(chr(10), '<br>')}</div>
+                            <div style="color:#94a3b8; font-style:italic; margin-bottom:12px;">⚡ {loading_msg}</div>
+                            {accumulated_html}
+                            <div style="border-left: 2px solid #d4af37; padding-left: 12px; color: #64748b; font-style: italic; margin-top: 10px;">
+                                {title} 분석 중...
+                            </div>
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        time.sleep(0.8) # 딜레이를 주어 긴장감 조성
+                        time.sleep(0.7)
 
-                        # 모델 호출
+                        # AI 모델 호출
                         response = client.models.generate_content(
                             model="gemini-3.6-flash",
-                            contents=prompt_text,
+                            contents=f"""
+                            [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
+                            [점술 데이터] {astrology_data}
+                            [상담 주제] {user_question}
+                            [지시사항] {prompt_text}
+                            """,
                         )
                         
                         step_result = response.text.strip()
-                        if full_reply:
-                            full_reply += "\n\n" + step_result
-                        else:
-                            full_reply = step_result
+                        
+                        # 각 단계를 독립된 카드 블록으로 누적
+                        accumulated_html += f"""
+                        <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding-bottom: 15px;">
+                            <div style="color: #d4af37; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase;">{title}</div>
+                            <div style="line-height: 1.8; color: #f1f5f9;">{step_result.replace(chr(10), '<br>')}</div>
+                        </div>
+                        """
 
-                        # 결과 실시간 갱신
                         terminal_placeholder.markdown(f"""
                         <div class="luxury-terminal">
-                            <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>
-                            <div style="line-height:1.8;">{full_reply.replace(chr(10), '<br>')}</div>
+                            <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE · SECURE CHANNEL ]</div>
+                            {accumulated_html}
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        time.sleep(0.5)
+                        time.sleep(0.4)
 
-                    st.session_state["chat_messages"] = [{"role": "assistant", "content": full_reply}]
+                    st.session_state["chat_messages"] = [{"role": "assistant", "content": accumulated_html}]
                     st.session_state["chat_initialized"] = True
                     st.rerun()
                     
@@ -1426,6 +1409,30 @@ if selected_product_id == "FREE":
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
+        
+        else:
+            # 저장된 결과물 표시 (단계별 카드 구조 유지)
+            for message in st.session_state["chat_messages"]:
+                st.markdown(f"""
+                <div class="luxury-terminal">
+                    <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:12px;">[ ORACLE · SECURE CHANNEL ]</div>
+                    {message["content"]}
+                </div>
+                """, unsafe_allow_html=True)
+
+            # 하단 유료 결제 유도 버튼 및 새로 시작 버튼
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            if st.button("🔓 THE RAW DEEP ANALYSIS · 990원", use_container_width=True, key="go_deep_chat_wide_final"):
+                st.session_state["checkout_product"] = "RAW_DEEP"
+                st.rerun()
+
+            st.markdown("<div style='text-align: center; margin-top: 15px;'>", unsafe_allow_html=True)
+            if st.button("↺ 처음부터 다시 시작하기", key="reset_session_sub_final"):
+                st.session_state["chat_messages"] = []
+                st.session_state["chat_initialized"] = False
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
         
         else:
             # 출력된 결과물 표시
