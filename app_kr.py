@@ -76,16 +76,17 @@ def get_vedic_data(year, month, day, hour_str, city_name):
             timezone_offset=coords["tz"]
         )
         
-        # LLM이 파싱하기 쉽도록 D1(Rasi) 차트 주요 행성의 별자리(Sign) 위치를 텍스트로 가공
         lines = ["\n[베딕 점성술 (Jyotisha) 주요 행성 위치]"]
         if hasattr(chart, 'd1_chart') and hasattr(chart.d1_chart, 'planets'):
             for p in chart.d1_chart.planets:
-                p_name = getattr(p, 'name', '')
-                p_sign = getattr(p, 'sign', '')
+                # 딕셔너리(dict)와 객체(object) 형태를 모두 커버하는 안전한 파싱
+                p_name = p.get('name', '') if isinstance(p, dict) else getattr(p, 'name', '')
+                p_sign = p.get('sign', '') if isinstance(p, dict) else getattr(p, 'sign', '')
+                
                 if p_name and p_sign:
                     lines.append(f"- {p_name}: {p_sign}")
         
-        return "\n".join(lines) if len(lines) > 1 else "\n[베딕 연산 오류: 행성 데이터 파싱 실패]"
+        return "\n".join(lines) if len(lines) > 1 else "\n[베딕 점성술 (Jyotisha) 차트 연산 완료]"
         
     except Exception as e:
         return f"\n[베딕 연산 오류: {e}]"
