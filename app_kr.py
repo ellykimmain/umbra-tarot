@@ -1336,7 +1336,7 @@ if selected_product_id == "FREE":
                     int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
                 )
                 
-                # 💡 단계별 타이틀과 명확한 지시가 담긴 4단계 순차 분석 정의
+                # 4단계 순차 분석 정의
                 steps = [
                     ("🪐 사주 명식 구조 분석", "사주 명식의 관점에서 내담자의 핵심 기질과 돈줄의 흐름을 딱 2줄로 서늘하게 요약하라. 한문이나 전문 용어는 배제할 것.", "사주 명식의 구조를 해부하는 중..."),
                     ("🎴 운명의 타로 4장 개방", "타로 카드가 드러내는 현재의 숨겨진 함정과 그림자를 딱 2줄로 압축하여 타격하라.", "운명의 타로 카드 4장을 뒤집는 중..."),
@@ -1349,7 +1349,6 @@ if selected_product_id == "FREE":
 
                 try:
                     for title, prompt_text, loading_msg in steps:
-                        # 로딩 중 연출
                         terminal_placeholder.markdown(f"""
                         <div class="luxury-terminal">
                             <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE · SYSTEM RUNNING ]</div>
@@ -1363,7 +1362,6 @@ if selected_product_id == "FREE":
                         
                         time.sleep(0.7)
 
-                        # AI 모델 호출
                         response = client.models.generate_content(
                             model="gemini-3.6-flash",
                             contents=f"""
@@ -1376,7 +1374,6 @@ if selected_product_id == "FREE":
                         
                         step_result = response.text.strip()
                         
-                        # 각 단계를 독립된 카드 블록으로 누적
                         accumulated_html += f"""
                         <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding-bottom: 15px;">
                             <div style="color: #d4af37; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase;">{title}</div>
@@ -1411,7 +1408,6 @@ if selected_product_id == "FREE":
                 """, unsafe_allow_html=True)
         
         else:
-            # 저장된 결과물 표시 (단계별 카드 구조 유지)
             for message in st.session_state["chat_messages"]:
                 st.markdown(f"""
                 <div class="luxury-terminal">
@@ -1420,7 +1416,6 @@ if selected_product_id == "FREE":
                 </div>
                 """, unsafe_allow_html=True)
 
-            # 하단 유료 결제 유도 버튼 및 새로 시작 버튼
             st.markdown("<br>", unsafe_allow_html=True)
             
             if st.button("🔓 THE RAW DEEP ANALYSIS · 990원", use_container_width=True, key="go_deep_chat_wide_final"):
@@ -1433,38 +1428,10 @@ if selected_product_id == "FREE":
                 st.session_state["chat_initialized"] = False
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
-        
-        else:
-            # 출력된 결과물 표시
-            for message in st.session_state["chat_messages"]:
-                st.markdown(f"""
-                <div class="luxury-terminal">
-                    <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>
-                    <div style="line-height:1.8;">{message["content"].replace(chr(10), '<br>')}</div>
-                </div>
-                """, unsafe_allow_html=True)
-
-            # 💡 중복된 버튼들을 모두 제거하고 아래 단일 구조로 완전히 통일합니다.
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # 1. 메인 유료 결제 버튼 (전체 너비로 묵직하게 강조)
-            if st.button("🔓 THE RAW DEEP ANALYSIS · 990원", use_container_width=True, key="go_deep_chat_wide_final"):
-                st.session_state["checkout_product"] = "RAW_DEEP"
-                st.rerun()
-
-            # 2. 새로 시작 버튼 (하단 중앙에 아주 미니멀한 보조 형태로 배치)
-            st.markdown("<div style='text-align: center; margin-top: 15px;'>", unsafe_allow_html=True)
-            if st.button("↺ 처음부터 다시 시작하기", key="reset_session_sub_final"):
-                st.session_state["chat_messages"] = []
-                st.session_state["chat_initialized"] = False
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
-                    
+                
     # 2. 기존 무료 SHADOW READING 모드
     else:
         if st.button("오늘의 SHADOW READING 시작하기"):
-            # (기존 무료 리딩 로직 유지)
-            ...
 
             current_date = today_kst()
 
