@@ -1359,8 +1359,11 @@ if selected_product_id == "FREE":
             product_id="FREE",
         )
 
+        # 프로그레스 바 완료 후 API 호출 직전 안내 문구 갱신
+        bar.empty()
+        ph.info("⚡ AI가 사주와 타로 데이터를 교차 분석하여 실시간 텍스트를 작성 중입니다...")
+
         try:
-            # 💡 [스트리밍 적용] generate_content 대신 generate_content_stream 사용
             response_stream = client.models.generate_content_stream(
                 model="gemini-3.6-flash",
                 contents=prompt,
