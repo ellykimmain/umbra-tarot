@@ -1282,40 +1282,60 @@ def send_result_email(user_email, user_name, result_text, product_name):
 
 
 # =========================================================
-# FREE SHADOW READING & RAW CHAT (RETRO TERMINAL)
+# FREE SHADOW READING & RAW CHAT (LUXURY DARK TERMINAL)
 # =========================================================
 
 if selected_product_id == "FREE":
 
-    # 1. 실시간 상담 모드 (RAW CHAT - Retro Terminal Style)
+    # 1. 실시간 상담 모드 (RAW CHAT - Luxury Dark Terminal)
     if reading_mode.startswith("RAW CHAT"):
         
-        # 레트로 터미널풍 CSS 디자인 적용
+        # 하이엔드 다크 럭셔리 터미널 CSS 디자인 적용
         st.markdown("""
         <style>
-        .terminal-box {
-            background-color: #0b0f0b;
-            border: 1px solid #1e3f1e;
-            border-radius: 6px;
-            padding: 20px;
-            font-family: 'Courier New', Courier, monospace;
-            color: #33ff33;
-            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
+        .luxury-terminal {
+            background-color: #0d0e12;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #e2e8f0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
         }
-        .terminal-title {
-            color: #ffb000;
-            font-family: 'Courier New', Courier, monospace;
-            letter-spacing: 2px;
-            font-weight: bold;
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            border-bottom: 1px dashed #333;
-            padding-bottom: 8px;
+        .terminal-header {
+            color: #d4af37;
+            font-family: Georgia, 'Times New Roman', serif;
+            letter-spacing: 3px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding-bottom: 12px;
+            text-transform: uppercase;
+        }
+        .oracle-bubble {
+            background: rgba(26, 26, 46, 0.7);
+            border-left: 3px solid #d4af37;
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 12px;
+            line-height: 1.8;
+            color: #f1f5f9;
+        }
+        .user-bubble {
+            background: rgba(15, 23, 42, 0.7);
+            border-left: 3px solid #38bdf8;
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 12px;
+            line-height: 1.8;
+            color: #e2e8f0;
         }
         </style>
         """, unsafe_allow_html=True)
 
-        st.markdown('<div class="terminal-title">THE_RAW_TERMINAL v1.0 // ORACLE_SESSION</div>', unsafe_allow_html=True)
+        st.markdown('<div class="terminal-header">THE RAW · ORACLE SECURE CHANNEL</div>', unsafe_allow_html=True)
 
         # 세션 초기화
         if "chat_messages" not in st.session_state:
@@ -1324,7 +1344,7 @@ if selected_product_id == "FREE":
 
         # 첫 시작 버튼
         if not st.session_state["chat_initialized"]:
-            if st.button(">> CONNECT_ORACLE (상담 시작)"):
+            if st.button(">> CONNECT ORACLE (상담 채널 열기)"):
                 if not user_name.strip():
                     st.warning("이름 또는 닉네임을 입력하십시오.")
                     st.stop()
@@ -1335,23 +1355,23 @@ if selected_product_id == "FREE":
                     int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
                 )
                 
-                # 💡 분량을 절반으로 압축하도록 프롬프트 지시 강화
+                # 분량 압축 및 팩트 중심 프롬프트
                 initial_prompt = f"""
-                당신은 THE RAW TAROT의 수석 분석가다. 레트로 터미널 시스템을 통해 내담자와 실시간 대화 중이다.
+                당신은 THE RAW TAROT의 수석 분석가다. 보안 채널을 통해 내담자와 실시간 대화 중이다.
                 
                 [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
                 [점술 데이터] {astrology_data}
                 [상담 주제] {user_question}
 
                 [필수 지침]
-                1. 길고 장황한 설명이나 위로는 절대 금지한다. 기존 분석 분량의 '딱 절반' 수준으로 짧고 압축적으로 작성하라.
+                1. 길고 장황한 설명이나 위로는 절대 금지한다. 기존 분석 분량의 '딱 절반' 수준으로 짧고 압축적이고 서늘하게 작성하라.
                 2. 사주, 수비학, 베딕 중 가장 결정적인 데이터 1~2개만 가볍게 언급하고 곧바로 현실을 후벼파는 진단으로 넘어가라.
                 3. 마지막은 대화를 이어가기 위한 날카로운 질문 1개로 끝낼 것.
                 """
 
                 ph = st.empty()
                 with ph.container():
-                    st.markdown('<div class="terminal-box">SYS_MSG: 우주 주파수 및 명식 데이터 로딩 중...</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="luxury-terminal"><div style="color:#d4af37; text-align:center;">우주 주파수와 명식 데이터를 조율하는 중입니다...</div></div>', unsafe_allow_html=True)
                 
                 try:
                     response_stream = client.models.generate_content_stream(
@@ -1362,14 +1382,13 @@ if selected_product_id == "FREE":
                     ph.empty()
                     
                     full_reply = ""
-                    # 터미널 박스 안에서 타이핑 효과 구현
                     with st.container():
-                        st.markdown('<div class="terminal-box">', unsafe_allow_html=True)
+                        st.markdown('<div class="luxury-terminal"><div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>', unsafe_allow_html=True)
                         box_placeholder = st.empty()
                         for chunk in response_stream:
                             if chunk.text:
                                 full_reply += chunk.text
-                                box_placeholder.markdown(full_reply + "█")
+                                box_placeholder.markdown(full_reply + "▌")
                         box_placeholder.markdown(full_reply)
                         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1378,40 +1397,49 @@ if selected_product_id == "FREE":
                     
                 except Exception as e:
                     ph.empty()
-                    st.error(f"터미널 연결 오류: {e}")
+                    st.error(f"채널 연결 오류: {e}")
             else:
                 st.markdown("""
-                <div class="terminal-box">
-                    SYSTEM READY.<br>
-                    > 입력된 프로필과 질문을 바탕으로 오라클 터미널 세션을 엽니다.<br>
-                    > 긴 설명은 배제되고 핵심 팩트만 타자기 출력됩니다.
+                <div class="luxury-terminal" style="text-align:center; padding: 30px;">
+                    <div style="color:#d4af37; font-size:1.1rem; margin-bottom:10px;">SECURE CONNECTION READY</div>
+                    <div style="color:#94a3b8; font-size:0.9rem; line-height:1.7;">
+                        입력된 프로필과 질문을 바탕으로 오라클과의 암호화된 실시간 상담 채널을 엽니다.<br>
+                        군더더기를 배제한 서늘한 팩트 폭행 리포트가 타자기 형식으로 출력됩니다.
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
         
         else:
-            # 이전 대화 기록 출력 (터미널 로그 스타일)
+            # 이전 대화 기록 출력
             for message in st.session_state["chat_messages"]:
-                role_prefix = "[ORACLE] " if message["role"] == "assistant" else f"[{user_name.upper()}] "
-                box_color = "#33ff33" if message["role"] == "assistant" else "#00ffff"
-                st.markdown(f"""
-                <div class="terminal-box" style="color: {box_color}; margin-bottom: 10px;">
-                    <b>{role_prefix}</b><br>{message["content"].replace(chr(10), '<br>')}
-                </div>
-                """, unsafe_allow_html=True)
+                if message["role"] == "assistant":
+                    st.markdown(f"""
+                    <div class="luxury-terminal">
+                        <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>
+                        <div style="line-height:1.8;">{message["content"].replace(chr(10), '<br>')}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                    <div class="luxury-terminal" style="border-left: 3px solid #38bdf8;">
+                        <div style="color:#38bdf8; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ {user_name.upper()} ]</div>
+                        <div style="line-height:1.8;">{message["content"].replace(chr(10), '<br>')}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-            # 유저 입력창 (티키타카)
-            if user_input := st.chat_input("터미널에 명령/질문 입력..."):
+            # 유저 입력창
+            if user_input := st.chat_input("오라클에게 추가로 따져묻거나 질문하세요..."):
                 st.session_state["chat_messages"].append({"role": "user", "content": user_input})
                 
-                # 유저 메시지 즉시 렌더링
                 st.markdown(f"""
-                <div class="terminal-box" style="color: #00ffff; margin-bottom: 10px;">
-                    <b>[{user_name.upper()}]</b><br>{user_input}
+                <div class="luxury-terminal" style="border-left: 3px solid #38bdf8;">
+                    <div style="color:#38bdf8; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ {user_name.upper()} ]</div>
+                    <div style="line-height:1.8;">{user_input}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
                 history_prompt = f"""
-                당신은 THE RAW TAROT의 수석 분석가다. 레트로 터미널에서 짧고 강력한 팩트 위주로 대화 중이다.
+                당신은 THE RAW TAROT의 수석 분석가다. 다크 럭셔리 터미널 채널에서 짧고 강력한 팩트 위주로 대화 중이다.
                 분량은 길지 않게, 핵심만 타자기 치듯 전달하라.
                 
                 [대화 기록]
@@ -1420,10 +1448,9 @@ if selected_product_id == "FREE":
                     role_name = "USER" if m["role"] == "user" else "ORACLE"
                     history_prompt += f"{role_name}: {m['content']}\n"
 
-                # 오라클 답변 스트리밍 타이핑 출력
                 full_reply = ""
                 with st.container():
-                    st.markdown('<div class="terminal-box" style="color: #33ff33;"><b>[ORACLE]</b><br>', unsafe_allow_html=True)
+                    st.markdown('<div class="luxury-terminal"><div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>', unsafe_allow_html=True)
                     box_placeholder = st.empty()
                     try:
                         response_stream = client.models.generate_content_stream(
@@ -1433,7 +1460,7 @@ if selected_product_id == "FREE":
                         for chunk in response_stream:
                             if chunk.text:
                                 full_reply += chunk.text
-                                box_placeholder.markdown(full_reply + "█")
+                                box_placeholder.markdown(full_reply + "▌")
                         box_placeholder.markdown(full_reply)
                     except Exception as e:
                         box_placeholder.markdown(f"ERR: {e}")
@@ -1442,7 +1469,7 @@ if selected_product_id == "FREE":
                 st.session_state["chat_messages"].append({"role": "assistant", "content": full_reply})
 
             # 세션 초기화 버튼
-            if st.button(">> RESET_TERMINAL (세션 초기화)"):
+            if st.button(">> RESET SESSION (상담 채널 초기화)"):
                 st.session_state["chat_messages"] = []
                 st.session_state["chat_initialized"] = False
                 st.rerun()
