@@ -136,7 +136,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 class='main-title'> THE RAW TAROT </h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-title'>당신의 숨겨진 그림자 자아를 직시하십시오. 잔혹한 진실을 마주할 시간입니다.</p>", unsafe_allow_html=True)
+st.markdown("<p class='sub-title'>당신을 직시하십시오. 잔혹한 진실을 마주할 시간입니다.</p>", unsafe_allow_html=True)
 
 # ── 구글 로그인 및 강력한 경고문 ───────────────────────────────────────────────
 if "google_token" not in st.session_state:
@@ -182,7 +182,7 @@ if "user_email" not in st.session_state:
 user_email = st.session_state["user_email"]
 
 st.sidebar.markdown("### 🪐 멤버십 등급")
-st.sidebar.radio("플랜 선택", ["무료 체험 (활성화됨)", "Pro Oracle (9월 1일 오픈)"], index=0, disabled=True)
+st.sidebar.radio("플랜 선택", ["무료 체험 (활성화됨)", "Pro Oracle (9월 20일 오픈)"], index=0, disabled=True)
 st.sidebar.info("✨ **그랜드 오픈!** 현재 무료 체험 기간입니다.")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔮 진단 모드")
