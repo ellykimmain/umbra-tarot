@@ -1309,29 +1309,25 @@ if selected_product_id == "FREE":
 
         ph = st.empty()
 
-        # 💡 [개선] 유저가 멈춘 것으로 오해하지 않도록 시각적 진행 단계를 명확히 쪼갬
         loading_steps = [
-            ("🌌 운명 데이터 동기화 중...", 0.9),
-            ("🪐 사주 명식과 수비학 구조 교차 분석 중...", 0.9),
-            ("☽ 베딕 점성술 행성 배치 대조 중...", 0.9),
-            ("🎴 타로 덱에서 운명의 카드를 뽑는 중...", 0.9),
+            ("🌌 운명 데이터 동기화 중...", 0.1),
+            ("🪐 사주 명식과 수비학 구조 교차 분석 중...", 0.3),
+            ("☽ 베딕 점성술 행성 배치 대조 중...", 0.5),
+            ("🎴 타로 덱에서 운명의 카드를 뽑는 중...", 0.7),
             ("⚡ 카드를 뒤집어 오늘의 그림자를 조합하는 중...", 0.9)
         ]
 
-        # 프로그레스 바와 텍스트를 함께 동적으로 렌더링
         bar = st.progress(0.0)
         for msg, progress_val in loading_steps:
             ph.info(msg)
             bar.progress(progress_val)
             time.sleep(0.5)
 
-        # 데이터 계산 및 카드 선정 완료 직전 프로그레스 완료 처리
         bar.progress(1.0)
         time.sleep(0.3)
-        bar.empty() # 프로그레스 바 제거
+        bar.empty()
+        ph.empty()
 
-        # ★ 기존 NameError 수정:
-        # prompt에서 사용하기 전에 astrology_data를 먼저 계산한다.
         astrology_data = build_astrology_block(
             int(birth_year),
             int(birth_month),
@@ -1359,29 +1355,26 @@ if selected_product_id == "FREE":
             product_id="FREE",
         )
 
-        # 프로그레스 바 완료 후 API 호출 직전 안내 문구 갱신
-        bar.empty()
-        ph.empty()
+        try:
+            with st.spinner("🌌 사주·수비학·베딕 데이터를 교차 검증하며 팩트 폭행 리포트를 실시간으로 조립 중입니다..."):
+                response_stream = client.models.generate_content_stream(
+                    model="gemini-3.6-flash",
+                    contents=prompt,
+                )
 
-        # 💡 [개선] 빙글빙글 돌아가는 애니메이션(Spinner)을 띄워 멈춘 것이 아님을 시각적으로 명확히 증명
-        with st.spinner("🌌 사주·수비학·베딕 데이터를 교차 검증하며 팩트 폭행 리포트를 실시간으로 조립 중입니다..."):
-            response_stream = client.models.generate_content_stream(
-                model="gemini-3.6-flash",
-                contents=prompt,
-            )
+                full_result_text = ""
+                result_placeholder = st.empty()
 
-            full_result_text = ""
-            result_placeholder = st.empty()
+                for chunk in response_stream:
+                    if chunk.text:
+                        full_result_text += chunk.text
+                        result_placeholder.markdown(full_result_text + "▌")
 
-            for chunk in response_stream:
-                if chunk.text:
-                    full_result_text += chunk.text
-                    result_placeholder.markdown(full_result_text + "▌")
+                result_placeholder.empty()
+                result_text = full_result_text
 
-            result_placeholder.empty()
-            result_text = full_result_text
+            st.success("오늘의 SHADOW READING이 완성되었습니다.")
 
-            # 기존 디자인 레이아웃에 맞게 최종 렌더링 실행
             display_free_result(
                 result_text,
                 drawn_keys,
@@ -1436,7 +1429,7 @@ if selected_product_id == "FREE":
                 "🔓 THE RAW DEEP ANALYSIS · 990원",
                 key="go_deep",
             ):
-                st.session_state["checkout_product"] = "RAW_DE_EP"
+                st.session_state["checkout_product"] = "RAW_DEEP"
                 st.rerun()
 
         except Exception as e:
@@ -1444,7 +1437,6 @@ if selected_product_id == "FREE":
             st.error(
                 f"리딩 생성 중 오류가 발생했습니다: {str(e)}"
             )
-
 
 # =========================================================
 # RAW DEEP ANALYSIS
