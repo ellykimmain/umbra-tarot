@@ -1309,17 +1309,26 @@ if selected_product_id == "FREE":
 
         ph = st.empty()
 
-        loading_messages = [
-            "🌌 당신의 데이터를 불러오고 있습니다...",
-            "🪐 사주와 수비학의 구조를 교차 확인하고 있습니다...",
-            "☽ 베딕 데이터를 현재 질문과 대조하고 있습니다...",
-            "🃏 당신의 그림자 카드 3장을 추출하고 있습니다...",
-            "⚡ 서로 다른 신호가 어디에서 겹치는지 확인하고 있습니다...",
+        # 💡 [개선] 유저가 멈춘 것으로 오해하지 않도록 시각적 진행 단계를 명확히 쪼갬
+        loading_steps = [
+            ("🌌 운명 데이터 동기화 중...", 0.1),
+            ("🪐 사주 명식과 수비학 구조 교차 분석 중...", 0.3),
+            ("☽ 베딕 점성술 행성 배치 대조 중...", 0.5),
+            ("🎴 타로 덱에서 운명의 카드를 뽑는 중...", 0.7),
+            ("⚡ 카드를 뒤집어 오늘의 그림자를 조합하는 중...", 0.9)
         ]
 
-        for message in loading_messages:
-            ph.info(message)
-            time.sleep(0.8)
+        # 프로그레스 바와 텍스트를 함께 동적으로 렌더링
+        bar = st.progress(0.0)
+        for msg, progress_val in loading_steps:
+            ph.info(msg)
+            bar.progress(progress_val)
+            time.sleep(0.5)
+
+        # 데이터 계산 및 카드 선정 완료 직전 프로그레스 완료 처리
+        bar.progress(1.0)
+        time.sleep(0.3)
+        bar.empty() # 프로그레스 바 제거
 
         # ★ 기존 NameError 수정:
         # prompt에서 사용하기 전에 astrology_data를 먼저 계산한다.
