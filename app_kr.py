@@ -705,6 +705,7 @@ reading_mode = st.sidebar.radio(
     [
         "MONEY SHADOW — 돈과 현실",
         "RAW QUESTION — 나만의 심층 질문",
+        "RAW CHAT — 실시간 상담하기",
     ],
 )
 
