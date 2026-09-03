@@ -1344,24 +1344,22 @@ if selected_product_id == "FREE":
                     ("⚡ 자미두수 및 최종 오라클 선언", "자미두수와 수비학 숫자가 가리키는 현실적 돌파구를 짚고, 마지막 문장은 반드시 방위(예: 북서쪽), 특정 띠, 성씨 등의 디테일을 포함한 단호한 선언으로 마무리하라. 절대 물음표로 끝내지 마라.", "자미두수 및 수비학 코드를 교차 검증하는 중...")
                 ]
 
-                terminal_placeholder = st.empty()
-                accumulated_html = ""
+               terminal_placeholder = st.empty()
+                saved_results = []
 
                 try:
                     for title, prompt_text, loading_msg in steps:
-                        terminal_placeholder.markdown(f"""
-                        <div class="luxury-terminal">
-                            <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE · SYSTEM RUNNING ]</div>
-                            <div style="color:#94a3b8; font-style:italic; margin-bottom:12px;">⚡ {loading_msg}</div>
-                            {accumulated_html}
-                            <div style="border-left: 2px solid #d4af37; padding-left: 12px; color: #64748b; font-style: italic; margin-top: 10px;">
-                                {title} 분석 중...
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        # 1단계씩 진행될 때마다 로딩 상태와 지금까지 완성된 결과들을 예쁘게 결합해서 표시
+                        current_display = f"### [ ORACLE · SECURE CHANNEL ]\n\n"
+                        for res_title, res_text in saved_results:
+                            current_display += f"**{res_title}**\n{res_text}\n\n---\n\n"
                         
-                        time.sleep(0.7)
+                        current_display += f"> ⚡ *{loading_msg} ({title} 진행 중...)*"
 
+                        terminal_placeholder.markdown(current_display)
+                        time.sleep(0.6)
+
+                        # 모델 호출
                         response = client.models.generate_content(
                             model="gemini-3.6-flash",
                             contents=f"""
@@ -1373,24 +1371,27 @@ if selected_product_id == "FREE":
                         )
                         
                         step_result = response.text.strip()
-                        
-                        accumulated_html += f"""
+                        saved_results.append((title, step_result))
+
+                        # 최신 결과까지 포함하여 다시 렌더링
+                        updated_display = f"### [ ORACLE · SECURE CHANNEL ]\n\n"
+                        for res_title, res_text in saved_results:
+                            updated_display += f"**{res_title}**\n{res_text}\n\n---\n\n"
+
+                        terminal_placeholder.markdown(updated_display)
+                        time.sleep(0.4)
+
+                    # 세션에 최종 마크다운 결과 저장
+                    final_html_storage = ""
+                    for res_title, res_text in saved_results:
+                        final_html_storage += f"""
                         <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding-bottom: 15px;">
-                            <div style="color: #d4af37; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase;">{title}</div>
-                            <div style="line-height: 1.8; color: #f1f5f9;">{step_result.replace(chr(10), '<br>')}</div>
+                            <div style="color: #d4af37; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase;">{res_title}</div>
+                            <div style="line-height: 1.8; color: #f1f5f9;">{res_text.replace(chr(10), '<br>')}</div>
                         </div>
                         """
 
-                        terminal_placeholder.markdown(f"""
-                        <div class="luxury-terminal">
-                            <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE · SECURE CHANNEL ]</div>
-                            {accumulated_html}
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        time.sleep(0.4)
-
-                    st.session_state["chat_messages"] = [{"role": "assistant", "content": accumulated_html}]
+                    st.session_state["chat_messages"] = [{"role": "assistant", "content": final_html_storage}]
                     st.session_state["chat_initialized"] = True
                     st.rerun()
                     
