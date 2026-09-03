@@ -109,6 +109,82 @@ def get_ziwei_data(year, month, day, hour_index, gender_str='Female'):
         }
     except Exception:
         return None
+        
+# ── 베딕 점성술(Jyotisha) 계산 함수 ──────────────────────────────────────────
+try:
+    from jyotishganit import calculate_birth_chart
+    VEDIC_AVAILABLE = True
+except ImportError:
+    VEDIC_AVAILABLE = False
+
+CITY_COORDS = {
+    "Seoul": {"lat": 37.5665, "lon": 126.9780, "tz": 9.0},
+    "Busan": {"lat": 35.1796, "lon": 129.0756, "tz": 9.0},
+    "Daejeon": {"lat": 36.3504, "lon": 127.3845, "tz": 9.0},
+    "Daegu": {"lat": 35.8714, "lon": 128.6014, "tz": 9.0},
+    "Incheon": {"lat": 37.4563, "lon": 126.7052, "tz": 9.0},
+    "Jeju": {"lat": 33.4996, "lon": 126.5312, "tz": 9.0},
+    "New York": {"lat": 40.7128, "lon": -74.0060, "tz": -5.0},
+    "Los Angeles": {"lat": 34.0522, "lon": -118.2437, "tz": -8.0},
+    "Chicago": {"lat": 41.8781, "lon": -87.6298, "tz": -6.0},
+    "Seattle": {"lat": 47.6062, "lon": -122.3321, "tz": -8.0},
+    "Houston": {"lat": 29.7604, "lon": -95.3698, "tz": -6.0},
+    "London": {"lat": 51.5074, "lon": -0.1278, "tz": 0.0},
+    "Manchester": {"lat": 53.4808, "lon": -2.2426, "tz": 0.0},
+    "Edinburgh": {"lat": 55.9533, "lon": -3.1883, "tz": 0.0},
+    "Birmingham": {"lat": 52.4862, "lon": -1.8904, "tz": 0.0},
+    "Tokyo": {"lat": 35.6762, "lon": 139.6503, "tz": 9.0},
+    "Osaka": {"lat": 34.6937, "lon": 135.5023, "tz": 9.0},
+    "Kyoto": {"lat": 35.0116, "lon": 135.7681, "tz": 9.0},
+    "Fukuoka": {"lat": 33.5902, "lon": 130.4017, "tz": 9.0},
+    "Sydney": {"lat": -33.8688, "lon": 151.2093, "tz": 10.0},
+    "Melbourne": {"lat": -37.8136, "lon": 144.9631, "tz": 10.0},
+    "Brisbane": {"lat": -27.4698, "lon": 153.0251, "tz": 10.0},
+    "Perth": {"lat": -31.9505, "lon": 115.8605, "tz": 8.0},
+    "Toronto": {"lat": 43.6510, "lon": -79.3470, "tz": -5.0},
+    "Vancouver": {"lat": 49.2827, "lon": -123.1207, "tz": -8.0},
+    "Montreal": {"lat": 45.5017, "lon": -73.5673, "tz": -5.0},
+    "Calgary": {"lat": 51.0447, "lon": -114.0719, "tz": -7.0},
+    "Bangkok": {"lat": 13.7563, "lon": 100.5018, "tz": 7.0},
+    "Chiang Mai": {"lat": 18.7883, "lon": 98.9853, "tz": 7.0},
+    "Phuket": {"lat": 7.8804, "lon": 98.3922, "tz": 7.0},
+    "Singapore": {"lat": 1.3521, "lon": 103.8198, "tz": 8.0},
+    "Other": {"lat": 37.5665, "lon": 126.9780, "tz": 9.0}
+}
+
+def get_vedic_data(year, month, day, hour_str, city_name):
+    if not VEDIC_AVAILABLE:
+        return "\n[Vedic Error: Library not found. Reboot app.]"
+    
+    if city_name not in CITY_COORDS:
+        return f"\n[Vedic Error: Coordinates for '{city_name}' not found.]"
+    
+    hr, mn = 12, 0
+    if ":" in hour_str:
+        hr, mn = map(int, hour_str.split(":"))
+        
+    coords = CITY_COORDS.get(city_name)
+    birth_dt = datetime(year, month, day, hr, mn, 0)
+    
+    try:
+        chart = calculate_birth_chart(
+            birth_date=birth_dt,
+            latitude=coords["lat"],
+            longitude=coords["lon"],
+            timezone_offset=coords["tz"]
+        )
+        
+        lines = ["\n=== Vedic Astrology (Jyotisha) ==="]
+        if hasattr(chart, 'd1_chart') and hasattr(chart.d1_chart, 'planets'):
+            for p in chart.d1_chart.planets:
+                p_name = p.get('celestial_body', '') if isinstance(p, dict) else getattr(p, 'celestial_body', '')
+                p_sign = p.get('sign', '') if isinstance(p, dict) else getattr(p, 'sign', '')
+                if p_name and p_sign:
+                    lines.append(f"- {p_name}: {p_sign}")
+        
+        return "\n".join(lines) if len(lines) > 1 else "\n[Vedic Error: Planet data parsing failed]"
+    except Exception as e:
+        return f"\n[Vedic Calculation Error: {e}]"
 
 # ── 수리학(Numerology) 계산 ─────────────────────────────────────────────────
 def reduce_num(n):
@@ -158,10 +234,15 @@ def build_astrology_block(year, month, day, hour_str, birth_place, gender):
     lines.append(f"Personal Month    : {num['personal_month']}")
     lines.append(f"Personal Day      : {num['personal_day']}")
 
+    # 베딕 점성술 추가 (birth_place에서 도시 이름만 추출하여 넘김)
+    city = birth_place.split(",")[0].strip()
+    vedic_text = get_vedic_data(year, month, day, hour_str, city)
+    lines.append(vedic_text)
+
     if not lines:
         lines.append("Cosmic calculation unavailable — reading based on birth data only.")
 
-    return "\n".join(lines)
+    return "\n".join(lines))
 
 # ── Streamlit 시크릿 로드 ───────────────────────────────────────────────────
 api_key       = st.secrets["GEMINI_API_KEY"]
@@ -401,6 +482,9 @@ if st.button("Consult the Oracle & Draw Cards"):
 You speak directly, offering no comforting lies. Deliver cold, hard truths based on the cosmic data.
 Use a tone that is piercing, mystical, and authoritative.
 
+[CRITICAL INSTRUCTION]
+You MUST read the provided [Vedic Astrology (Jyotisha)] data. Cross-reference the client's karmic traits and planetary positions with their BaZi/Ziwei data, and include this analysis in at least one sentence in your response.
+
 CURRENT DATE: {current_date} (All future predictions must start strictly from this date onwards.)
 
 USER PROFILE
@@ -410,13 +494,14 @@ Birth Place: {birth_place}
 Birth Date : {int(birth_year)}-{int(birth_month):02d}-{int(birth_day):02d}
 Birth Time : {birth_time}{question_ctx}
 
-COSMIC CALCULATIONS (BaZi · Purple Star Astrology · Numerology)
+COSMIC CALCULATIONS (BaZi · Purple Star Astrology · Vedic · Numerology)
 {astrology_data}
 
 DRAWN ARCANAS
 1. {drawn_keys[0]}
 2. {drawn_keys[1]}
 3. {drawn_keys[2]}
+4. {drawn_keys[3]}
 
 CRITICAL FORMATTING INSTRUCTION:
 Structure your response EXACTLY using the delimiters below. No text outside these blocks.
