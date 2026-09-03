@@ -268,7 +268,7 @@ user_email = st.session_state["user_email"]
 
 # ── 사이드바 ────────────────────────────────────────────────────────────────
 st.sidebar.markdown("### 🪐 Membership Tiers")
-st.sidebar.radio("Select Your Plan", ["Free Trial (Active)", "Pro Oracle (Available Sept 1st)"], index=0, disabled=True)
+st.sidebar.radio("Select Your Plan", ["Free Trial (Active)", "Pro Oracle (Available Sept 20th)"], index=0, disabled=True)
 st.sidebar.info("✨ **Grand Opening!** Currently in Free Trial Period.")
 st.sidebar.warning("💎 **Pro Oracle** features will unlock on September 1st.")
 st.sidebar.markdown("---")
