@@ -376,7 +376,7 @@ MAJOR_ARCANA = [
 
 # ── 오라클 버튼 실행 및 결제 대기(Checkout) 분기 ────────────────────────────────
 if selected_product_id == "FREE":
-    if st.button("무료 체험 시작하기"):
+    if st.button("오늘의 그림자 확인하기"):
         current_date = datetime.now().strftime("%Y-%m-%d")
         upsert_user(user_email, user_name)
         
@@ -386,92 +386,109 @@ if selected_product_id == "FREE":
                 st.stop()
 
         ph = st.empty()
-        ph.info("🌌 무료 체험 우주적 데이터를 동기화합니다...")
+        ph.info("🌌 오늘의 그림자를 동기화합니다...")
 
-        gender_str = "Male" if gender == "남성" else "Female"
-        astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
         drawn_keys = random.sample(MAJOR_ARCANA, current_product["cards"])
-        question_ctx = f"\n[내담자 질문]: {user_question}" if user_question else ""
 
-        prompt = f"""당신은 냉철한 운명 전략가입니다.
-        아래 데이터와 {current_product["cards"]}장의 타로 카드를 바탕으로 '무료 체험용' 짧은 핵심 메시지를 작성하십시오. 상세 예측은 금지합니다.
+        prompt = f"""당신은 내담자의 숨겨진 치부와 뼈아픈 현실을 정확히 꿰뚫어보는 잔혹한 타로 마스터입니다.
+        아래 {current_product["cards"]}장의 타로 카드를 바탕으로 내담자가 '내 상황을 어떻게 이렇게 정확히 알지?'라며 소름 돋게 만들 '오늘의 그림자'를 진단하십시오.
+        어설픈 힐링, 위로, 누구나 할 수 있는 뻔한 소리는 절대 금지합니다.
         
-        [데이터]
-        {astrology_data}
-        {question_ctx}
         뽑힌 카드: {', '.join(drawn_keys)}
         
-        반드시 다음 구조로 작성:
-        1. 짧고 강렬한 현재 상황 진단
-        2. 핵심 경고 메시지
+        반드시 다음 3가지 구조로만 작성할 것:
+        1. [뼈를 때리는 진단] 내담자가 현재 가장 답답해하거나 고통받고 있는 상황을 1문장으로 단언할 것. (예: "당신은 현재 겉으로는 버티고 있으나, 속으로는 밑빠진 독에 물을 붓고 있습니다.")
+        2. [외면해온 진실] 카드가 폭로하는, 내담자 스스로도 알면서 모른 척하고 있던 치명적인 문제점. (2문장 이내)
+        3. [오늘의 경고] 지금의 기만적인 태도를 당장 바꾸지 않으면 맞이할 잔혹한 결과 1가지.
         """
 
         try:
             res = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
             ph.empty()
-            st.success("무료 체험 렌더링 완료.")
+            st.success("오늘의 그림자 렌더링 완료.")
+            
+            st.markdown("<br><h4 style='color: #1a1a2e;'>🎴 당신이 뽑은 운명의 카드</h4>", unsafe_allow_html=True)
+            cols = st.columns(len(drawn_keys))
+            for idx, card_name in enumerate(drawn_keys):
+                image_filename = f"images/{card_name.replace(' ', '_')}.png"
+                with cols[idx]:
+                    try:
+                        st.image(image_filename, caption=card_name, use_container_width=True)
+                    except:
+                        st.warning(f"이미지 누락: {card_name}")
+            
+            st.markdown("<h4 style='color: #1a1a2e; margin-top: 20px;'>📜 오라클의 팩트 폭행</h4>", unsafe_allow_html=True)
             st.info(res.text)
             
             save_free_usage(user_email, current_date)
-            save_report_to_db(user_email, "FREE", user_question, res.text)
+            save_report_to_db(user_email, "FREE", "오늘의 그림자", res.text)
 
             st.markdown("---")
             st.markdown("""
-            <div style='background-color:#e9ecef; padding:20px; text-align:center;'>
+            <div style='background-color:#e9ecef; padding:30px 20px; text-align:center; border-radius: 10px;'>
                 <h3 style='color:#1a1a2e;'>여기서부터가 RAW입니다</h3>
-                <p style='color:#212529;'>단 하나의 질문을 4개의 시스템으로 교차분석한 전체 리포트를 확인하세요.</p>
+                <p style='color:#495057; font-size: 1.05rem; margin-bottom: 15px;'>
+                    당신의 생년월일과 출생지를 기반으로<br><b>만세력(사주) × 수비학 × 베딕 점성술 × 타로</b>를 교차 분석하면 무엇이 달라질까요?
+                </p>
+                <h3 style='color:#1a1a2e; margin-bottom: 20px; font-weight: 800;'>🔒 잠금<br>THE RAW DEEP ANALYSIS</h3>
             </div>
             """, unsafe_allow_html=True)
             
-            if st.button("RAW ONE 심층 리포트 보기 — 990원"):
-                st.session_state["checkout_product"] = "RAW_ONE"
+            if st.button("RAW DEEP 분석 리포트 — 990원"):
+                st.session_state["checkout_product"] = "RAW_DEEP"
                 st.rerun()
+                
         except Exception as e:
             ph.empty()
-            st.error(f"아스트랄 연결 오류: {str(e)}")
+            st.error(f"오류 발생: {str(e)}")
 
-elif selected_product_id == "RAW_ONE":
+elif selected_product_id == "RAW_DEEP":
     st.markdown("---")
-    st.markdown("## 💳 RAW ONE 결제 데스크")
+    st.markdown("## 💳 THE RAW DEEP ANALYSIS")
     st.markdown("""
-    당신의 단 하나의 질문을 **타로(5장) × 사주 × 수비학 × 베딕 점성술**로 교차 검증합니다.
-    - **결제 금액:** 990원
-    - **제공 내용:** 현재 상황, 충돌 신호 분석, 숨겨진 장애물, 단호한 행동 전략
+    단 하나의 질문을 위해 당신의 모든 데이터를 동원합니다.  
+    **만세력(사주) × 수비학 × 베딕 점성술 × 타로(4장 스프레드)** 교차 분석 리포트.
+    
+    - **결제 금액:** 990원 (1회성 결제)
+    - **제공 내용:** 종합 분석, 현실적 행동 전략, PDF 리포트 발송
     """)
     
-    # [TO-DO] 이 버튼을 누르면 실제 토스페이먼츠 결제창으로 넘어가도록 다음 단계에서 구현합니다.
-    # 현재는 결제가 완료되었다고 가정하고 심층 프롬프트를 즉시 실행하는 테스트용입니다.
-    if st.button("990원 결제하기 (현재는 클릭 시 즉시 생성)"):
+    if st.button("990원 결제 및 리포트 생성 (테스트)"):
         ph = st.empty()
-        ph.info("🌌 RAW ONE 심층 우주적 데이터를 동기화합니다...")
+        ph.info("🌌 당신의 운명 데이터를 심층 분석 중입니다. 잠시만 기다려주십시오...")
         
-        gender_str = "Male" if gender == "남성" else "Female"
         astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
         drawn_keys = random.sample(MAJOR_ARCANA, current_product["cards"])
-        question_ctx = f"\n[내담자 질문]: {user_question}" if user_question else ""
+        question_ctx = f"\n[내담자 심층 질문]: {user_question}" if user_question else ""
 
-        prompt = f"""당신은 냉철하고 분석적인 운명 전략가입니다.
-        아래 데이터와 {current_product["cards"]}장의 타로 카드를 '교차 검증'하여 심층 리포트를 작성하십시오.
+        prompt = f"""당신은 최고의 명리학자이자 점성술사, 타로 마스터입니다.
+        아래 데이터와 {current_product["cards"]}장의 타로 카드를 교차 검증하여, 내담자를 위한 심층 개인 분석 리포트를 작성하십시오.
         
         [데이터]
         {astrology_data}
         {question_ctx}
         뽑힌 카드: {', '.join(drawn_keys)}
         
-        반드시 다음 구조로 작성:
-        1. 질문의 본질과 현재 상황 (팩트 폭행)
-        2. 점술 시스템 간 일치하는 신호와 충돌하는 신호 분석
-        3. 당신을 가로막는 숨겨진 장애물
-        4. 즉각적으로 실행해야 할 단호한 행동 전략
+        반드시 다음 구조로 전문가 리포트 형식으로 작성할 것:
+        1. 질문에 대한 종합 분석 (각 체계의 일치점과 충돌점 분석)
+        2. 당신을 가로막는 현실적/무의식적 장애물
+        3. 현실적인 행동 전략 및 지침
         """
         try:
             res = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
             ph.empty()
-            st.success("RAW ONE 심층 리포트 렌더링 완료.")
-            st.info(res.text)
-            save_report_to_db(user_email, "RAW_ONE", user_question, res.text)
+            st.success("RAW DEEP 리포트 생성이 완료되었습니다.")
             
-            if st.button("돌아가기"):
+            st.markdown("<h4 style='color: #1a1a2e;'>🎴 분석에 사용된 4장의 카드</h4>", unsafe_allow_html=True)
+            cols = st.columns(4)
+            for idx, card_name in enumerate(drawn_keys):
+                with cols[idx]:
+                    st.image(f"images/{card_name.replace(' ', '_')}.png", caption=card_name, use_container_width=True)
+            
+            st.info(res.text)
+            save_report_to_db(user_email, "RAW_DEEP", user_question, res.text)
+            
+            if st.button("초기 화면으로 돌아가기"):
                 st.session_state["checkout_product"] = "FREE"
                 st.rerun()
         except Exception as e:
