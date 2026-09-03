@@ -153,6 +153,18 @@ def save_free_usage(email, date_str):
     except Exception as e:
         print(f"DB Error (save_free_usage): {e}")
 
+def save_report_to_db(email, product_id, question, result_text):
+    """분석 완료 후 reports 테이블에 결과 저장"""
+    try:
+        supabase.table("reports").insert({
+            "email": email,
+            "product_id": product_id,
+            "question": question,
+            "result": result_text
+        }).execute()
+    except Exception as e:
+        print(f"DB Error (save_report): {e}")
+
 # ── Streamlit 및 API 설정 ───────────────────────────────────────────────────
 api_key = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=api_key)
