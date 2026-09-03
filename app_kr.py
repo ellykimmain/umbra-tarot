@@ -1336,7 +1336,7 @@ if selected_product_id == "FREE":
                     int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
                 )
                 
-                # 💡 단계별 순차 출력을 위한 프롬프트 분할 정의 (안정된 구조 + 깔끔한 섹션 스타일)
+                # 4단계 순차 분석 정의 (안정적인 마크다운 기반 렌더링)
                 steps = [
                     ("🪐 사주 명식 구조 분석", f"""
                     [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
@@ -1363,26 +1363,23 @@ if selected_product_id == "FREE":
                     [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
                     [점술 데이터] {astrology_data}
                     [상담 주제] {user_question}
-                    [지시] 자미두수와 수비학 숫자가 가리키는 현실적 돌파구를 짚고, 마지막 문장은 반드시 방위(예: 북서쪽), 특정 띠, 성씨 등의 디테일을 포함한 단호한 선언으로 마무리하라. 절대 물음표로 끝내지 마라.
+                    [지시] 자미두수와 수비학 숫자가 가리키는 현실적 돌파구를 짚고, 마지막 문장은 반드시 방위(예: 북서쪽), 특정 띠, 성씨 등의 디테일을 포함한 단호한 선언으로 마무리하라. 절대 물음표로 끝내지 마라. 분량은 4~5줄 내외로 압축하라.
                     """, "자미두수 및 수비학 코드를 교차 검증하는 중...")
                 ]
 
-                # 터미널 박스를 미리 띄우고 순차적으로 채워나감
-                full_reply_html = ""
                 terminal_placeholder = st.empty()
+                saved_results = []
 
                 try:
                     for title, prompt_text, loading_msg in steps:
-                        # 로딩 중 상태를 보여주는 터미널 갱신
-                        terminal_placeholder.markdown(f"""
-                        <div class="luxury-terminal">
-                            <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE · SYSTEM RUNNING ]</div>
-                            <div style="color:#94a3b8; font-style:italic; margin-bottom:10px;">⚡ {loading_msg}</div>
-                            <div style="line-height:1.8;">{full_reply_html}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        # 현재까지 완성된 내용을 마크다운으로 깔끔하게 조합하여 출력
+                        current_display = "### [ ORACLE · SECURE CHANNEL ]\n\n"
+                        for res_title, res_text in saved_results:
+                            current_display += f"**{res_title}**\n{res_text}\n\n---\n\n"
                         
-                        time.sleep(0.7)
+                        current_display += f"> ⚡ *{loading_msg}*"
+                        terminal_placeholder.markdown(current_display)
+                        time.sleep(0.6)
 
                         # 모델 호출
                         response = client.models.generate_content(
@@ -1391,28 +1388,15 @@ if selected_product_id == "FREE":
                         )
                         
                         step_result = response.text.strip()
-                        
-                        # 각 단계별 결과를 뚜렷한 소제목과 구분선이 있는 카드 블록으로 누적
-                        section_block = f"""
-                        <div style="margin-bottom: 18px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 14px;">
-                            <div style="color: #d4af37; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase; font-weight: bold;">{title}</div>
-                            <div style="line-height: 1.8; color: #f1f5f9;">{step_result.replace(chr(10), '<br>')}</div>
-                        </div>
-                        """
-                        
-                        full_reply_html += section_block
-
-                        # 결과 실시간 갱신 (누적된 블록들 출력)
-                        terminal_placeholder.markdown(f"""
-                        <div class="luxury-terminal">
-                            <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>
-                            <div style="line-height:1.8;">{full_reply_html}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
+                        saved_results.append((title, step_result))
                         time.sleep(0.4)
 
-                    st.session_state["chat_messages"] = [{"role": "assistant", "content": full_reply_html}]
+                    # 최종 완성된 결과 마크다운 생성
+                    final_markdown = "### [ ORACLE · SECURE CHANNEL ]\n\n"
+                    for res_title, res_text in saved_results:
+                        final_markdown += f"**{res_title}**\n{res_text}\n\n---\n\n"
+
+                    st.session_state["chat_messages"] = [{"role": "assistant", "content": final_markdown}]
                     st.session_state["chat_initialized"] = True
                     st.rerun()
                     
