@@ -57,7 +57,6 @@ def get_vedic_data(year, month, day, hour_str, city_name):
     if not VEDIC_AVAILABLE or city_name not in CITY_COORDS:
         return ""
     
-    # 시간 파싱 (모름일 경우 12:00 기준)
     hr, mn = 12, 0
     if hour_str != "모름":
         hr, mn = map(int, hour_str.split(":"))
@@ -66,15 +65,25 @@ def get_vedic_data(year, month, day, hour_str, city_name):
     birth_dt = datetime(year, month, day, hr, mn, 0)
     
     try:
-        # 베딕 차트 계산
+        # 베딕 차트 정밀 연산 실행
         chart = calculate_birth_chart(
             birth_date=birth_dt,
             latitude=coords["lat"],
             longitude=coords["lon"],
             timezone_offset=coords["tz"]
         )
-        # 예시로 Rasi(D1 차트)나 주요 행성의 별자리 위치를 문자열로 조합
-        return f"\n[베딕 점성술 (Jyotisha) 데이터]\n기준 차트 정상 연산 완료. 행성 기운 추가 분석 요망."
+        
+        # LLM이 파싱하기 쉽도록 D1(Rasi) 차트 주요 행성의 별자리(Sign) 위치를 텍스트로 가공
+        lines = ["\n[베딕 점성술 (Jyotisha) 주요 행성 위치]"]
+        if hasattr(chart, 'd1_chart') and hasattr(chart.d1_chart, 'planets'):
+            for p in chart.d1_chart.planets:
+                p_name = getattr(p, 'name', '')
+                p_sign = getattr(p, 'sign', '')
+                if p_name and p_sign:
+                    lines.append(f"- {p_name}: {p_sign}")
+        
+        return "\n".join(lines) if len(lines) > 1 else "\n[베딕 점성술 (Jyotisha) 데이터 연산 완료]"
+        
     except Exception as e:
         return f"\n[베딕 연산 오류: {e}]"
 def reduce_num(n):
