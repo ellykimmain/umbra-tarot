@@ -234,6 +234,17 @@ if "user_email" not in st.session_state:
         st.session_state["user_email"] = ""
 
 user_email = st.session_state["user_email"]
+# ── 사용자 DB 등록 ─────────────────────────────────────────────
+if user_email:
+    try:
+        supabase.table("users").upsert(
+            {
+                "email": user_email
+            },
+            on_conflict="email"
+        ).execute()
+    except Exception as e:
+        st.error("사용자 정보 저장에 실패했습니다.")
 
 st.sidebar.markdown("### 🪐 멤버십 등급")
 st.sidebar.radio("플랜 선택", ["무료 체험 (활성화됨)", "Pro Oracle (9월 20일 오픈)"], index=0, disabled=True)
