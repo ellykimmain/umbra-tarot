@@ -1282,85 +1282,149 @@ def send_result_email(user_email, user_name, result_text, product_name):
 
 
 # =========================================================
-# FREE SHADOW READING & RAW CHAT
+# FREE SHADOW READING & RAW CHAT (RETRO TERMINAL)
 # =========================================================
 
 if selected_product_id == "FREE":
 
-    # 1. 실시간 상담 모드 (RAW CHAT)
+    # 1. 실시간 상담 모드 (RAW CHAT - Retro Terminal Style)
     if reading_mode.startswith("RAW CHAT"):
-        st.markdown("<h2 style='text-align:center; color:#1a1a2e;'>THE RAW · 실시간 오라클 상담</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align:center; color:#6c757d;'>사주와 수비학 데이터를 바탕으로 오라클과 실시간으로 대화를 이어갑니다.</p>", unsafe_allow_html=True)
+        
+        # 레트로 터미널풍 CSS 디자인 적용
+        st.markdown("""
+        <style>
+        .terminal-box {
+            background-color: #0b0f0b;
+            border: 1px solid #1e3f1e;
+            border-radius: 6px;
+            padding: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #33ff33;
+            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
+        }
+        .terminal-title {
+            color: #ffb000;
+            font-family: 'Courier New', Courier, monospace;
+            letter-spacing: 2px;
+            font-weight: bold;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #333;
+            padding-bottom: 8px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
-        # 세션에 대화 기록이 없으면 초기화 및 사주 데이터 생성
+        st.markdown('<div class="terminal-title">THE_RAW_TERMINAL v1.0 // ORACLE_SESSION</div>', unsafe_allow_html=True)
+
+        # 세션 초기화
         if "chat_messages" not in st.session_state:
             st.session_state["chat_messages"] = []
             st.session_state["chat_initialized"] = False
 
-        # 첫 시작 버튼 또는 초기화
+        # 첫 시작 버튼
         if not st.session_state["chat_initialized"]:
-            if st.button("실시간 상담 세션 시작하기"):
+            if st.button(">> CONNECT_ORACLE (상담 시작)"):
                 if not user_name.strip():
                     st.warning("이름 또는 닉네임을 입력하십시오.")
                     st.stop()
                 
                 upsert_user(user_email, user_name)
 
-                # 초기 사주/점술 데이터 계산
                 astrology_data = build_astrology_block(
                     int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
                 )
                 
+                # 💡 분량을 절반으로 압축하도록 프롬프트 지시 강화
                 initial_prompt = f"""
-                당신은 THE RAW TAROT의 차갑고 예리한 수석 분석가입니다.
-                내담자와의 실시간 상담을 시작합니다. 내담자의 프로필과 데이터는 다음과 같습니다.
+                당신은 THE RAW TAROT의 수석 분석가다. 레트로 터미널 시스템을 통해 내담자와 실시간 대화 중이다.
                 
-                [프로필]
-                이름: {user_name} / 성별: {gender} / 출생지: {birth_place} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-                [점술 데이터]
-                {astrology_data}
-                [상담 주제]
-                {user_question}
+                [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
+                [점술 데이터] {astrology_data}
+                [상담 주제] {user_question}
 
-                위 데이터를 바탕으로, 내담자의 첫 번째 질문이나 주제에 대해 차갑고 뼈를 때리는 현실적인 오라클 진단을 내리고, 대화를 이어갈 수 있도록 날카로운 질문 1개를 던지며 첫 답변을 시작하라.
+                [필수 지침]
+                1. 길고 장황한 설명이나 위로는 절대 금지한다. 기존 분석 분량의 '딱 절반' 수준으로 짧고 압축적으로 작성하라.
+                2. 사주, 수비학, 베딕 중 가장 결정적인 데이터 1~2개만 가볍게 언급하고 곧바로 현실을 후벼파는 진단으로 넘어가라.
+                3. 마지막은 대화를 이어가기 위한 날카로운 질문 1개로 끝낼 것.
                 """
 
-                with st.spinner("🌌 오라클과 주파수를 동기화하고 있습니다..."):
-                    try:
-                        response = client.models.generate_content(
-                            model="gemini-3.6-flash",
-                            contents=initial_prompt,
-                        )
-                        initial_reply = response.text or "연결이 원활하지 않습니다."
-                        st.session_state["chat_messages"].append({"role": "assistant", "content": initial_reply})
-                        st.session_state["chat_initialized"] = True
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"상담 초기화 중 오류 발생: {e}")
+                ph = st.empty()
+                with ph.container():
+                    st.markdown('<div class="terminal-box">SYS_MSG: 우주 주파수 및 명식 데이터 로딩 중...</div>', unsafe_allow_html=True)
+                
+                try:
+                    response_stream = client.models.generate_content_stream(
+                        model="gemini-3.6-flash",
+                        contents=initial_prompt,
+                    )
+                    
+                    ph.empty()
+                    
+                    full_reply = ""
+                    # 터미널 박스 안에서 타이핑 효과 구현
+                    with st.container():
+                        st.markdown('<div class="terminal-box">', unsafe_allow_html=True)
+                        box_placeholder = st.empty()
+                        for chunk in response_stream:
+                            if chunk.text:
+                                full_reply += chunk.text
+                                box_placeholder.markdown(full_reply + "█")
+                        box_placeholder.markdown(full_reply)
+                        st.markdown('</div>', unsafe_allow_html=True)
+
+                    st.session_state["chat_messages"].append({"role": "assistant", "content": full_reply})
+                    st.session_state["chat_initialized"] = True
+                    
+                except Exception as e:
+                    ph.empty()
+                    st.error(f"터미널 연결 오류: {e}")
             else:
-                st.info("위 버튼을 누르면 사주 데이터가 연동된 실시간 오라클 대화가 시작됩니다.")
+                st.markdown("""
+                <div class="terminal-box">
+                    SYSTEM READY.<br>
+                    > 입력된 프로필과 질문을 바탕으로 오라클 터미널 세션을 엽니다.<br>
+                    > 긴 설명은 배제되고 핵심 팩트만 타자기 출력됩니다.
+                </div>
+                """, unsafe_allow_html=True)
         
         else:
-            # 기존 대화 기록 출력
+            # 이전 대화 기록 출력 (터미널 로그 스타일)
             for message in st.session_state["chat_messages"]:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+                role_prefix = "[ORACLE] " if message["role"] == "assistant" else f"[{user_name.upper()}] "
+                box_color = "#33ff33" if message["role"] == "assistant" else "#00ffff"
+                st.markdown(f"""
+                <div class="terminal-box" style="color: {box_color}; margin-bottom: 10px;">
+                    <b>{role_prefix}</b><br>{message["content"].replace(chr(10), '<br>')}
+                </div>
+                """, unsafe_allow_html=True)
 
             # 유저 입력창 (티키타카)
-            if user_input := st.chat_input("오라클에게 추가로 따져묻거나 질문하세요..."):
+            if user_input := st.chat_input("터미널에 명령/질문 입력..."):
                 st.session_state["chat_messages"].append({"role": "user", "content": user_input})
-                with st.chat_message("user"):
-                    st.markdown(user_input)
+                
+                # 유저 메시지 즉시 렌더링
+                st.markdown(f"""
+                <div class="terminal-box" style="color: #00ffff; margin-bottom: 10px;">
+                    <b>[{user_name.upper()}]</b><br>{user_input}
+                </div>
+                """, unsafe_allow_html=True)
 
-                # Gemini 대화 맥락 구성
-                history_prompt = f"당신은 THE RAW TAROT의 차갑고 예리한 오라클 분석가입니다. 앞선 대화 맥락과 내담자 데이터({user_name}, {birth_year}년생)를 바탕으로 냉정하고 뼈 때리는 팩트 위주로 실시간 답변을 이어가세요.\n\n[대화 기록]\n"
+                history_prompt = f"""
+                당신은 THE RAW TAROT의 수석 분석가다. 레트로 터미널에서 짧고 강력한 팩트 위주로 대화 중이다.
+                분량은 길지 않게, 핵심만 타자기 치듯 전달하라.
+                
+                [대화 기록]
+                """
                 for m in st.session_state["chat_messages"]:
-                    role_name = "내담자" if m["role"] == "user" else "오라클"
+                    role_name = "USER" if m["role"] == "user" else "ORACLE"
                     history_prompt += f"{role_name}: {m['content']}\n"
 
-                with st.chat_message("assistant"):
-                    message_placeholder = st.empty()
-                    full_reply = ""
+                # 오라클 답변 스트리밍 타이핑 출력
+                full_reply = ""
+                with st.container():
+                    st.markdown('<div class="terminal-box" style="color: #33ff33;"><b>[ORACLE]</b><br>', unsafe_allow_html=True)
+                    box_placeholder = st.empty()
                     try:
                         response_stream = client.models.generate_content_stream(
                             model="gemini-3.6-flash",
@@ -1369,19 +1433,21 @@ if selected_product_id == "FREE":
                         for chunk in response_stream:
                             if chunk.text:
                                 full_reply += chunk.text
-                                message_placeholder.markdown(full_reply + "▌")
-                        message_placeholder.markdown(full_reply)
-                        st.session_state["chat_messages"].append({"role": "assistant", "content": full_reply})
+                                box_placeholder.markdown(full_reply + "█")
+                        box_placeholder.markdown(full_reply)
                     except Exception as e:
-                        st.error(f"답변 생성 중 오류: {e}")
+                        box_placeholder.markdown(f"ERR: {e}")
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-            # 상담 초기화 버튼
-            if st.button("상담 세션 초기화하기"):
+                st.session_state["chat_messages"].append({"role": "assistant", "content": full_reply})
+
+            # 세션 초기화 버튼
+            if st.button(">> RESET_TERMINAL (세션 초기화)"):
                 st.session_state["chat_messages"] = []
                 st.session_state["chat_initialized"] = False
                 st.rerun()
 
-    # 2. 기존 무료 SHADOW READING 모드 (Money Shadow 또는 Raw Question)
+    # 2. 기존 무료 SHADOW READING 모드
     else:
         if st.button("오늘의 SHADOW READING 시작하기"):
 
