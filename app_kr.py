@@ -1443,10 +1443,10 @@ if selected_product_id == "FREE":
                 당신은 THE RAW TAROT의 수석 분석가다. 다크 럭셔리 터미널 채널에서 대화 중이다.
                 
                 [절대 철칙]
-                - 일반적인 AI 상담사처럼 인간의 도덕이나 심리, 뻔한 대안을 말하지 마라.
-                - 내담자의 답변을 받아 사주(일간, 오행, 십신, 합충), 베딕 점성술(행성, 하우스), 수비학의 관점에서만 재해석하라.
-                - "내담자의 현재 상황은 명식의 어느 글자 때문에 발현되었는가"를 설명하고 짧고 서늘하게 팩트를 꽂아라.
-                - 분량은 짧게, 질문 1개로 마무리할 것.
+                1. 일반적인 AI 상담사처럼 인간의 도덕이나 심리, 뻔한 대안을 말하지 마라.
+                2. 내담자의 답변을 받아 사주(일간, 오행, 십신, 합충), 베딕 점성술(행성, 하우스), 수비학의 관점에서만 재해석하라.
+                3. 길고 장황한 설명 대신 기존 분량의 '딱 절반' 수준으로 짧고 서늘하게 팩트를 꽂아라.
+                4. 마지막은 오직 명식의 관점에서 내담자의 모순을 깨기 위한 날카로운 질문 1개로 끝낼 것.
                 
                 [대화 기록]
                 """
@@ -1455,29 +1455,28 @@ if selected_product_id == "FREE":
                     history_prompt += f"{role_name}: {m['content']}\n"
 
                 full_reply = ""
-                with st.container():
-                    st.markdown('<div class="luxury-terminal"><div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>', unsafe_allow_html=True)
-                    box_placeholder = st.empty()
+                # 💡 [개선] 빈 박스 대신 스피너와 로딩 안내를 띄워 멈춘 것이 아님을 시각적으로 증명
+                with st.spinner("🌌 명식과 점술 데이터를 대조하며 서늘한 팩트를 조립 중입니다..."):
                     try:
                         response_stream = client.models.generate_content_stream(
                             model="gemini-3.6-flash",
                             contents=history_prompt,
                         )
+                        
+                        # 스피너 완료 후 실제 터미널 답변 박스 생성 및 타자기 출력
+                        st.markdown('<div class="luxury-terminal"><div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:8px;">[ ORACLE ]</div>', unsafe_allow_html=True)
+                        box_placeholder = st.empty()
                         for chunk in response_stream:
                             if chunk.text:
                                 full_reply += chunk.text
                                 box_placeholder.markdown(full_reply + "▌")
                         box_placeholder.markdown(full_reply)
+                        st.markdown('</div>', unsafe_allow_html=True)
+
                     except Exception as e:
-                        box_placeholder.markdown(f"ERR: {e}")
-                    st.markdown('</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="luxury-terminal" style="color:#ff6b6b;">ERR: {e}</div>', unsafe_allow_html=True)
 
                 st.session_state["chat_messages"].append({"role": "assistant", "content": full_reply})
-
-            # 세션 초기화 버튼
-            if st.button(">> RESET SESSION (상담 채널 초기화)"):
-                st.session_state["chat_messages"] = []
-                st.session_state["chat_initialized"] = False
                 st.rerun()
 
     # 2. 기존 무료 SHADOW READING 모드
