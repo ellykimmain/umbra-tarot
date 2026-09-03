@@ -12,8 +12,8 @@ from datetime import datetime
 from supabase import create_client, Client
 
 # ── Supabase DB 초기화 ───────────────────────────────────────────────────────
-SUPABASE_URL = st.secrets["https://hrobdpqhvjaplzoeqbao.supabase.co/rest/v1/"]
-SUPABASE_KEY = st.secrets["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhyb2JkcHFodmphcGx6b2VxYmFvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODQxOTYyMCwiZXhwIjoyMTAzOTk1NjIwfQ.TbDBKnY8M9HBC-7DkGtq0ShaLYanYFM2f5omtv2yelM"]
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_SERVICE_ROLE_KEY"]
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ── 사주 라이브러리 (py-iztro 제외, sxtwl만 유지) ──────────────────────────────
@@ -348,6 +348,15 @@ PRODUCTS = {
 selected_product_id = st.session_state.get("checkout_product", "FREE")
 current_product = PRODUCTS[selected_product_id]
 
+# ── 카드 이름 매핑 ─────────────────────────────────────────────────────────
+MAJOR_ARCANA = [
+    "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor",
+    "The Hierophant", "The Lovers", "The Chariot", "Strength", "The Hermit",
+    "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance",
+    "The Devil", "The Tower", "The Star", "The Moon", "The Sun",
+    "Judgement", "The World"
+]
+
 # ── 오라클 버튼 실행 로직 ───────────────────────────────────────────────────
 if st.button(f"{current_product['name']} 시작하기"):
     current_date = datetime.now().strftime("%Y-%m-%d")
@@ -369,7 +378,7 @@ if st.button(f"{current_product['name']} 시작하기"):
     gender_str = "Male" if gender == "Male" else "Female"
     astrology_data = build_astrology_block(
         int(birth_year), int(birth_month), int(birth_day),
-        birth_time, birth_place, "M" if gender == "Male" else "F"
+        birth_time, birth_city
     )
 
     # 4. 상품에 따른 카드 드로우 및 프롬프트 분기
