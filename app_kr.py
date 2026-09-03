@@ -1311,10 +1311,10 @@ if selected_product_id == "FREE":
 
         # 💡 [개선] 유저가 멈춘 것으로 오해하지 않도록 시각적 진행 단계를 명확히 쪼갬
         loading_steps = [
-            ("🌌 운명 데이터 동기화 중...", 0.1),
-            ("🪐 사주 명식과 수비학 구조 교차 분석 중...", 0.3),
-            ("☽ 베딕 점성술 행성 배치 대조 중...", 0.5),
-            ("🎴 타로 덱에서 운명의 카드를 뽑는 중...", 0.7),
+            ("🌌 운명 데이터 동기화 중...", 0.9),
+            ("🪐 사주 명식과 수비학 구조 교차 분석 중...", 0.9),
+            ("☽ 베딕 점성술 행성 배치 대조 중...", 0.9),
+            ("🎴 타로 덱에서 운명의 카드를 뽑는 중...", 0.9),
             ("⚡ 카드를 뒤집어 오늘의 그림자를 조합하는 중...", 0.9)
         ]
 
@@ -1361,28 +1361,23 @@ if selected_product_id == "FREE":
 
         # 프로그레스 바 완료 후 API 호출 직전 안내 문구 갱신
         bar.empty()
-        ph.info("⚡ AI가 사주와 타로 데이터를 교차 분석하여 실시간 텍스트를 작성 중입니다...")
+        ph.empty()
 
-        try:
+        # 💡 [개선] 빙글빙글 돌아가는 애니메이션(Spinner)을 띄워 멈춘 것이 아님을 시각적으로 명확히 증명
+        with st.spinner("🌌 사주·수비학·베딕 데이터를 교차 검증하며 팩트 폭행 리포트를 실시간으로 조립 중입니다..."):
             response_stream = client.models.generate_content_stream(
                 model="gemini-3.6-flash",
                 contents=prompt,
             )
 
-            ph.empty()
-            st.success("오늘의 SHADOW READING이 완성되고 있습니다.")
-
-            # 스트리밍 데이터를 실시간으로 합치면서 임시 컨테이너에 출력
             full_result_text = ""
             result_placeholder = st.empty()
 
             for chunk in response_stream:
                 if chunk.text:
                     full_result_text += chunk.text
-                    # 타이핑되는 느낌을 주기 위해 마크다운으로 실시간 갱신
                     result_placeholder.markdown(full_result_text + "▌")
 
-            # 스트리밍 완료 후 마지막 깜빡임 커서 제거 및 최종 텍스트 확정
             result_placeholder.empty()
             result_text = full_result_text
 
