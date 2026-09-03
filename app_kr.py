@@ -136,7 +136,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 class='main-title'> THE RAW TAROT </h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-title'>당신을 직시하십시오. 잔혹한 진실을 마주할 시간입니다.</p>", unsafe_allow_html=True)
+st.markdown("<p class='sub-title'>당신을 직시하십시오. 잔혹한 진실과 마주할 시간입니다.</p>", unsafe_allow_html=True)
 
 # ── 구글 로그인 및 강력한 경고문 ───────────────────────────────────────────────
 if "google_token" not in st.session_state:
