@@ -1351,17 +1351,30 @@ if selected_product_id == "FREE":
         )
 
         try:
-            response = client.models.generate_content(
+            # 💡 [스트리밍 적용] generate_content 대신 generate_content_stream 사용
+            response_stream = client.models.generate_content_stream(
                 model="gemini-3.6-flash",
                 contents=prompt,
             )
 
-            result_text = response.text or ""
-
             ph.empty()
+            st.success("오늘의 SHADOW READING이 완성되고 있습니다.")
 
-            st.success("오늘의 SHADOW READING이 완성되었습니다.")
+            # 스트리밍 데이터를 실시간으로 합치면서 임시 컨테이너에 출력
+            full_result_text = ""
+            result_placeholder = st.empty()
 
+            for chunk in response_stream:
+                if chunk.text:
+                    full_result_text += chunk.text
+                    # 타이핑되는 느낌을 주기 위해 마크다운으로 실시간 갱신
+                    result_placeholder.markdown(full_result_text + "▌")
+
+            # 스트리밍 완료 후 마지막 깜빡임 커서 제거 및 최종 텍스트 확정
+            result_placeholder.empty()
+            result_text = full_result_text
+
+            # 기존 디자인 레이아웃에 맞게 최종 렌더링 실행
             display_free_result(
                 result_text,
                 drawn_keys,
@@ -1416,7 +1429,7 @@ if selected_product_id == "FREE":
                 "🔓 THE RAW DEEP ANALYSIS · 990원",
                 key="go_deep",
             ):
-                st.session_state["checkout_product"] = "RAW_DEEP"
+                st.session_state["checkout_product"] = "RAW_DE_EP"
                 st.rerun()
 
         except Exception as e:
