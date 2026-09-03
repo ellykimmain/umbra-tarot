@@ -1401,50 +1401,21 @@ if selected_product_id == "FREE":
                 </div>
                 """, unsafe_allow_html=True)
 
-            # 💡 입력창 코드를 아예 제거하여 추가 질문을 원천 차단하고 결제 유도만 배치
-            st.markdown("---")
-            st.markdown("""
-<div class="raw-dark-card" style="text-align:center; border: 1px solid #d4af37; padding: 25px; border-radius: 12px; background: #0d0e12;">
-    <div class="raw-label" style="color:#d4af37; font-weight:bold; letter-spacing:2px;">
-        SECURE CHANNEL LOCKED
-    </div>
-    <div style="font-size:1.35rem; font-weight:700; margin-top:10px; color:#f1f5f9;">
-        오라클 프리뷰 세션이 종료되었습니다.
-    </div>
-    <p style="color:#94a3b8; line-height:1.8; margin-top:10px; font-size:0.95rem;">
-        자미두수 궁(宮) 분석, 방위와 띠에 얽힌 인과, 그리고 구체적인 커리어 전략과 시기적 흐름의<br>
-        전체 기록은 DEEP ANALYSIS에서 개방됩니다.
-    </p>
-    <div class="deep-price" style="color:#f3e5ab; margin-top:15px; font-size:1.5rem; font-weight:bold;">
-        990원
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
+            # 💡 중복된 버튼들을 모두 제거하고 아래 단일 구조로 완전히 통일합니다.
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # 메인 유료 결제 버튼 (전체 너비로 묵직하게 강조)
-            if st.button("🔓 THE RAW DEEP ANALYSIS · 990원", use_container_width=True, key="go_deep_chat_wide"):
+            # 1. 메인 유료 결제 버튼 (전체 너비로 묵직하게 강조)
+            if st.button("🔓 THE RAW DEEP ANALYSIS · 990원", use_container_width=True, key="go_deep_chat_wide_final"):
                 st.session_state["checkout_product"] = "RAW_DEEP"
                 st.rerun()
 
-            # 새로 시작 버튼은 눈에 띄지 않게 아주 작고 미니멀한 보조 형태로 하단에 배치
+            # 2. 새로 시작 버튼 (하단 중앙에 아주 미니멀한 보조 형태로 배치)
             st.markdown("<div style='text-align: center; margin-top: 15px;'>", unsafe_allow_html=True)
-            if st.button("↺ 처음부터 다시 시작하기", key="reset_session_sub"):
+            if st.button("↺ 처음부터 다시 시작하기", key="reset_session_sub_final"):
                 st.session_state["chat_messages"] = []
                 st.session_state["chat_initialized"] = False
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
-            col_a, col_b = st.columns(2)
-            with col_a:
-                if st.button("🔓 THE RAW DEEP ANALYSIS · 990원", key="go_deep_chat"):
-                    st.session_state["checkout_product"] = "RAW_DEEP"
-                    st.rerun()
-            with col_b:
-                if st.button(">> RESET SESSION (새로 시작)"):
-                    st.session_state["chat_messages"] = []
-                    st.session_state["chat_initialized"] = False
-                    st.rerun()
                     
     # 2. 기존 무료 SHADOW READING 모드
     else:
