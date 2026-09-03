@@ -390,7 +390,9 @@ if selected_product_id == "FREE":
 
         drawn_keys = random.sample(MAJOR_ARCANA, current_product["cards"])
 
-        # 현재 연도 계산 (나이대 유추용)
+        # 💡 에러를 잡기 위해 추가된 핵심 변수
+        question_ctx = f"\n[내담자 질문]: {user_question}" if user_question else ""
+
         current_year = datetime.now().year
         age = current_year - int(birth_year)
 
