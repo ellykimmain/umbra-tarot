@@ -129,37 +129,29 @@ def build_astrology_block(year, month, day, hour_str, birth_city):
 # ── DB 및 상태 검증 함수 ─────────────────────────────────────────────────────
 def upsert_user(email, name):
     """구글 로그인 시 users 테이블에 사용자 등록 (최초 1회)"""
+    if not email: return
     try:
-        # 이미 존재하는지 확인
         res = supabase.table("users").select("id").eq("email", email).execute()
         if not res.data:
             supabase.table("users").insert({"email": email, "name": name}).execute()
     except Exception as e:
-        print(f"DB Error (upsert_user): {e}")
+        st.error(f"사용자 정보 저장에 실패했습니다. 상세 에러: {e}")
 
-def get_today_free_count(email, date_str):
-    """오늘 날짜 기준 무료(FREE) 리포트 생성 횟수 조회"""
+def has_used_free_today(email, date_str):
+    """오늘 무료 진단을 이미 사용했는지 free_usage 테이블에서 팩트 체크"""
     try:
-        res = supabase.table("reports").select("id", count="exact")\
-            .eq("email", email)\
-            .eq("product_id", "FREE")\
-            .like("created_at", f"%{date_str}%")\
-            .execute()
-        return res.count if res.count else 0
-    except:
-        return 1 # 에러 시 방어적으로 1 반환하여 남용 방지
-
-def save_report_to_db(email, product_id, question, result_text):
-    """분석 완료 후 reports 테이블에 결과 저장"""
-    try:
-        supabase.table("reports").insert({
-            "email": email,
-            "product_id": product_id,
-            "question": question,
-            "result": result_text
-        }).execute()
+        res = supabase.table("free_usage").select("id").eq("email", email).eq("usage_date", date_str).execute()
+        return len(res.data) > 0
     except Exception as e:
-        print(f"DB Error (save_report): {e}")
+        print(f"DB Error (has_used_free_today): {e}")
+        return True  # 에러 시 남용을 막기 위해 방어적으로 접근 차단
+
+def save_free_usage(email, date_str):
+    """무료 진단 완료 후 free_usage 테이블에 사용 기록 영구 저장"""
+    try:
+        supabase.table("free_usage").insert({"email": email, "usage_date": date_str}).execute()
+    except Exception as e:
+        print(f"DB Error (save_free_usage): {e}")
 
 # ── Streamlit 및 API 설정 ───────────────────────────────────────────────────
 api_key = st.secrets["GEMINI_API_KEY"]
@@ -374,33 +366,32 @@ MAJOR_ARCANA = [
 if st.button(f"{current_product['name']} 시작하기"):
     current_date = datetime.now().strftime("%Y-%m-%d")
     
-    # 1. 유저 DB 등록 및 무료 사용량 검증
+    # 1. 유저 DB 등록
     upsert_user(user_email, user_name)
     
+    # 2. 무료 사용량 검증 (휘발성 세션 폐기, DB 직접 조회)
     if not current_product["is_pro"]:
-        usage_count = get_today_free_count(user_email, current_date)
-        if usage_count >= 1:
+        if has_used_free_today(user_email, current_date):
             st.error("🌙 오늘 오라클은 이미 당신에게 응답했습니다. 자정 이후 다시 방문하십시오.")
             st.stop()
 
-    # 2. 로딩 UI
+    # 3. 로딩 UI
     ph = st.empty()
     ph.info(f"🌌 {current_product['name']} 우주적 데이터를 동기화합니다...")
 
-    # 3. 우주적 데이터 구성 (사주, 수비학, 베딕)
-    gender_str = "Male" if gender == "Male" else "Female"
+    # 4. 우주적 데이터 구성 (사주, 수비학, 베딕)
+    gender_str = "Male" if gender == "남성" else "Female"
     astrology_data = build_astrology_block(
         int(birth_year), int(birth_month), int(birth_day),
         birth_time, birth_city
     )
 
-    # 4. 상품에 따른 카드 드로우 및 프롬프트 분기
+    # 5. 상품에 따른 카드 드로우 및 프롬프트 분기
     draw_count = current_product["cards"]
     drawn_keys = random.sample(MAJOR_ARCANA, draw_count)
     question_ctx = f"\n[내담자 질문]: {user_question}" if user_question else ""
 
     if current_product["is_pro"]:
-        # RAW ONE (PRO) 전용 프롬프트
         prompt = f"""당신은 냉철하고 분석적인 운명 전략가입니다.
         아래 우주적 데이터와 {draw_count}장의 타로 카드를 '교차 검증'하여 심층 리포트를 작성하십시오.
         
@@ -416,7 +407,6 @@ if st.button(f"{current_product['name']} 시작하기"):
         4. 즉각적으로 실행해야 할 단호한 행동 전략
         """
     else:
-        # FREE 전용 프롬프트
         prompt = f"""당신은 냉철한 운명 전략가입니다.
         아래 데이터와 {draw_count}장의 타로 카드를 바탕으로 '무료 체험용' 짧은 핵심 메시지를 작성하십시오.
         상세한 예측이나 행동 전략은 공개하지 마십시오.
@@ -431,7 +421,7 @@ if st.button(f"{current_product['name']} 시작하기"):
         2. 핵심 경고 메시지
         """
 
-    # 5. Gemini API 호출
+    # 6. Gemini API 호출
     try:
         response = client.models.generate_content(
             model="gemini-3.6-flash",
@@ -441,12 +431,13 @@ if st.button(f"{current_product['name']} 시작하기"):
         
         ph.empty()
         st.success(f"{current_product['name']} 렌더링 완료.")
-        st.info(res_text) # 임시 결과 출력 UI (추후 파싱 로직 적용 필요)
+        st.info(res_text)
 
-        # 6. DB에 결과 저장
-        save_report_to_db(user_email, selected_product_id, user_question, res_text)
+        # 7. 진단이 무사히 완료된 직후 무료 이용 기록을 DB에 저장 (핵심)
+        if not current_product["is_pro"]:
+            save_free_usage(user_email, current_date)
 
-        # 7. 무료 버전일 경우 결제 유도(CTA) 버튼 렌더링
+        # 8. 결제 유도(CTA) 버튼 렌더링
         if not current_product["is_pro"]:
             st.markdown("---")
             st.markdown("""
