@@ -1330,6 +1330,47 @@ if selected_product_id == "FREE":
             st.session_state["chat_messages"] = []
             st.session_state["chat_initialized"] = False
 
+        # 💡 [핵심 1] 사주, 별자리, 수비학 데이터를 HTML 시각화 표로 렌더링하는 공통 함수
+        def build_visual_block():
+            saju_dict = get_saju_data(int(birth_year), int(birth_month), int(birth_day), TIME_TO_ZHI.get(birth_time, 0))
+            num_data = get_numerology(int(birth_year), int(birth_month), int(birth_day))
+            
+            def get_zodiac(m, d):
+                if (m == 1 and d >= 20) or (m == 2 and d <= 18): return "물병자리", "♒"
+                elif (m == 2 and d >= 19) or (m == 3 and d <= 20): return "물고기자리", "♓"
+                elif (m == 3 and d >= 21) or (m == 4 and d <= 19): return "양자리", "♈"
+                elif (m == 4 and d >= 20) or (m == 5 and d <= 20): return "황소자리", "♉"
+                elif (m == 5 and d >= 21) or (m == 6 and d <= 20): return "쌍둥이자리", "♊"
+                elif (m == 6 and d >= 21) or (m == 7 and d <= 22): return "게자리", "♋"
+                elif (m == 7 and d >= 23) or (m == 8 and d <= 22): return "사자자리", "♌"
+                elif (m == 8 and d >= 23) or (m == 9 and d <= 22): return "처녀자리", "♍"
+                elif (m == 9 and d >= 23) or (m == 10 and d <= 22): return "천칭자리", "♎"
+                elif (m == 10 and d >= 23) or (m == 11 and d <= 21): return "전갈자리", "♏"
+                elif (m == 11 and d >= 22) or (m == 12 and d <= 21): return "사수자리", "♐"
+                else: return "염소자리", "♑"
+                
+            zodiac_name, zodiac_symbol = get_zodiac(int(birth_month), int(birth_day))
+            life_path = num_data['life_path']
+            
+            if not saju_dict:
+                return ""
+                
+            return f"""
+            <div style="border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 25px 20px; margin-bottom: 30px; background: rgba(13, 14, 18, 0.7); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                <div style="color: #64748b; font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 20px; text-align: center; font-weight: 600;">[ EXTRACTED RAW DATA ]</div>
+                <div style="display: flex; justify-content: space-around; text-align: center; font-family: 'Times New Roman', serif, '명조'; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
+                    <div><div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">時 (시간)</div><div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['hour'][0]}<br>{saju_dict['hour'][1]}</div></div>
+                    <div><div style="color:#d4af37; font-size:0.75rem; margin-bottom:10px;">日 (본질)</div><div style="color:#d4af37; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['day'][0]}<br>{saju_dict['day'][1]}</div></div>
+                    <div><div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">月 (환경)</div><div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['month'][0]}<br>{saju_dict['month'][1]}</div></div>
+                    <div><div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">年 (근원)</div><div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['year'][0]}<br>{saju_dict['year'][1]}</div></div>
+                </div>
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div><div style="color:#94a3b8; font-size:0.7rem; letter-spacing: 1px; margin-bottom:8px;">ZODIAC SIGN</div><div style="color:#d4af37; font-size:1.1rem; font-weight:bold;">{zodiac_symbol} {zodiac_name}</div></div>
+                    <div><div style="color:#94a3b8; font-size:0.7rem; letter-spacing: 1px; margin-bottom:8px;">LIFE PATH</div><div style="color:#d4af37; font-size:1.1rem; font-weight:bold;">NO. {life_path}</div></div>
+                </div>
+            </div>
+            """
+
         # 아직 상담을 시작하지 않은 경우
         if not st.session_state["chat_initialized"]:
             if st.button(">> INITIALIZE ORACLE CHAT (상담 채널 열기)"):
@@ -1341,7 +1382,6 @@ if selected_product_id == "FREE":
                 
                 upsert_user(user_email, user_name)
 
-                # 💡 [추가] 관리자 계정이 아닐 경우 오늘 이미 사용했는지 체크
                 if user_email != ADMIN_EMAIL:
                     if has_used_free_today(user_email, current_date):
                         st.error("오늘의 오라클 세션은 이미 사용했습니다. 내일 다시 새로운 세션을 시작할 수 있습니다.")
@@ -1351,7 +1391,6 @@ if selected_product_id == "FREE":
                     int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
                 )
                 
-                # 4단계 순차 분석 정의
                 steps = [
                     ("🪐 사주 명식 구조 분석", f"""
                     [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
@@ -1383,75 +1422,31 @@ if selected_product_id == "FREE":
                 ]
 
                 try:
-                    # 💡 [추가] 만세력, 점성술(별자리), 수비학 데이터를 시각화하기 위한 로직
-                    saju_dict = get_saju_data(int(birth_year), int(birth_month), int(birth_day), TIME_TO_ZHI.get(birth_time, 0))
-                    num_data = get_numerology(int(birth_year), int(birth_month), int(birth_day))
+                    # 💡 [핵심 2] 화면 상단에 시각적 표 생성
+                    saju_visual_block = build_visual_block()
                     
-                    # 별자리 계산 함수
-                    def get_zodiac(m, d):
-                        if (m == 1 and d >= 20) or (m == 2 and d <= 18): return "물병자리", "♒"
-                        elif (m == 2 and d >= 19) or (m == 3 and d <= 20): return "물고기자리", "♓"
-                        elif (m == 3 and d >= 21) or (m == 4 and d <= 19): return "양자리", "♈"
-                        elif (m == 4 and d >= 20) or (m == 5 and d <= 20): return "황소자리", "♉"
-                        elif (m == 5 and d >= 21) or (m == 6 and d <= 20): return "쌍둥이자리", "♊"
-                        elif (m == 6 and d >= 21) or (m == 7 and d <= 22): return "게자리", "♋"
-                        elif (m == 7 and d >= 23) or (m == 8 and d <= 22): return "사자자리", "♌"
-                        elif (m == 8 and d >= 23) or (m == 9 and d <= 22): return "처녀자리", "♍"
-                        elif (m == 9 and d >= 23) or (m == 10 and d <= 22): return "천칭자리", "♎"
-                        elif (m == 10 and d >= 23) or (m == 11 and d <= 21): return "전갈자리", "♏"
-                        elif (m == 11 and d >= 22) or (m == 12 and d <= 21): return "사수자리", "♐"
-                        else: return "염소자리", "♑"
-                        
-                    zodiac_name, zodiac_symbol = get_zodiac(int(birth_month), int(birth_day))
-                    life_path = num_data['life_path']
-                    
-                    saju_visual_block = ""
-                    if saju_dict:
-                        saju_visual_block = f"""
-                        <div style="border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 25px 20px; margin-bottom: 30px; background: rgba(13, 14, 18, 0.7); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
-                            <div style="color: #64748b; font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 20px; text-align: center; font-weight: 600;">[ EXTRACTED RAW DATA ]</div>
-                            
-                            <!-- 상단: 동양 만세력 -->
-                            <div style="display: flex; justify-content: space-around; text-align: center; font-family: 'Times New Roman', serif, '명조'; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
-                                <div>
-                                    <div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">時 (시간)</div>
-                                    <div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['hour'][0]}<br>{saju_dict['hour'][1]}</div>
-                                </div>
-                                <div>
-                                    <div style="color:#d4af37; font-size:0.75rem; margin-bottom:10px;">日 (본질)</div>
-                                    <div style="color:#d4af37; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['day'][0]}<br>{saju_dict['day'][1]}</div>
-                                </div>
-                                <div>
-                                    <div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">月 (환경)</div>
-                                    <div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['month'][0]}<br>{saju_dict['month'][1]}</div>
-                                </div>
-                                <div>
-                                    <div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">年 (근원)</div>
-                                    <div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['year'][0]}<br>{saju_dict['year'][1]}</div>
-                                </div>
-                            </div>
-                            
-                            <!-- 하단: 서양 점성술 및 수비학 -->
-                            <div style="display: flex; justify-content: space-around; text-align: center;">
-                                <div>
-                                    <div style="color:#94a3b8; font-size:0.7rem; letter-spacing: 1px; margin-bottom:8px;">ZODIAC SIGN</div>
-                                    <div style="color:#d4af37; font-size:1.1rem; font-weight:bold;">{zodiac_symbol} {zodiac_name}</div>
-                                </div>
-                                <div>
-                                    <div style="color:#94a3b8; font-size:0.7rem; letter-spacing: 1px; margin-bottom:8px;">LIFE PATH</div>
-                                    <div style="color:#d4af37; font-size:1.1rem; font-weight:bold;">NO. {life_path}</div>
-                                </div>
-                            </div>
-                        </div>
-                        """
+                    terminal_placeholder = st.empty()
+                    saved_results = []
 
                     for title, prompt_text, loading_msg in steps:
-                        current_display = saju_visual_block + "### [ ORACLE · SECURE CHANNEL ]\n\n"
-                        for res_title, res_text in saved_results:
-                            current_display += f"**{res_title}**\n{res_text}\n\n---\n\n"
                         
-                        current_display += f"> ⚡ *{loading_msg}*"
-                        terminal_placeholder.markdown(current_display, unsafe_allow_html=True)
+                        # 💡 HTML 안에서 올바르게 표시되도록 줄바꿈(<br>) 적용
+                        text_display = ""
+                        for res_title, res_text in saved_results:
+                            text_display += f"<strong style='color:#d4af37; font-size:1.05em;'>{res_title}</strong><br><br>{res_text}<br><br><hr style='border: 0; border-top: 1px solid rgba(212,175,55,0.2); margin: 15px 0;'><br>"
+                        
+                        text_display += f"<span style='color:#94a3b8; font-style:italic;'>⚡ {loading_msg}</span>"
+
+                        terminal_placeholder.markdown(f"""
+                        <div class="luxury-terminal">
+                            <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:20px;">[ ORACLE · SECURE CHANNEL ]</div>
+                            {saju_visual_block}
+                            <div style="line-height: 1.8; color: #f1f5f9; font-size:0.95rem;">
+                                {text_display}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
                         time.sleep(0.6)
 
                         response = client.models.generate_content(
@@ -1459,17 +1454,20 @@ if selected_product_id == "FREE":
                             contents=prompt_text,
                         )
                         
-                        step_result = response.text.strip()
+                        # 💡 [핵심 3] AI가 뱉은 특수기호나 찌꺼기 태그를 '미리' 깨끗하게 제거하고 저장 (DOM 파괴 방지)
+                        step_result = response.text.strip().replace("</div>", "").replace("<div>", "").replace("**", "").replace("###", "")
+                        step_result = step_result.replace(chr(10), "<br>")
+                        
                         saved_results.append((title, step_result))
                         time.sleep(0.4)
 
-                    final_markdown = saju_visual_block + "### [ ORACLE · SECURE CHANNEL ]\n\n"
+                    final_text_html = ""
                     for res_title, res_text in saved_results:
-                        final_markdown += f"**{res_title}**\n{res_text}\n\n---\n\n"
+                        final_text_html += f"<strong style='color:#d4af37; font-size:1.05em;'>{res_title}</strong><br><br>{res_text}<br><br><hr style='border: 0; border-top: 1px solid rgba(212,175,55,0.2); margin: 15px 0;'><br>"
 
                     save_free_usage(user_email, current_date)
 
-                    st.session_state["chat_messages"] = [{"role": "assistant", "content": final_markdown}]
+                    st.session_state["chat_messages"] = [{"role": "assistant", "content": final_text_html}]
                     st.session_state["chat_initialized"] = True
                     st.rerun()
                     
@@ -1487,12 +1485,17 @@ if selected_product_id == "FREE":
                 """, unsafe_allow_html=True)
         
         else:
+            # 💡 [핵심 4] 세션 완료 후에도 시각화 블록을 깨짐 없이 완벽하게 복구하여 결합
+            saju_visual_block = build_visual_block()
+            
             for message in st.session_state["chat_messages"]:
-                content_clean = message["content"].replace("</div>", "").replace("<div>", "")
                 st.markdown(f"""
                 <div class="luxury-terminal">
-                    <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:12px;">[ ORACLE · SECURE CHANNEL ]</div>
-                    <div style="line-height: 1.8; color: #f1f5f9;">{content_clean}</div>
+                    <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:20px;">[ ORACLE · SECURE CHANNEL ]</div>
+                    {saju_visual_block}
+                    <div style="line-height: 1.8; color: #f1f5f9; font-size:0.95rem;">
+                        {message["content"]}
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
 
