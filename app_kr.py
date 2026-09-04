@@ -1618,37 +1618,26 @@ if selected_product_id == "FREE":
                 product_id="FREE",
             )
 
-            # 💡 [핵심 수정] 로딩바를 지우지 않고 100% 상태로 문구만 변경하여 API 연결 대기
+            # 💡 로딩바 100% 상태로 문구만 변경하여 API 연결 대기
             bar.progress(1.0)
-            ph.info("🌌 오라클 엔진 가동 중... 교차 검증을 마치고 리포트를 실시간으로 조립하고 있습니다.")
+            ph.info("🌌 오라클 엔진 가동 중... 교차 검증을 마치고 리포트를 조립하고 있습니다. (약 5~10초 소요)")
 
             try:
-                response_stream = client.models.generate_content_stream(
+                # 💡 스트리밍(타이핑 효과)을 제거하고 완성된 결과를 한 번에 받아옵니다.
+                response = client.models.generate_content(
                     model="gemini-3.6-flash",
                     contents=prompt,
                 )
 
-                full_result_text = ""
-                result_placeholder = st.empty()
-                is_first_chunk = True
+                # 답변이 100% 완성되어 도착하면 비로소 로딩바 삭제
+                bar.empty()
+                ph.empty()
 
-                for chunk in response_stream:
-                    if chunk.text:
-                        # 💡 AI의 첫 번째 답변 텍스트가 도착하는 순간, 비로소 대기 UI를 깔끔하게 삭제
-                        if is_first_chunk:
-                            bar.empty()
-                            ph.empty()
-                            is_first_chunk = False
-                            
-                        full_result_text += chunk.text
-                        result_placeholder.markdown(full_result_text + "▌")
-
-                result_placeholder.empty()
-                result_text = full_result_text
+                result_text = response.text.strip()
 
                 st.success("오늘의 SHADOW READING이 완성되었습니다.")
 
-                # 💡 [추가] MONEY SHADOW 등 일반 무료 리딩에서도 최상단에 만세력 시각화 표를 출력합니다.
+                # 만세력 시각화 표 출력 (최상단)
                 saju_html = build_visual_block()
                 if saju_html:
                     st.markdown(saju_html, unsafe_allow_html=True)
