@@ -1294,6 +1294,49 @@ def send_result_email(user_email, user_name, result_text, product_name):
 
 if selected_product_id == "FREE":
 
+    # 💡 [핵심] 모든 모드에서 만세력 표를 띄우기 위해 함수를 바깥으로 뺐습니다.
+    def build_visual_block():
+        saju_dict = get_saju_data(int(birth_year), int(birth_month), int(birth_day), TIME_TO_ZHI.get(birth_time, 0))
+        num_data = get_numerology(int(birth_year), int(birth_month), int(birth_day))
+        
+        def get_zodiac(m, d):
+            if (m == 1 and d >= 20) or (m == 2 and d <= 18): return "물병자리", "♒"
+            elif (m == 2 and d >= 19) or (m == 3 and d <= 20): return "물고기자리", "♓"
+            elif (m == 3 and d >= 21) or (m == 4 and d <= 19): return "양자리", "♈"
+            elif (m == 4 and d >= 20) or (m == 5 and d <= 20): return "황소자리", "♉"
+            elif (m == 5 and d >= 21) or (m == 6 and d <= 20): return "쌍둥이자리", "♊"
+            elif (m == 6 and d >= 21) or (m == 7 and d <= 22): return "게자리", "♋"
+            elif (m == 7 and d >= 23) or (m == 8 and d <= 22): return "사자자리", "♌"
+            elif (m == 8 and d >= 23) or (m == 9 and d <= 22): return "처녀자리", "♍"
+            elif (m == 9 and d >= 23) or (m == 10 and d <= 22): return "천칭자리", "♎"
+            elif (m == 10 and d >= 23) or (m == 11 and d <= 21): return "전갈자리", "♏"
+            elif (m == 11 and d >= 22) or (m == 12 and d <= 21): return "사수자리", "♐"
+            else: return "염소자리", "♑"
+            
+        zodiac_name, zodiac_symbol = get_zodiac(int(birth_month), int(birth_day))
+        life_path = num_data['life_path']
+        
+        if not saju_dict:
+            return ""
+            
+        return f"""
+        <div style="border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 25px 20px; margin-bottom: 30px; background: rgba(13, 14, 18, 0.7); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+            <div style="color: #64748b; font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 20px; text-align: center; font-weight: 600;">[ EXTRACTED RAW DATA ]</div>
+            <div style="display: flex; justify-content: space-around; text-align: center; font-family: 'Times New Roman', serif, '명조'; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
+                <div><div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">時 (시간)</div><div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['hour'][0]}<br>{saju_dict['hour'][1]}</div></div>
+                <div><div style="color:#d4af37; font-size:0.75rem; margin-bottom:10px;">日 (본질)</div><div style="color:#d4af37; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['day'][0]}<br>{saju_dict['day'][1]}</div></div>
+                <div><div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">月 (환경)</div><div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['month'][0]}<br>{saju_dict['month'][1]}</div></div>
+                <div><div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">年 (근원)</div><div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['year'][0]}<br>{saju_dict['year'][1]}</div></div>
+            </div>
+            <div style="display: flex; justify-content: space-around; text-align: center;">
+                <div><div style="color:#94a3b8; font-size:0.7rem; letter-spacing: 1px; margin-bottom:8px;">ZODIAC SIGN</div><div style="color:#d4af37; font-size:1.1rem; font-weight:bold;">{zodiac_symbol} {zodiac_name}</div></div>
+                <div><div style="color:#94a3b8; font-size:0.7rem; letter-spacing: 1px; margin-bottom:8px;">LIFE PATH</div><div style="color:#d4af37; font-size:1.1rem; font-weight:bold;">NO. {life_path}</div></div>
+            </div>
+        </div>
+        """
+
+    # 1. 실시간 상담 모드 (RAW CHAT)
+    if reading_mode.startswith("RAW CHAT"):
     # 1. 실시간 상담 모드 (RAW CHAT - 1일 1회 제한 및 단호한 오라클 선언)
     if reading_mode.startswith("RAW CHAT"):
         
@@ -1607,7 +1650,10 @@ if selected_product_id == "FREE":
 
                 st.success("오늘의 SHADOW READING이 완성되었습니다.")
 
-                # ... (이하 display_free_result 등 기존 코드 유지) ...
+                # 💡 [추가] MONEY SHADOW 등 일반 무료 리딩에서도 최상단에 만세력 시각화 표를 출력합니다.
+                saju_html = build_visual_block()
+                if saju_html:
+                    st.markdown(saju_html, unsafe_allow_html=True)
 
                 display_free_result(
                     result_text,
