@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 
 import streamlit as st
 from google import genai
-from streamlit_oauth import OAuth2Component
+from streamlit_oauth import OAuth2Component, StreamlitOauthError
 from supabase import create_client, Client
 
 
@@ -548,14 +548,21 @@ if "google_token" not in st.session_state:
         unsafe_allow_html=True,
     )
 
-    result = oauth2.authorize_button(
-        name="Google로 시작하기",
-        icon="https://www.google.com/favicon.ico",
-        redirect_uri=REDIRECT_URI,
-        scope="openid email profile",
-        key="google_login",
-        use_container_width=True,
-    )
+    # 💡 꼬여있는 인증 State 파라미터를 잡아내고 URL을 청소하는 방어 로직
+    try:
+        result = oauth2.authorize_button(
+            name="Google로 시작하기",
+            icon="https://www.google.com/favicon.ico",
+            redirect_uri=REDIRECT_URI,
+            scope="openid email profile",
+            key="google_login",
+            use_container_width=True,
+        )
+    except StreamlitOauthError:
+        st.error("로그인 세션이 만료되었거나 충돌했습니다. 화면을 정리하고 다시 시작합니다.")
+        st.query_params.clear() # URL에 남은 이전 로그인 찌꺼기 초기화
+        time.sleep(1.5)
+        st.rerun()
 
     if result:
         st.session_state["google_token"] = result.get("token")
