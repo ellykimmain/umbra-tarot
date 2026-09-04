@@ -1294,7 +1294,7 @@ def send_result_email(user_email, user_name, result_text, product_name):
 
 if selected_product_id == "FREE":
 
-    # 💡 [핵심] 모든 모드에서 만세력 표를 띄우기 위해 함수를 바깥으로 뺐습니다.
+    # 💡 [핵심] 모든 모드에서 만세력 표를 띄우기 위해 함수를 바깥으로 뺐습니다. (들여쓰기 4칸 유지)
     def build_visual_block():
         saju_dict = get_saju_data(int(birth_year), int(birth_month), int(birth_day), TIME_TO_ZHI.get(birth_time, 0))
         num_data = get_numerology(int(birth_year), int(birth_month), int(birth_day))
@@ -1335,8 +1335,6 @@ if selected_product_id == "FREE":
         </div>
         """
 
-    # 1. 실시간 상담 모드 (RAW CHAT)
-    if reading_mode.startswith("RAW CHAT"):
     # 1. 실시간 상담 모드 (RAW CHAT - 1일 1회 제한 및 단호한 오라클 선언)
     if reading_mode.startswith("RAW CHAT"):
         
