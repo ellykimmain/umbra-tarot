@@ -1532,33 +1532,27 @@ if selected_product_id == "FREE":
                     )
                     st.stop()
 
+            # ... (이전 if has_used_free_today(...) 검사 로직 유지) ...
+
             ph = st.empty()
+            bar = st.progress(0.0)
 
             loading_steps = [
-                ("🌌 운명 데이터 동기화 중...", 0.1),
-                ("🪐 사주 명식과 수비학 구조 교차 분석 중...", 0.3),
-                ("☽ 베딕 점성술 행성 배치 대조 중...", 0.5),
-                ("🎴 타로 덱에서 운명의 카드를 뽑는 중...", 0.7),
-                ("⚡ 카드를 뒤집어 오늘의 그림자를 조합하는 중...", 0.9)
+                ("🌌 운명 데이터 동기화 중...", 0.2),
+                ("🪐 사주 명식과 수비학 구조 교차 분석 중...", 0.4),
+                ("☽ 베딕 점성술 행성 배치 대조 중...", 0.6),
+                ("🎴 타로 덱에서 운명의 카드를 뽑는 중...", 0.8),
+                ("⚡ 카드를 뒤집어 오늘의 그림자를 조합하는 중...", 0.95)
             ]
 
-            bar = st.progress(0.0)
             for msg, progress_val in loading_steps:
                 ph.info(msg)
                 bar.progress(progress_val)
-                time.sleep(0.5)
+                time.sleep(0.4)
 
-            bar.progress(1.0)
-            time.sleep(0.3)
-            bar.empty()
-            ph.empty()
-
+            # 점술 데이터 및 프롬프트 빌드 (백그라운드에서 빠르게 처리)
             astrology_data = build_astrology_block(
-                int(birth_year),
-                int(birth_month),
-                int(birth_day),
-                birth_time,
-                birth_city,
+                int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
             )
 
             drawn_keys = random.sample(
@@ -1580,25 +1574,37 @@ if selected_product_id == "FREE":
                 product_id="FREE",
             )
 
+            # 💡 [핵심 수정] 로딩바를 지우지 않고 100% 상태로 문구만 변경하여 API 연결 대기
+            bar.progress(1.0)
+            ph.info("🌌 오라클 엔진 가동 중... 교차 검증을 마치고 리포트를 실시간으로 조립하고 있습니다.")
+
             try:
-                with st.spinner("🌌 사주·수비학·베딕 데이터를 교차 검증하며 팩트 폭행 리포트를 실시간으로 조립 중입니다..."):
-                    response_stream = client.models.generate_content_stream(
-                        model="gemini-3.6-flash",
-                        contents=prompt,
-                    )
+                response_stream = client.models.generate_content_stream(
+                    model="gemini-3.6-flash",
+                    contents=prompt,
+                )
 
-                    full_result_text = ""
-                    result_placeholder = st.empty()
+                full_result_text = ""
+                result_placeholder = st.empty()
+                is_first_chunk = True
 
-                    for chunk in response_stream:
-                        if chunk.text:
-                            full_result_text += chunk.text
-                            result_placeholder.markdown(full_result_text + "▌")
+                for chunk in response_stream:
+                    if chunk.text:
+                        # 💡 AI의 첫 번째 답변 텍스트가 도착하는 순간, 비로소 대기 UI를 깔끔하게 삭제
+                        if is_first_chunk:
+                            bar.empty()
+                            ph.empty()
+                            is_first_chunk = False
+                            
+                        full_result_text += chunk.text
+                        result_placeholder.markdown(full_result_text + "▌")
 
-                    result_placeholder.empty()
-                    result_text = full_result_text
+                result_placeholder.empty()
+                result_text = full_result_text
 
                 st.success("오늘의 SHADOW READING이 완성되었습니다.")
+
+                # ... (이하 display_free_result 등 기존 코드 유지) ...
 
                 display_free_result(
                     result_text,
