@@ -1375,17 +1375,76 @@ if selected_product_id == "FREE":
                     """, "자미두수 및 수비학 코드를 교차 검증하는 중...")
                 ]
 
-                terminal_placeholder = st.empty()
-                saved_results = []
-
                 try:
+                    # 💡 [추가] 만세력, 점성술(별자리), 수비학 데이터를 시각화하기 위한 로직
+                    saju_dict = get_saju_data(int(birth_year), int(birth_month), int(birth_day), TIME_TO_ZHI.get(birth_time, 0))
+                    num_data = get_numerology(int(birth_year), int(birth_month), int(birth_day))
+                    
+                    # 별자리 계산 함수
+                    def get_zodiac(m, d):
+                        if (m == 1 and d >= 20) or (m == 2 and d <= 18): return "물병자리", "♒"
+                        elif (m == 2 and d >= 19) or (m == 3 and d <= 20): return "물고기자리", "♓"
+                        elif (m == 3 and d >= 21) or (m == 4 and d <= 19): return "양자리", "♈"
+                        elif (m == 4 and d >= 20) or (m == 5 and d <= 20): return "황소자리", "♉"
+                        elif (m == 5 and d >= 21) or (m == 6 and d <= 20): return "쌍둥이자리", "♊"
+                        elif (m == 6 and d >= 21) or (m == 7 and d <= 22): return "게자리", "♋"
+                        elif (m == 7 and d >= 23) or (m == 8 and d <= 22): return "사자자리", "♌"
+                        elif (m == 8 and d >= 23) or (m == 9 and d <= 22): return "처녀자리", "♍"
+                        elif (m == 9 and d >= 23) or (m == 10 and d <= 22): return "천칭자리", "♎"
+                        elif (m == 10 and d >= 23) or (m == 11 and d <= 21): return "전갈자리", "♏"
+                        elif (m == 11 and d >= 22) or (m == 12 and d <= 21): return "사수자리", "♐"
+                        else: return "염소자리", "♑"
+                        
+                    zodiac_name, zodiac_symbol = get_zodiac(int(birth_month), int(birth_day))
+                    life_path = num_data['life_path']
+                    
+                    saju_visual_block = ""
+                    if saju_dict:
+                        saju_visual_block = f"""
+                        <div style="border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 25px 20px; margin-bottom: 30px; background: rgba(13, 14, 18, 0.7); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                            <div style="color: #64748b; font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 20px; text-align: center; font-weight: 600;">[ EXTRACTED RAW DATA ]</div>
+                            
+                            <!-- 상단: 동양 만세력 -->
+                            <div style="display: flex; justify-content: space-around; text-align: center; font-family: 'Times New Roman', serif, '명조'; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
+                                <div>
+                                    <div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">時 (시간)</div>
+                                    <div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['hour'][0]}<br>{saju_dict['hour'][1]}</div>
+                                </div>
+                                <div>
+                                    <div style="color:#d4af37; font-size:0.75rem; margin-bottom:10px;">日 (본질)</div>
+                                    <div style="color:#d4af37; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['day'][0]}<br>{saju_dict['day'][1]}</div>
+                                </div>
+                                <div>
+                                    <div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">月 (환경)</div>
+                                    <div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['month'][0]}<br>{saju_dict['month'][1]}</div>
+                                </div>
+                                <div>
+                                    <div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">年 (근원)</div>
+                                    <div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['year'][0]}<br>{saju_dict['year'][1]}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 하단: 서양 점성술 및 수비학 -->
+                            <div style="display: flex; justify-content: space-around; text-align: center;">
+                                <div>
+                                    <div style="color:#94a3b8; font-size:0.7rem; letter-spacing: 1px; margin-bottom:8px;">ZODIAC SIGN</div>
+                                    <div style="color:#d4af37; font-size:1.1rem; font-weight:bold;">{zodiac_symbol} {zodiac_name}</div>
+                                </div>
+                                <div>
+                                    <div style="color:#94a3b8; font-size:0.7rem; letter-spacing: 1px; margin-bottom:8px;">LIFE PATH</div>
+                                    <div style="color:#d4af37; font-size:1.1rem; font-weight:bold;">NO. {life_path}</div>
+                                </div>
+                            </div>
+                        </div>
+                        """
+
                     for title, prompt_text, loading_msg in steps:
-                        current_display = "### [ ORACLE · SYSTEM RUNNING ]\n\n"
+                        current_display = saju_visual_block + "### [ ORACLE · SECURE CHANNEL ]\n\n"
                         for res_title, res_text in saved_results:
                             current_display += f"**{res_title}**\n{res_text}\n\n---\n\n"
                         
                         current_display += f"> ⚡ *{loading_msg}*"
-                        terminal_placeholder.markdown(current_display)
+                        terminal_placeholder.markdown(current_display, unsafe_allow_html=True)
                         time.sleep(0.6)
 
                         response = client.models.generate_content(
@@ -1397,11 +1456,10 @@ if selected_product_id == "FREE":
                         saved_results.append((title, step_result))
                         time.sleep(0.4)
 
-                    final_markdown = ""
+                    final_markdown = saju_visual_block + "### [ ORACLE · SECURE CHANNEL ]\n\n"
                     for res_title, res_text in saved_results:
                         final_markdown += f"**{res_title}**\n{res_text}\n\n---\n\n"
 
-                    # 💡 [추가] 정상 완료 시 DB에 오늘 사용 기록 저장
                     save_free_usage(user_email, current_date)
 
                     st.session_state["chat_messages"] = [{"role": "assistant", "content": final_markdown}]
