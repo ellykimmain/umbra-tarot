@@ -616,6 +616,12 @@ PRODUCTS = {
         "cards": 3,
         "is_pro": False,
     },
+    "RAW_DATE": {
+        "name": "지정일 금전 운세",
+        "price": 100,
+        "cards": 0,
+        "is_pro": True,
+    },
     "RAW_DEEP": {
         "name": "THE RAW DEEP ANALYSIS",
         "price": 990,
@@ -710,7 +716,8 @@ st.sidebar.markdown("---")
 reading_mode = st.sidebar.radio(
     "질문 테마",
     [
-        "TODAY'S MONEY — 오늘의 금전 운세", # 💡 새로 추가된 메뉴
+        "TODAY'S MONEY — 오늘의 금전 운세",
+        "TARGET DATE MONEY — 지정일 금전 운세",
         "MONEY SHADOW — 돈과 현실",
         "RAW QUESTION — 나만의 심층 질문",
         "RAW CHAT — 실시간 상담하기",
@@ -1146,15 +1153,8 @@ if selected_product_id == "FREE":
     if reading_mode.startswith("RAW CHAT"):
         st.markdown("""
         <style>
-        .luxury-terminal {
-            background-color: #0d0e12; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px;
-            padding: 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            color: #e2e8f0; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); margin-bottom: 20px;
-        }
-        .terminal-header {
-            color: #d4af37; font-family: Georgia, 'Times New Roman', serif; letter-spacing: 3px; font-weight: 700;
-            font-size: 1.1rem; margin-bottom: 16px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 12px; text-transform: uppercase;
-        }
+        .luxury-terminal { background-color: #0d0e12; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #e2e8f0; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); margin-bottom: 20px; }
+        .terminal-header { color: #d4af37; font-family: Georgia, 'Times New Roman', serif; letter-spacing: 3px; font-weight: 700; font-size: 1.1rem; margin-bottom: 16px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 12px; text-transform: uppercase; }
         </style>
         """, unsafe_allow_html=True)
         st.markdown('<div class="terminal-header">THE RAW · ORACLE SECURE CHANNEL (PREVIEW)</div>', unsafe_allow_html=True)
@@ -1238,19 +1238,18 @@ if selected_product_id == "FREE":
             today_prompt = f"""
 당신은 THE RAW TAROT의 오라클이다.
 오늘({current_date}) 하루 동안 내담자의 '돈과 현실'에 어떤 일이 벌어질지만 냉정하게 분석하라.
-한자 사용을 금지하고, "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
+한자 사용을 금지하고, "~다는 거죠", "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
 [내담자 데이터] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}\n{astrology_data}
 
 아래 태그를 정확히 사용하여 출력하라.
 @SCORE@
 오늘의 금전 기운 점수를 0~100 사이의 숫자로만 적어라. (예: 45)
 @SAJU@
-오늘 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "오늘 지갑을 열면 ~한 이유로 손해를 볼 수 있습니다." 식으로 경고하라.
+오늘 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "오늘 지갑을 열면 ~한 이유로 손해를 본다는 거죠" 식으로 경고하라.
 @ASTRO@
 오늘 별자리와 수비학 기운이 주는 금전적 힌트를 2문장으로 짚어라. 
 @SUMMARY@
 오늘 당장 돈을 지키기 위해 '절대 하지 말아야 할 행동' 1가지와 운을 올리기 위한 색상/방향을 단호하게 선언하라. (3문장 내외)
-오늘 당장 운을 올리기 위해 악세서리, 색상, 방향을 알려줘라. (3문장 내외)
 """
             ph.info("🌌 오늘의 금전 기운을 추출하고 있습니다...")
             try:
@@ -1288,7 +1287,33 @@ if selected_product_id == "FREE":
             except Exception as e:
                 ph.empty(); st.error(f"운세 생성 중 오류가 발생했습니다: {e}")
 
-    # 3. 일반 무료 리딩 모드
+    # 3. 지정일 운세 모드 (유료 유도)
+    elif reading_mode.startswith("TARGET DATE"):
+        st.markdown("<h4 style='color:#1a1a2e; text-align:center; margin-bottom: 10px;'>📅 지정일 금전 운세</h4>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center; color:#6c757d; font-size:0.9rem; margin-bottom:20px;'>계약, 이사, 중요한 미팅...<br>궁금한 날짜가 여러 개라면 100원씩 가볍게 확인하십시오.</p>", unsafe_allow_html=True)
+        
+        target_date_val = st.date_input("운세를 확인할 날짜를 선택하십시오")
+        
+        st.markdown(f"""
+        <div class="raw-dark-card" style="text-align:center; padding: 25px; margin-top: 20px;">
+            <div style="color:#d4af37; font-size:1.1rem; margin-bottom:10px; font-weight:bold;">지정일 RAW MONEY 추출</div>
+            <div style="color:#94a3b8; font-size:0.9rem; margin-bottom: 20px; line-height: 1.6;">
+                선택하신 날짜({target_date_val.strftime("%Y-%m-%d")})의 명식과 우주 기운을 꿰뚫어<br>
+                당일 피해야 할 손재수와 행동 지침을 즉시 알려드립니다.
+            </div>
+            <div style="color:#f3e5ab; font-size:1.8rem; font-weight:bold;">100원</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("🔓 100원 결제하고 해당일 운세 확인", use_container_width=True):
+            if not user_name.strip():
+                st.warning("이름 또는 닉네임을 입력하십시오.")
+                st.stop()
+            st.session_state["target_date_str"] = target_date_val.strftime("%Y-%m-%d")
+            st.session_state["checkout_product"] = "RAW_DATE"
+            st.rerun()
+
+    # 4. 일반 무료 리딩 모드 (MONEY SHADOW 등)
     else:
         if st.button("오늘의 SHADOW READING 시작하기"):
             current_date = today_kst()
@@ -1326,120 +1351,155 @@ if selected_product_id == "FREE":
             except Exception as e:
                 ph.empty(); st.error(f"리딩 생성 중 오류가 발생했습니다: {str(e)}")
 
+
 # =========================================================
-# THE RAW DEEP ANALYSIS (유료)
+# 유료 상품 결제 및 실행 모드 (RAW_DATE & RAW_DEEP)
 # =========================================================
 
 else:
-    st.markdown("""
-    <div class="raw-dark-card" style="text-align:center; padding:40px 20px;">
-        <div class="raw-label" style="color:#d4af37;">SECURE PAYMENT</div>
-        <div style="font-size:1.8rem; font-weight:700; margin:15px 0;">
-            THE RAW DEEP ANALYSIS
-        </div>
-        <div style="color:#aaa; font-size:0.95rem; line-height:1.7;">
-            결제가 완료되면 사주, 수비학, 베딕, 5장의 타로를 교차 검증한<br>
-            가장 심층적인 분석 리포트가 즉시 생성됩니다.
-        </div>
-        <div style="font-size:2.5rem; font-weight:800; color:#f3e5ab; margin-top:25px;">
-            990원
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    if st.button("결제하고 심층 분석 시작하기 (테스트)", use_container_width=True):
+    if selected_product_id == "RAW_DATE":
+        target_date_str = st.session_state.get("target_date_str", today_kst())
         
-        current_date = today_kst()
-        
-        if not user_name.strip():
-            st.warning("이름 또는 닉네임을 입력하십시오.")
-            st.stop()
+        st.markdown(f"""
+        <div class="raw-dark-card" style="text-align:center; padding:40px 20px;">
+            <div class="raw-label" style="color:#d4af37;">SECURE PAYMENT</div>
+            <div style="font-size:1.6rem; font-weight:700; margin:15px 0;">
+                {target_date_str} 지정일 금전 운세
+            </div>
+            <div style="color:#aaa; font-size:0.95rem; line-height:1.7;">
+                결제가 완료되면 선택하신 특정 날짜의 일진(日辰)과<br>
+                우주 기운을 교차 검증하여 금전 흐름을 즉시 분석합니다.
+            </div>
+            <div style="font-size:2.5rem; font-weight:800; color:#f3e5ab; margin-top:25px;">
+                {current_product['price']}원
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        upsert_user(user_email, user_name)
-
-        ph = st.empty()
-        bar = st.progress(0.0)
-
-        loading_steps = [
-            ("결제 승인 대기 중...", 0.1),
-            ("운명 데이터 동기화 완료...", 0.3),
-            ("사주 명식과 수비학 구조 교차 분석 중...", 0.5),
-            ("베딕 점성술 행성 배치 대조 중...", 0.7),
-            ("타로 덱에서 5장의 운명 카드를 뽑는 중...", 0.9),
-            ("최종 딥 리포트 조립 중...", 0.95)
-        ]
-
-        for msg, progress_val in loading_steps:
-            ph.info(msg)
-            bar.progress(progress_val)
-            time.sleep(0.5)
-
-        astrology_data = build_astrology_block(
-            int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
-        )
-
-        drawn_keys = random.sample(
-            MAJOR_ARCANA,
-            PRODUCTS["RAW_DEEP"]["cards"],
-        )
-
-        prompt = build_prompt(
-            user_name=user_name,
-            gender=gender,
-            birth_place=birth_place,
-            birth_year=int(birth_year),
-            birth_month=int(birth_month),
-            birth_day=int(birth_day),
-            birth_time=birth_time,
-            user_question=user_question,
-            astrology_data=astrology_data,
-            drawn_keys=drawn_keys,
-            product_id="RAW_DEEP",
-        )
-        
-        bar.progress(1.0)
-        ph.info("🌌 THE RAW 오라클 엔진 가동 중... 가장 깊은 진실을 추출하고 있습니다. (약 10~15초 소요)")
-
-        try:
-            response = client.models.generate_content(
-                model="gemini-3.6-flash",
-                contents=prompt,
-            )
-
-            bar.empty()
-            ph.empty()
+        if st.button("결제하고 지정일 운세 확인하기 (테스트)", use_container_width=True):
+            upsert_user(user_email, user_name)
+            ph = st.empty()
+            bar = st.progress(0.0)
             
-            result_text = response.text.strip()
+            loading_steps = [("결제 승인 대기 중...", 0.2), (f"{target_date_str} 일진 데이터 동기화 중...", 0.5), ("당일 흉살 및 손재수(損財數) 계산 중...", 0.9)]
+            for msg, progress_val in loading_steps:
+                ph.info(msg); bar.progress(progress_val); time.sleep(0.4)
+                
+            astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
             
-            st.success("THE RAW DEEP ANALYSIS가 완료되었습니다.")
+            target_prompt = f"""
+당신은 THE RAW TAROT의 오라클이다.
+내담자가 지정한 날짜({target_date_str}) 하루 동안 '돈과 현실'에 어떤 일이 벌어질지만 냉정하게 분석하라.
+한자 사용을 금지하고, "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
+
+[내담자 데이터] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}\n{astrology_data}
+
+아래 태그를 정확히 사용하여 출력하라.
+
+@SCORE@
+해당 날짜의 금전 기운 점수를 0~100 사이의 숫자로만 적어라. (예: 45)
+
+@SAJU@
+해당 날짜의 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "이날 지갑을 열면 ~한 이유로 손해를 볼 수 있습니다." 식으로 경고하라.
+
+@ASTRO@
+해당 날짜의 우주 기운과 수비학이 주는 금전적 힌트를 2문장으로 짚어라. 
+
+@SUMMARY@
+이날 돈을 지키기 위해 '절대 하지 말아야 할 행동' 1가지와 운을 올리기 위한 색상/방향을 단호하게 선언하라. (3문장 내외)
+"""
+            ph.info(f"🌌 {target_date_str}의 금전 기운을 추출하고 있습니다...")
             
-            display_deep_result(
-                result_text,
-                drawn_keys,
-            )
+            try:
+                response = client.models.generate_content(model="gemini-3.6-flash", contents=target_prompt)
+                bar.empty(); ph.empty()
+                result_text = response.text.strip()
+                
+                score = extract_section(result_text, "@SCORE@", "@SAJU@").strip()
+                saju_text = extract_section(result_text, "@SAJU@", "@ASTRO@").strip()
+                astro_text = extract_section(result_text, "@ASTRO@", "@SUMMARY@").strip()
+                summary_text = extract_section(result_text, "@SUMMARY@", None).strip()
 
-            save_report_to_db(
-                user_email,
-                "RAW_DEEP",
-                user_question,
-                result_text,
-            )
+                st.success(f"{user_name} 님의 {target_date_str} 지정일 금전 운세가 완성되었습니다.")
 
-            email_sent = send_result_email(
-                user_email,
-                user_name,
-                result_text,
-                "THE RAW DEEP ANALYSIS",
-            )
+                # 시각화 표 대신 심플하게 결과만 렌더링
+                st.markdown(f"""
+                <div style="background-color: #0d0e12; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 25px; margin-bottom: 20px;">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="color: #64748b; font-size: 0.85rem; letter-spacing: 2px;">{target_date_str} MONEY POWER</div>
+                        <div style="color: #d4af37; font-size: 3.5rem; font-weight: 800; font-family: Georgia, serif;">{score}<span style="font-size: 1.5rem; color: #64748b;"> 점</span></div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <span style="background-color: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">명식 기운</span>
+                        <div style="color: #e2e8f0; line-height: 1.7; margin-top: 8px; font-size: 0.95rem;">{saju_text}</div>
+                    </div>
+                    <div style="margin-bottom: 25px;">
+                        <span style="background-color: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">우주 기운</span>
+                        <div style="color: #e2e8f0; line-height: 1.7; margin-top: 8px; font-size: 0.95rem;">{astro_text}</div>
+                    </div>
+                    <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 20px;">
+                        <div style="color: #ef4444; font-size: 0.9rem; font-weight: bold; margin-bottom: 8px;">[ THE RAW WARNING ]</div>
+                        <div style="color: #f1f5f9; line-height: 1.8; font-size: 1rem; font-weight: 500;">{summary_text}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown("---")
+                if st.button("처음으로 돌아가기"):
+                    st.session_state["checkout_product"] = "FREE"
+                    st.rerun()
+
+            except Exception as e:
+                ph.empty(); st.error(f"운세 생성 중 오류가 발생했습니다: {e}")
+
+    elif selected_product_id == "RAW_DEEP":
+        st.markdown("""
+        <div class="raw-dark-card" style="text-align:center; padding:40px 20px;">
+            <div class="raw-label" style="color:#d4af37;">SECURE PAYMENT</div>
+            <div style="font-size:1.8rem; font-weight:700; margin:15px 0;">
+                THE RAW DEEP ANALYSIS
+            </div>
+            <div style="color:#aaa; font-size:0.95rem; line-height:1.7;">
+                결제가 완료되면 사주, 수비학, 베딕, 5장의 타로를 교차 검증한<br>
+                가장 심층적인 분석 리포트가 즉시 생성됩니다.
+            </div>
+            <div style="font-size:2.5rem; font-weight:800; color:#f3e5ab; margin-top:25px;">
+                990원
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("결제하고 심층 분석 시작하기 (테스트)", use_container_width=True):
+            current_date = today_kst()
+            if not user_name.strip(): st.warning("이름 또는 닉네임을 입력하십시오."); st.stop()
+            upsert_user(user_email, user_name)
+
+            ph = st.empty()
+            bar = st.progress(0.0)
+
+            loading_steps = [("결제 승인 대기 중...", 0.1), ("운명 데이터 동기화 완료...", 0.3), ("사주 명식과 수비학 구조 교차 분석 중...", 0.5), ("베딕 점성술 행성 배치 대조 중...", 0.7), ("타로 덱에서 5장의 운명 카드를 뽑는 중...", 0.9), ("최종 딥 리포트 조립 중...", 0.95)]
+            for msg, progress_val in loading_steps:
+                ph.info(msg); bar.progress(progress_val); time.sleep(0.5)
+
+            astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
+            drawn_keys = random.sample(MAJOR_ARCANA, PRODUCTS["RAW_DEEP"]["cards"])
+            prompt = build_prompt(user_name=user_name, gender=gender, birth_place=birth_place, birth_year=int(birth_year), birth_month=int(birth_month), birth_day=int(birth_day), birth_time=birth_time, user_question=user_question, astrology_data=astrology_data, drawn_keys=drawn_keys, product_id="RAW_DEEP")
             
-            if email_sent:
-                st.caption("리딩 결과를 이메일로도 안전하게 보내드렸습니다.")
+            bar.progress(1.0)
+            ph.info("🌌 THE RAW 오라클 엔진 가동 중... 가장 깊은 진실을 추출하고 있습니다. (약 10~15초 소요)")
 
-            st.markdown("---")
-            if st.button("처음으로 돌아가기"):
-                st.session_state["checkout_product"] = "FREE"
-                st.rerun()
-
-        except Exception as e:
-            ph.empty()
-            st.error(f"리딩 생성 중 오류가 발생했습니다: {str(e)}")
+            try:
+                response = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
+                bar.empty(); ph.empty()
+                result_text = response.text.strip()
+                st.success("THE RAW DEEP ANALYSIS가 완료되었습니다.")
+                display_deep_result(result_text, drawn_keys)
+                save_report_to_db(user_email, "RAW_DEEP", user_question, result_text)
+                if send_result_email(user_email, user_name, result_text, "THE RAW DEEP ANALYSIS"):
+                    st.caption("리딩 결과를 이메일로도 안전하게 보내드렸습니다.")
+                st.markdown("---")
+                if st.button("처음으로 돌아가기"):
+                    st.session_state["checkout_product"] = "FREE"
+                    st.rerun()
+            except Exception as e:
+                ph.empty(); st.error(f"리딩 생성 중 오류가 발생했습니다: {str(e)}")
