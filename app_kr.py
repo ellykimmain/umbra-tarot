@@ -1641,10 +1641,18 @@ if selected_product_id == "FREE":
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
                 
-    # 2. 기존 무료 SHADOW READING 모드
-    else:
-        if st.button("오늘의 SHADOW READING 시작하기"):
+    st.markdown("<div style='text-align: center; margin-top: 15px;'>", unsafe_allow_html=True)
+            if st.button("↺ 처음부터 다시 시작하기", key="reset_session_sub_final"):
+                st.session_state["chat_messages"] = []
+                st.session_state["chat_initialized"] = False
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
+    # =========================================================
+    # 2. 오늘의 금전 운세 모드 (매일 접속 유도)
+    # =========================================================
+    elif reading_mode.startswith("TODAY'S"):
+        if st.button("오늘의 RAW MONEY 확인하기", use_container_width=True):
             current_date = today_kst()
 
             if not user_name.strip():
@@ -1654,141 +1662,112 @@ if selected_product_id == "FREE":
             upsert_user(user_email, user_name)
 
             if user_email != ADMIN_EMAIL:
-                if has_used_free_today(
-                    user_email,
-                    current_date,
-                ):
-                    st.error(
-                        "오늘의 무료 SHADOW READING은 이미 사용했습니다. "
-                        "내일 다시 새로운 리딩을 시작할 수 있습니다."
-                    )
+                if has_used_free_today(user_email, current_date):
+                    st.error("오늘의 오라클 세션은 이미 사용했습니다. 내일 다시 확인하십시오.")
                     st.stop()
-
-            # ... (이전 if has_used_free_today(...) 검사 로직 유지) ...
 
             ph = st.empty()
             bar = st.progress(0.0)
 
             loading_steps = [
-                ("🌌 운명 데이터 동기화 중...", 0.2),
-                ("🪐 사주 명식과 수비학 구조 교차 분석 중...", 0.4),
-                ("☽ 베딕 점성술 행성 배치 대조 중...", 0.6),
-                ("🎴 타로 덱에서 운명의 카드를 뽑는 중...", 0.8),
-                ("⚡ 카드를 뒤집어 오늘의 그림자를 조합하는 중...", 0.95)
+                ("일진(日辰) 데이터 동기화 중...", 0.3),
+                ("오늘의 금전 흐름과 흉살 교차 검증 중...", 0.6),
+                ("오늘 피해야 할 손재수(損財數) 계산 중...", 1.0)
             ]
 
             for msg, progress_val in loading_steps:
                 ph.info(msg)
                 bar.progress(progress_val)
-                time.sleep(0.4)
+                time.sleep(0.3)
 
-            # 점술 데이터 및 프롬프트 빌드 (백그라운드에서 빠르게 처리)
             astrology_data = build_astrology_block(
                 int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
             )
 
-            drawn_keys = random.sample(
-                MAJOR_ARCANA,
-                PRODUCTS["FREE"]["cards"],
-            )
+            # 오늘의 운세 전용 팩트 폭행 프롬프트
+            today_prompt = f"""
+당신은 THE RAW TAROT의 오라클이다.
+오늘({current_date}) 하루 동안 내담자의 '돈과 현실'에 어떤 일이 벌어질지만 냉정하게 분석하라.
+한자 사용을 금지하고, "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
 
-            prompt = build_prompt(
-                user_name=user_name,
-                gender=gender,
-                birth_place=birth_place,
-                birth_year=int(birth_year),
-                birth_month=int(birth_month),
-                birth_day=int(birth_day),
-                birth_time=birth_time,
-                user_question=user_question,
-                astrology_data=astrology_data,
-                drawn_keys=drawn_keys,
-                product_id="FREE",
-            )
+[내담자 데이터]
+이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
+{astrology_data}
 
-            # 💡 로딩바 100% 상태로 문구만 변경하여 API 연결 대기
-            bar.progress(1.0)
-            ph.info("🌌 오라클 엔진 가동 중... 교차 검증을 마치고 리포트를 조립하고 있습니다. (약 5~10초 소요)")
+아래 태그를 정확히 사용하여 출력하라.
+
+@SCORE@
+오늘의 금전 기운 점수를 0~100 사이의 숫자로만 적어라. (예: 45)
+
+@SAJU@
+오늘 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "오늘 지갑을 열면 ~한 이유로 손해를 볼수 있습니다." 식으로 구체적인 돈의 흐름을 경고하라.
+
+@ASTRO@
+오늘 별자리와 수비학 기운이 주는 금전적 힌트를 2문장으로 짚어라. 
+
+@SUMMARY@
+오늘 당장 돈을 지키기 위해 '절대 하지 말아야 할 행동' 1가지를 단호하게 선언하라. (3문장 내외)
+오늘 당장 돈의 운을 올리기 위해서 악세서리, 방향, 색상을 알려줘라. (3문장 내외)
+"""
+            ph.info("🌌 오늘의 금전 기운을 추출하고 있습니다...")
 
             try:
-                # 💡 스트리밍(타이핑 효과)을 제거하고 완성된 결과를 한 번에 받아옵니다.
                 response = client.models.generate_content(
                     model="gemini-3.6-flash",
-                    contents=prompt,
+                    contents=today_prompt,
                 )
-
-                # 답변이 100% 완성되어 도착하면 비로소 로딩바 삭제
+                
                 bar.empty()
                 ph.empty()
-
+                
                 result_text = response.text.strip()
+                
+                # 결과 파싱 (extract_section 함수 활용)
+                score = extract_section(result_text, "@SCORE@", "@SAJU@").strip()
+                saju_text = extract_section(result_text, "@SAJU@", "@ASTRO@").strip()
+                astro_text = extract_section(result_text, "@ASTRO@", "@SUMMARY@").strip()
+                summary_text = extract_section(result_text, "@SUMMARY@", None).strip()
 
-                st.success("오늘의 SHADOW READING이 완성되었습니다.")
+                st.success(f"{user_name} 님의 {current_date} 금전 운세가 완성되었습니다.")
 
-                # 만세력 시각화 표 출력 (최상단)
+                # 시각화 표 출력
                 saju_html = build_visual_block()
                 if saju_html:
                     st.markdown(saju_html, unsafe_allow_html=True)
 
-                display_free_result(
-                    result_text,
-                    drawn_keys,
-                )
-
-                save_free_usage(
-                    user_email,
-                    current_date,
-                )
-
-                save_report_to_db(
-                    user_email,
-                    "FREE",
-                    user_question,
-                    result_text,
-                )
-
-                email_sent = send_result_email(
-                    user_email,
-                    user_name,
-                    result_text,
-                    "무료 SHADOW READING",
-                )
-
-                if email_sent:
-                    st.caption("리딩 결과를 이메일로도 보내드렸습니다.")
-
-                st.markdown("---")
-
-                st.markdown("""
-<div class="raw-dark-card" style="text-align:center;">
-    <div class="raw-label" style="color:#d4af37;">
-        GO DEEPER
-    </div>
-    <div style="font-size:1.45rem; font-weight:700; margin-top:8px;">
-        여기서부터 THE RAW입니다.
-    </div>
-    <p style="color:#d9d9df; line-height:1.8; margin-top:12px;">
-        무료 리딩은 지금의 핵심 그림자를 보여줍니다.<br>
-        DEEP ANALYSIS에서는 돈의 구조, 교차검증, 현실 전략과 흐름을 더 깊게 분석합니다.
-    </p>
-    <div class="deep-price" style="color:#f3e5ab; margin-top:15px;">
-        990원
-    </div>
-    <div style="color:#aaa; font-size:0.85rem; margin-top:5px;">
-        1회성 · 결제 연동 전 테스트 모드
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-                if st.button(
-                    "🔓 THE RAW DEEP ANALYSIS · 990원",
-                    key="go_deep",
-                ):
-                    st.session_state["checkout_product"] = "RAW_DEEP"
-                    st.rerun()
+                # 오늘의 운세 럭셔리 터미널 UI 렌더링
+                st.markdown(f"""
+                <div style="background-color: #0d0e12; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 25px; margin-bottom: 20px;">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="color: #64748b; font-size: 0.85rem; letter-spacing: 2px;">TODAY'S MONEY POWER</div>
+                        <div style="color: #d4af37; font-size: 3.5rem; font-weight: 800; font-family: Georgia, serif;">{score}<span style="font-size: 1.5rem; color: #64748b;"> 점</span></div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <span style="background-color: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">명식 기운</span>
+                        <div style="color: #e2e8f0; line-height: 1.7; margin-top: 8px; font-size: 0.95rem;">{saju_text}</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <span style="background-color: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">우주 기운</span>
+                        <div style="color: #e2e8f0; line-height: 1.7; margin-top: 8px; font-size: 0.95rem;">{astro_text}</div>
+                    </div>
+                    
+                    <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 20px;">
+                        <div style="color: #ef4444; font-size: 0.9rem; font-weight: bold; margin-bottom: 8px;">[ THE RAW WARNING ]</div>
+                        <div style="color: #f1f5f9; line-height: 1.8; font-size: 1rem; font-weight: 500;">{summary_text}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                save_free_usage(user_email, current_date)
 
             except Exception as e:
                 ph.empty()
-                st.error(
-                    f"리딩 생성 중 오류가 발생했습니다: {str(e)}"
-                )
+                st.error(f"운세 생성 중 오류가 발생했습니다: {e}")
+
+    # =========================================================
+    # 3. 기존 무료 리딩 모드 (MONEY SHADOW / RAW QUESTION)
+    # =========================================================
+    else:
+        if st.button("오늘의 SHADOW READING 시작하기"):
