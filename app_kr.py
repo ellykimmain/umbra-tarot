@@ -1423,9 +1423,10 @@ if selected_product_id == "FREE":
         </div>
         """
 
-    # 1. 실시간 상담 모드 (RAW CHAT - 1일 1회 제한 및 단호한 오라클 선언)
+    # =========================================================
+    # 1. 실시간 상담 모드 (RAW CHAT)
+    # =========================================================
     if reading_mode.startswith("RAW CHAT"):
-        
         st.markdown("""
         <style>
         .luxury-terminal {
@@ -1454,53 +1455,10 @@ if selected_product_id == "FREE":
 
         st.markdown('<div class="terminal-header">THE RAW · ORACLE SECURE CHANNEL (PREVIEW)</div>', unsafe_allow_html=True)
 
-        # 세션 초기화
         if "chat_messages" not in st.session_state:
             st.session_state["chat_messages"] = []
             st.session_state["chat_initialized"] = False
 
-        # 💡 [핵심 1] 사주, 별자리, 수비학 데이터를 HTML 시각화 표로 렌더링하는 공통 함수
-        def build_visual_block():
-            saju_dict = get_saju_data(int(birth_year), int(birth_month), int(birth_day), TIME_TO_ZHI.get(birth_time, 0))
-            num_data = get_numerology(int(birth_year), int(birth_month), int(birth_day))
-            
-            def get_zodiac(m, d):
-                if (m == 1 and d >= 20) or (m == 2 and d <= 18): return "물병자리", "♒"
-                elif (m == 2 and d >= 19) or (m == 3 and d <= 20): return "물고기자리", "♓"
-                elif (m == 3 and d >= 21) or (m == 4 and d <= 19): return "양자리", "♈"
-                elif (m == 4 and d >= 20) or (m == 5 and d <= 20): return "황소자리", "♉"
-                elif (m == 5 and d >= 21) or (m == 6 and d <= 20): return "쌍둥이자리", "♊"
-                elif (m == 6 and d >= 21) or (m == 7 and d <= 22): return "게자리", "♋"
-                elif (m == 7 and d >= 23) or (m == 8 and d <= 22): return "사자자리", "♌"
-                elif (m == 8 and d >= 23) or (m == 9 and d <= 22): return "처녀자리", "♍"
-                elif (m == 9 and d >= 23) or (m == 10 and d <= 22): return "천칭자리", "♎"
-                elif (m == 10 and d >= 23) or (m == 11 and d <= 21): return "전갈자리", "♏"
-                elif (m == 11 and d >= 22) or (m == 12 and d <= 21): return "사수자리", "♐"
-                else: return "염소자리", "♑"
-                
-            zodiac_name, zodiac_symbol = get_zodiac(int(birth_month), int(birth_day))
-            life_path = num_data['life_path']
-            
-            if not saju_dict:
-                return ""
-                
-            return f"""
-            <div style="border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 25px 20px; margin-bottom: 30px; background: rgba(13, 14, 18, 0.7); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
-                <div style="color: #64748b; font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 20px; text-align: center; font-weight: 600;">[ EXTRACTED RAW DATA ]</div>
-                <div style="display: flex; justify-content: space-around; text-align: center; font-family: 'Times New Roman', serif, '명조'; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
-                    <div><div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">時 (시간)</div><div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['hour'][0]}<br>{saju_dict['hour'][1]}</div></div>
-                    <div><div style="color:#d4af37; font-size:0.75rem; margin-bottom:10px;">日 (본질)</div><div style="color:#d4af37; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['day'][0]}<br>{saju_dict['day'][1]}</div></div>
-                    <div><div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">月 (환경)</div><div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['month'][0]}<br>{saju_dict['month'][1]}</div></div>
-                    <div><div style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">年 (근원)</div><div style="color:#e2e8f0; font-size:1.7rem; font-weight:bold; line-height:1.5;">{saju_dict['year'][0]}<br>{saju_dict['year'][1]}</div></div>
-                </div>
-                <div style="display: flex; justify-content: space-around; text-align: center;">
-                    <div><div style="color:#94a3b8; font-size:0.7rem; letter-spacing: 1px; margin-bottom:8px;">ZODIAC SIGN</div><div style="color:#d4af37; font-size:1.1rem; font-weight:bold;">{zodiac_symbol} {zodiac_name}</div></div>
-                    <div><div style="color:#94a3b8; font-size:0.7rem; letter-spacing: 1px; margin-bottom:8px;">LIFE PATH</div><div style="color:#d4af37; font-size:1.1rem; font-weight:bold;">NO. {life_path}</div></div>
-                </div>
-            </div>
-            """
-
-        # 아직 상담을 시작하지 않은 경우
         if not st.session_state["chat_initialized"]:
             if st.button(">> INITIALIZE ORACLE CHAT (상담 채널 열기)"):
                 current_date = today_kst()
@@ -1516,77 +1474,40 @@ if selected_product_id == "FREE":
                         st.error("오늘의 오라클 세션은 이미 사용했습니다. 내일 다시 새로운 세션을 시작할 수 있습니다.")
                         st.stop()
 
-                astrology_data = build_astrology_block(
-                    int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
-                )
+                astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
                 
                 steps = [
-                    ("🪐 사주 명식 구조 분석", f"""
-                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-                    [점술 데이터] {astrology_data}
-                    [상담 주제] {user_question}
-                    [지시] 사주 명식의 관점에서 내담자의 핵심 기질과 돈줄의 흐름을 딱 2줄로 서늘하게 요약하라. 한문이나 전문 용어는 배제할 것.
-                    """, "사주 명식의 구조를 해부하는 중..."),
-                    
-                    ("🎴 운명의 타로 4장 개방", f"""
-                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-                    [점술 데이터] {astrology_data}
-                    [상담 주제] {user_question}
-                    [지시] 타로 카드가 드러내는 현재의 숨겨진 함정과 그림자를 딱 2줄로 압축하여 타격하라.
-                    """, "운명의 타로 카드 4장을 뒤집는 중..."),
-                    
-                    ("☽ 베딕 점성술 행성 궤도 대조", f"""
-                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-                    [점술 데이터] {astrology_data}
-                    [상담 주제] {user_question}
-                    [지시] 베딕 점성술의 행성 궤도에서 드러나는 거대한 흐름과 피해야 할 위기를 딱 2줄로 서늘하게 진단하라.
-                    """, "베딕 점성술의 행성 배치를 대조하는 중..."),
-                    
-                    ("⚡ 자미두수 및 최종 오라클 선언", f"""
-                    [프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-                    [점술 데이터] {astrology_data}
-                    [상담 주제] {user_question}
-                    [지시] 자미두수와 수비학 숫자가 가리키는 현실적 돌파구를 짚고, 마지막 문장은 반드시 방위(예: 북서쪽), 특정 띠, 성씨 등의 디테일을 포함한 단호한 선언으로 마무리하라. 절대 물음표로 끝내지 마라. 분량은 4~5줄 내외로 압축하라.
-                    """, "자미두수 및 수비학 코드를 교차 검증하는 중...")
+                    ("🪐 사주 명식 구조 분석", f"[프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}\n[점술 데이터] {astrology_data}\n[상담 주제] {user_question}\n[지시] 사주 명식의 관점에서 내담자의 핵심 기질과 돈줄의 흐름을 딱 2줄로 서늘하게 요약하라. 한문이나 전문 용어는 배제할 것.", "사주 명식의 구조를 해부하는 중..."),
+                    ("🎴 운명의 타로 4장 개방", f"[프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}\n[점술 데이터] {astrology_data}\n[상담 주제] {user_question}\n[지시] 타로 카드가 드러내는 현재의 숨겨진 함정과 그림자를 딱 2줄로 압축하여 타격하라.", "운명의 타로 카드 4장을 뒤집는 중..."),
+                    ("☽ 베딕 점성술 행성 궤도 대조", f"[프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}\n[점술 데이터] {astrology_data}\n[상담 주제] {user_question}\n[지시] 베딕 점성술의 행성 궤도에서 드러나는 거대한 흐름과 피해야 할 위기를 딱 2줄로 서늘하게 진단하라.", "베딕 점성술의 행성 배치를 대조하는 중..."),
+                    ("⚡ 자미두수 및 최종 오라클 선언", f"[프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}\n[점술 데이터] {astrology_data}\n[상담 주제] {user_question}\n[지시] 자미두수와 수비학 숫자가 가리키는 현실적 돌파구를 짚고, 마지막 문장은 반드시 방위(예: 북서쪽), 특정 띠, 성씨 등의 디테일을 포함한 단호한 선언으로 마무리하라. 절대 물음표로 끝내지 마라. 분량은 4~5줄 내외로 압축하라.", "자미두수 및 수비학 코드를 교차 검증하는 중...")
                 ]
 
                 try:
-                    # 💡 [핵심 2] 화면 상단에 시각적 표 생성
                     saju_visual_block = build_visual_block()
-                    
                     terminal_placeholder = st.empty()
                     saved_results = []
 
                     for title, prompt_text, loading_msg in steps:
-                        
-                        # 💡 HTML 안에서 올바르게 표시되도록 줄바꿈(<br>) 적용
                         text_display = ""
                         for res_title, res_text in saved_results:
                             text_display += f"<strong style='color:#d4af37; font-size:1.05em;'>{res_title}</strong><br><br>{res_text}<br><br><hr style='border: 0; border-top: 1px solid rgba(212,175,55,0.2); margin: 15px 0;'><br>"
                         
                         text_display += f"<span style='color:#94a3b8; font-style:italic;'>⚡ {loading_msg}</span>"
 
-                        terminal_placeholder.markdown(f"""
-                        <div class="luxury-terminal">
-                            <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:20px;">[ ORACLE · SECURE CHANNEL ]</div>
-                            {saju_visual_block}
-                            <div style="line-height: 1.8; color: #f1f5f9; font-size:0.95rem;">
-                                {text_display}
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
+                        terminal_html = (
+                            '<div class="luxury-terminal">'
+                            '<div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:20px;">[ ORACLE · SECURE CHANNEL ]</div>'
+                            f'{saju_visual_block}'
+                            f'<div style="line-height: 1.8; color: #f1f5f9; font-size:0.95rem;">{text_display}</div>'
+                            '</div>'
+                        )
+                        terminal_placeholder.markdown(terminal_html, unsafe_allow_html=True)
                         time.sleep(0.6)
 
-                        response = client.models.generate_content(
-                            model="gemini-3.6-flash",
-                            contents=prompt_text,
-                        )
-                        
-                        # 💡 [핵심 3] AI가 뱉은 특수기호나 찌꺼기 태그를 '미리' 깨끗하게 제거하고 저장 (DOM 파괴 방지)
+                        response = client.models.generate_content(model="gemini-3.6-flash", contents=prompt_text)
                         step_result = response.text.strip().replace("</div>", "").replace("<div>", "").replace("**", "").replace("###", "")
                         step_result = step_result.replace(chr(10), "<br>")
-                        
                         saved_results.append((title, step_result))
                         time.sleep(0.4)
 
@@ -1595,7 +1516,6 @@ if selected_product_id == "FREE":
                         final_text_html += f"<strong style='color:#d4af37; font-size:1.05em;'>{res_title}</strong><br><br>{res_text}<br><br><hr style='border: 0; border-top: 1px solid rgba(212,175,55,0.2); margin: 15px 0;'><br>"
 
                     save_free_usage(user_email, current_date)
-
                     st.session_state["chat_messages"] = [{"role": "assistant", "content": final_text_html}]
                     st.session_state["chat_initialized"] = True
                     st.rerun()
@@ -1612,14 +1532,11 @@ if selected_product_id == "FREE":
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-
-    # --- (RAW CHAT 모드 마지막 else 블록 시작) ---
+        
         else:
             saju_visual_block = build_visual_block()
-            
             for message in st.session_state["chat_messages"]:
                 content_html = message["content"]
-                
                 final_html = (
                     '<div class="luxury-terminal">'
                     '<div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:20px;">[ ORACLE · SECURE CHANNEL ]</div>'
@@ -1674,15 +1591,12 @@ if selected_product_id == "FREE":
                 bar.progress(progress_val)
                 time.sleep(0.3)
 
-            astrology_data = build_astrology_block(
-                int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
-            )
+            astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
 
-            # 오늘의 운세 전용 팩트 폭행 프롬프트
             today_prompt = f"""
 당신은 THE RAW TAROT의 오라클이다.
 오늘({current_date}) 하루 동안 내담자의 '돈과 현실'에 어떤 일이 벌어질지만 냉정하게 분석하라.
-한자 사용을 금지하고, "~다는 거죠", "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
+한자 사용을 금지하고, "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
 
 [내담자 데이터]
 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
@@ -1694,28 +1608,25 @@ if selected_product_id == "FREE":
 오늘의 금전 기운 점수를 0~100 사이의 숫자로만 적어라. (예: 45)
 
 @SAJU@
-오늘 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "오늘 지갑을 열면 ~한 이유로 손해를 본다는 거죠" 식으로 구체적인 돈의 흐름을 경고하라.
+오늘 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "오늘 지갑을 열면 ~한 이유로 손해를 볼 수 있습니다." 식으로 구체적인 돈의 흐름을 경고하라.
 
 @ASTRO@
 오늘 별자리와 수비학 기운이 주는 금전적 힌트를 2문장으로 짚어라. 
 
 @SUMMARY@
 오늘 당장 돈을 지키기 위해 '절대 하지 말아야 할 행동' 1가지를 단호하게 선언하라. (3문장 내외)
+오늘 당장 돈의 운을 올리기 위해 악세서리, 색상, 방향을 알려줘라. (3문장 내외)
 """
             ph.info("🌌 오늘의 금전 기운을 추출하고 있습니다...")
 
             try:
-                response = client.models.generate_content(
-                    model="gemini-3.6-flash",
-                    contents=today_prompt,
-                )
+                response = client.models.generate_content(model="gemini-3.6-flash", contents=today_prompt)
                 
                 bar.empty()
                 ph.empty()
                 
                 result_text = response.text.strip()
                 
-                # 결과 파싱
                 score = extract_section(result_text, "@SCORE@", "@SAJU@").strip()
                 saju_text = extract_section(result_text, "@SAJU@", "@ASTRO@").strip()
                 astro_text = extract_section(result_text, "@ASTRO@", "@SUMMARY@").strip()
@@ -1723,29 +1634,24 @@ if selected_product_id == "FREE":
 
                 st.success(f"{user_name} 님의 {current_date} 금전 운세가 완성되었습니다.")
 
-                # 시각화 표 출력
                 saju_html = build_visual_block()
                 if saju_html:
                     st.markdown(saju_html, unsafe_allow_html=True)
 
-                # 오늘의 운세 럭셔리 터미널 UI 렌더링
                 st.markdown(f"""
                 <div style="background-color: #0d0e12; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 25px; margin-bottom: 20px;">
                     <div style="text-align: center; margin-bottom: 25px;">
                         <div style="color: #64748b; font-size: 0.85rem; letter-spacing: 2px;">TODAY'S MONEY POWER</div>
                         <div style="color: #d4af37; font-size: 3.5rem; font-weight: 800; font-family: Georgia, serif;">{score}<span style="font-size: 1.5rem; color: #64748b;"> 점</span></div>
                     </div>
-                    
                     <div style="margin-bottom: 20px;">
                         <span style="background-color: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">명식 기운</span>
                         <div style="color: #e2e8f0; line-height: 1.7; margin-top: 8px; font-size: 0.95rem;">{saju_text}</div>
                     </div>
-                    
                     <div style="margin-bottom: 25px;">
                         <span style="background-color: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">우주 기운</span>
                         <div style="color: #e2e8f0; line-height: 1.7; margin-top: 8px; font-size: 0.95rem;">{astro_text}</div>
                     </div>
-                    
                     <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 20px;">
                         <div style="color: #ef4444; font-size: 0.9rem; font-weight: bold; margin-bottom: 8px;">[ THE RAW WARNING ]</div>
                         <div style="color: #f1f5f9; line-height: 1.8; font-size: 1rem; font-weight: 500;">{summary_text}</div>
