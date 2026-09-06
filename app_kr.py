@@ -1613,20 +1613,21 @@ if selected_product_id == "FREE":
                 </div>
                 """, unsafe_allow_html=True)
         
+        # --- (RAW CHAT 모드 마지막 else 블록 시작) ---
         else:
-            # 💡 [핵심 4] 세션 완료 후에도 시각화 블록을 깨짐 없이 완벽하게 복구하여 결합
             saju_visual_block = build_visual_block()
             
             for message in st.session_state["chat_messages"]:
-                st.markdown(f"""
-                <div class="luxury-terminal">
-                    <div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:20px;">[ ORACLE · SECURE CHANNEL ]</div>
-                    {saju_visual_block}
-                    <div style="line-height: 1.8; color: #f1f5f9; font-size:0.95rem;">
-                        {message["content"]}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                content_html = message["content"]
+                
+                final_html = (
+                    '<div class="luxury-terminal">'
+                    '<div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:20px;">[ ORACLE · SECURE CHANNEL ]</div>'
+                    f'{saju_visual_block}'
+                    f'<div style="line-height: 1.8; color: #f1f5f9; font-size:0.95rem;">{content_html}</div>'
+                    '</div>'
+                )
+                st.markdown(final_html, unsafe_allow_html=True)
 
             st.markdown("<br>", unsafe_allow_html=True)
             
@@ -1641,6 +1642,9 @@ if selected_product_id == "FREE":
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
+    # =========================================================
+    # 2. 오늘의 금전 운세 모드 (매일 접속 유도)
+    # =========================================================
     elif reading_mode.startswith("TODAY'S"):
         if st.button("오늘의 RAW MONEY 확인하기", use_container_width=True):
             current_date = today_kst()
@@ -1755,5 +1759,8 @@ if selected_product_id == "FREE":
                 ph.empty()
                 st.error(f"운세 생성 중 오류가 발생했습니다: {e}")
 
+    # =========================================================
+    # 3. 기존 무료 리딩 모드 (MONEY SHADOW / RAW QUESTION)
+    # =========================================================
     else:
         if st.button("오늘의 SHADOW READING 시작하기"):
