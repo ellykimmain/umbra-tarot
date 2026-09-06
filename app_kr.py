@@ -1404,7 +1404,6 @@ else:
                 astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
                 
                 target_prompt = f"""
-target_prompt = f"""
 당신은 THE RAW TAROT의 오라클이다.
 내담자가 지정한 날짜({target_date_str}) 하루 동안 '돈과 현실'에 어떤 일이 벌어질지만 냉정하게 분석하라.
 한자 사용을 금지하고, "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
