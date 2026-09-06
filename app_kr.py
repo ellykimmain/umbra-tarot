@@ -710,6 +710,7 @@ st.sidebar.markdown("---")
 reading_mode = st.sidebar.radio(
     "질문 테마",
     [
+        "TODAY'S MONEY — 오늘의 금전 운세", # 💡 새로 추가된 메뉴
         "MONEY SHADOW — 돈과 현실",
         "RAW QUESTION — 나만의 심층 질문",
         "RAW CHAT — 실시간 상담하기",
@@ -857,6 +858,122 @@ if reading_mode.startswith("MONEY"):
     )
 
     user_question = selected_query
+
+# 2. 오늘의 금전 운세 모드 (매일 접속 유도)
+    elif reading_mode.startswith("TODAY'S"):
+        if st.button("오늘의 RAW MONEY 확인하기", use_container_width=True):
+            current_date = today_kst()
+
+            if not user_name.strip():
+                st.warning("이름 또는 닉네임을 입력하십시오.")
+                st.stop()
+
+            upsert_user(user_email, user_name)
+
+            if user_email != ADMIN_EMAIL:
+                if has_used_free_today(user_email, current_date):
+                    st.error("오늘의 오라클 세션은 이미 사용했습니다. 내일 다시 확인하십시오.")
+                    st.stop()
+
+            ph = st.empty()
+            bar = st.progress(0.0)
+
+            loading_steps = [
+                ("일진(日辰) 데이터 동기화 중...", 0.3),
+                ("오늘의 금전 흐름과 흉살 교차 검증 중...", 0.6),
+                ("오늘 피해야 할 손재수(損財數) 계산 중...", 1.0)
+            ]
+
+            for msg, progress_val in loading_steps:
+                ph.info(msg)
+                bar.progress(progress_val)
+                time.sleep(0.3)
+
+            astrology_data = build_astrology_block(
+                int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
+            )
+
+            # 오늘의 운세 전용 팩트 폭행 프롬프트
+            today_prompt = f"""
+당신은 THE RAW TAROT의 오라클이다.
+오늘({current_date}) 하루 동안 내담자의 '돈과 현실'에 어떤 일이 벌어질지만 냉정하게 분석하라.
+한자 사용을 금지하고, "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
+
+[내담자 데이터]
+이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
+{astrology_data}
+
+아래 태그를 정확히 사용하여 출력하라.
+
+@SCORE@
+오늘의 금전 기운 점수를 0~100 사이의 숫자로만 적어라. (예: 45)
+
+@SAJU@
+오늘 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "오늘 지갑을 열면 ~한 이유로 손해를 볼 수 있습니다." 식으로 구체적인 돈의 흐름을 경고하라.
+
+@ASTRO@
+오늘 별자리와 수비학 기운이 주는 금전적 힌트를 2문장으로 짚어라. 
+
+@SUMMARY@
+오늘 당장 돈을 지키기 위해 '절대 하지 말아야 할 행동' 1가지를 단호하게 선언하라. (3문장 내외)
+오늘 당장 돈의 운을 올리기 위해서 착용해야하는 악세서리 및 색상, 방향을 알려줘라. (3문장 내외)
+"""
+            ph.info("🌌 오늘의 금전 기운을 추출하고 있습니다...")
+
+            try:
+                response = client.models.generate_content(
+                    model="gemini-3.6-flash",
+                    contents=today_prompt,
+                )
+                
+                bar.empty()
+                ph.empty()
+                
+                result_text = response.text.strip()
+                
+                # 결과 파싱
+                score = extract_section(result_text, "@SCORE@", "@SAJU@").strip()
+                saju_text = extract_section(result_text, "@SAJU@", "@ASTRO@").strip()
+                astro_text = extract_section(result_text, "@ASTRO@", "@SUMMARY@").strip()
+                summary_text = extract_section(result_text, "@SUMMARY@", None).strip()
+
+                st.success(f"{user_name} 님의 {current_date} 금전 운세가 완성되었습니다.")
+
+                # 시각화 표 출력
+                saju_html = build_visual_block()
+                if saju_html:
+                    st.markdown(saju_html, unsafe_allow_html=True)
+
+                # 오늘의 운세 럭셔리 터미널 UI 렌더링
+                st.markdown(f"""
+                <div style="background-color: #0d0e12; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 25px; margin-bottom: 20px;">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="color: #64748b; font-size: 0.85rem; letter-spacing: 2px;">TODAY'S MONEY POWER</div>
+                        <div style="color: #d4af37; font-size: 3.5rem; font-weight: 800; font-family: Georgia, serif;">{score}<span style="font-size: 1.5rem; color: #64748b;"> 점</span></div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <span style="background-color: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">명식 기운</span>
+                        <div style="color: #e2e8f0; line-height: 1.7; margin-top: 8px; font-size: 0.95rem;">{saju_text}</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <span style="background-color: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">우주 기운</span>
+                        <div style="color: #e2e8f0; line-height: 1.7; margin-top: 8px; font-size: 0.95rem;">{astro_text}</div>
+                    </div>
+                    
+                    <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 20px;">
+                        <div style="color: #ef4444; font-size: 0.9rem; font-weight: bold; margin-bottom: 8px;">[ THE RAW WARNING ]</div>
+                        <div style="color: #f1f5f9; line-height: 1.8; font-size: 1rem; font-weight: 500;">{summary_text}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                save_free_usage(user_email, current_date)
+
+            except Exception as e:
+                ph.empty()
+                st.error(f"운세 생성 중 오류가 발생했습니다: {e}")
 
 else:
     user_question = st.text_area(
