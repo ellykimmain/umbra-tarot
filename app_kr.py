@@ -862,6 +862,9 @@ if reading_mode.startswith("MONEY"):
     user_question = selected_query
 elif reading_mode.startswith("TODAY'S"):
     user_question = "오늘 하루 나의 금전 흐름과 흉살 방지책"
+elif reading_mode.startswith("TARGET DATE"):
+    # 💡 [추가] 지정일 운세 모드에서는 텍스트 박스를 숨기고 알아서 질문을 세팅합니다.
+    user_question = "선택한 지정일의 금전 흐름과 흉살 방지책"
 else:
     user_question = st.text_area(
         "당신의 심층 질문",
