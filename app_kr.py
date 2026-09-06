@@ -1640,17 +1640,7 @@ if selected_product_id == "FREE":
                 st.session_state["chat_initialized"] = False
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
-                
-    st.markdown("<div style='text-align: center; margin-top: 15px;'>", unsafe_allow_html=True)
-            if st.button("↺ 처음부터 다시 시작하기", key="reset_session_sub_final"):
-                st.session_state["chat_messages"] = []
-                st.session_state["chat_initialized"] = False
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
 
-    # =========================================================
-    # 2. 오늘의 금전 운세 모드 (매일 접속 유도)
-    # =========================================================
     elif reading_mode.startswith("TODAY'S"):
         if st.button("오늘의 RAW MONEY 확인하기", use_container_width=True):
             current_date = today_kst()
@@ -1688,7 +1678,7 @@ if selected_product_id == "FREE":
             today_prompt = f"""
 당신은 THE RAW TAROT의 오라클이다.
 오늘({current_date}) 하루 동안 내담자의 '돈과 현실'에 어떤 일이 벌어질지만 냉정하게 분석하라.
-한자 사용을 금지하고, "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
+한자 사용을 금지하고, "~다는 거죠", "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
 
 [내담자 데이터]
 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
@@ -1700,14 +1690,13 @@ if selected_product_id == "FREE":
 오늘의 금전 기운 점수를 0~100 사이의 숫자로만 적어라. (예: 45)
 
 @SAJU@
-오늘 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "오늘 지갑을 열면 ~한 이유로 손해를 볼수 있습니다." 식으로 구체적인 돈의 흐름을 경고하라.
+오늘 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "오늘 지갑을 열면 ~한 이유로 손해를 본다는 거죠" 식으로 구체적인 돈의 흐름을 경고하라.
 
 @ASTRO@
 오늘 별자리와 수비학 기운이 주는 금전적 힌트를 2문장으로 짚어라. 
 
 @SUMMARY@
 오늘 당장 돈을 지키기 위해 '절대 하지 말아야 할 행동' 1가지를 단호하게 선언하라. (3문장 내외)
-오늘 당장 돈의 운을 올리기 위해서 악세서리, 방향, 색상을 알려줘라. (3문장 내외)
 """
             ph.info("🌌 오늘의 금전 기운을 추출하고 있습니다...")
 
@@ -1722,7 +1711,7 @@ if selected_product_id == "FREE":
                 
                 result_text = response.text.strip()
                 
-                # 결과 파싱 (extract_section 함수 활용)
+                # 결과 파싱
                 score = extract_section(result_text, "@SCORE@", "@SAJU@").strip()
                 saju_text = extract_section(result_text, "@SAJU@", "@ASTRO@").strip()
                 astro_text = extract_section(result_text, "@ASTRO@", "@SUMMARY@").strip()
@@ -1766,8 +1755,5 @@ if selected_product_id == "FREE":
                 ph.empty()
                 st.error(f"운세 생성 중 오류가 발생했습니다: {e}")
 
-    # =========================================================
-    # 3. 기존 무료 리딩 모드 (MONEY SHADOW / RAW QUESTION)
-    # =========================================================
     else:
         if st.button("오늘의 SHADOW READING 시작하기"):
