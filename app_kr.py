@@ -1612,8 +1612,8 @@ if selected_product_id == "FREE":
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-        
-        # --- (RAW CHAT 모드 마지막 else 블록 시작) ---
+
+    # --- (RAW CHAT 모드 마지막 else 블록 시작) ---
         else:
             saju_visual_block = build_visual_block()
             
