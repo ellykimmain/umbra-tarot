@@ -851,137 +851,14 @@ if reading_mode.startswith("MONEY"):
         "앞으로 가까운 시기의 금전 흐름에서 무엇을 주의해야 하는가?",
         "지금 돈을 만들기 위해 가장 먼저 바꿔야 할 것은 무엇인가?",
     ]
-
-    selected_query = st.selectbox(
-        "무엇을 알고 싶습니까?",
-        question_options,
-    )
-
+    selected_query = st.selectbox("무엇을 알고 싶습니까?", question_options)
     user_question = selected_query
-
-# 2. 오늘의 금전 운세 모드 (매일 접속 유도)
-    elif reading_mode.startswith("TODAY'S"):
-        if st.button("오늘의 RAW MONEY 확인하기", use_container_width=True):
-            current_date = today_kst()
-
-            if not user_name.strip():
-                st.warning("이름 또는 닉네임을 입력하십시오.")
-                st.stop()
-
-            upsert_user(user_email, user_name)
-
-            if user_email != ADMIN_EMAIL:
-                if has_used_free_today(user_email, current_date):
-                    st.error("오늘의 오라클 세션은 이미 사용했습니다. 내일 다시 확인하십시오.")
-                    st.stop()
-
-            ph = st.empty()
-            bar = st.progress(0.0)
-
-            loading_steps = [
-                ("일진(日辰) 데이터 동기화 중...", 0.3),
-                ("오늘의 금전 흐름과 흉살 교차 검증 중...", 0.6),
-                ("오늘 피해야 할 손재수(損財數) 계산 중...", 1.0)
-            ]
-
-            for msg, progress_val in loading_steps:
-                ph.info(msg)
-                bar.progress(progress_val)
-                time.sleep(0.3)
-
-            astrology_data = build_astrology_block(
-                int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
-            )
-
-            # 오늘의 운세 전용 팩트 폭행 프롬프트
-            today_prompt = f"""
-당신은 THE RAW TAROT의 오라클이다.
-오늘({current_date}) 하루 동안 내담자의 '돈과 현실'에 어떤 일이 벌어질지만 냉정하게 분석하라.
-한자 사용을 금지하고, "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
-
-[내담자 데이터]
-이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-{astrology_data}
-
-아래 태그를 정확히 사용하여 출력하라.
-
-@SCORE@
-오늘의 금전 기운 점수를 0~100 사이의 숫자로만 적어라. (예: 45)
-
-@SAJU@
-오늘 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "오늘 지갑을 열면 ~한 이유로 손해를 볼 수 있습니다." 식으로 구체적인 돈의 흐름을 경고하라.
-
-@ASTRO@
-오늘 별자리와 수비학 기운이 주는 금전적 힌트를 2문장으로 짚어라. 
-
-@SUMMARY@
-오늘 당장 돈을 지키기 위해 '절대 하지 말아야 할 행동' 1가지를 단호하게 선언하라. (3문장 내외)
-오늘 당장 돈의 운을 올리기 위해서 착용해야하는 악세서리 및 색상, 방향을 알려줘라. (3문장 내외)
-"""
-            ph.info("🌌 오늘의 금전 기운을 추출하고 있습니다...")
-
-            try:
-                response = client.models.generate_content(
-                    model="gemini-3.6-flash",
-                    contents=today_prompt,
-                )
-                
-                bar.empty()
-                ph.empty()
-                
-                result_text = response.text.strip()
-                
-                # 결과 파싱
-                score = extract_section(result_text, "@SCORE@", "@SAJU@").strip()
-                saju_text = extract_section(result_text, "@SAJU@", "@ASTRO@").strip()
-                astro_text = extract_section(result_text, "@ASTRO@", "@SUMMARY@").strip()
-                summary_text = extract_section(result_text, "@SUMMARY@", None).strip()
-
-                st.success(f"{user_name} 님의 {current_date} 금전 운세가 완성되었습니다.")
-
-                # 시각화 표 출력
-                saju_html = build_visual_block()
-                if saju_html:
-                    st.markdown(saju_html, unsafe_allow_html=True)
-
-                # 오늘의 운세 럭셔리 터미널 UI 렌더링
-                st.markdown(f"""
-                <div style="background-color: #0d0e12; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 25px; margin-bottom: 20px;">
-                    <div style="text-align: center; margin-bottom: 25px;">
-                        <div style="color: #64748b; font-size: 0.85rem; letter-spacing: 2px;">TODAY'S MONEY POWER</div>
-                        <div style="color: #d4af37; font-size: 3.5rem; font-weight: 800; font-family: Georgia, serif;">{score}<span style="font-size: 1.5rem; color: #64748b;"> 점</span></div>
-                    </div>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <span style="background-color: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">명식 기운</span>
-                        <div style="color: #e2e8f0; line-height: 1.7; margin-top: 8px; font-size: 0.95rem;">{saju_text}</div>
-                    </div>
-                    
-                    <div style="margin-bottom: 25px;">
-                        <span style="background-color: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">우주 기운</span>
-                        <div style="color: #e2e8f0; line-height: 1.7; margin-top: 8px; font-size: 0.95rem;">{astro_text}</div>
-                    </div>
-                    
-                    <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 20px;">
-                        <div style="color: #ef4444; font-size: 0.9rem; font-weight: bold; margin-bottom: 8px;">[ THE RAW WARNING ]</div>
-                        <div style="color: #f1f5f9; line-height: 1.8; font-size: 1rem; font-weight: 500;">{summary_text}</div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                save_free_usage(user_email, current_date)
-
-            except Exception as e:
-                ph.empty()
-                st.error(f"운세 생성 중 오류가 발생했습니다: {e}")
-
+elif reading_mode.startswith("TODAY'S"):
+    user_question = "오늘 하루 나의 금전 흐름과 흉살 방지책"
 else:
     user_question = st.text_area(
         "당신의 심층 질문",
-        placeholder=(
-            "예: 지금 내가 가진 경험으로 "
-            "어떤 방식의 수입을 만드는 것이 가장 현실적인가?"
-        ),
+        placeholder="예: 지금 내가 가진 경험으로 어떤 방식의 수입을 만드는 것이 가장 현실적인가?",
     )
 
 
@@ -990,30 +867,19 @@ else:
 # =========================================================
 
 def build_prompt(
-    user_name,
-    gender,
-    birth_place,
-    birth_year,
-    birth_month,
-    birth_day,
-    birth_time,
-    user_question,
-    astrology_data,
-    drawn_keys,
-    product_id,
+    user_name, gender, birth_place, birth_year, birth_month, birth_day, birth_time,
+    user_question, astrology_data, drawn_keys, product_id
 ):
     current_date = today_kst()
 
-    card_lines = "\n".join(
-        f"{idx + 1}. {card}"
-        for idx, card in enumerate(drawn_keys)
-    )
+    card_lines = "\n".join(f"{idx + 1}. {card}" for idx, card in enumerate(drawn_keys))
 
     if product_id == "FREE":
         output_format = """
 @INTRO@
 기계적인 인사를 생략하고, 내담자의 질문과 명식의 기운을 꿰뚫으며 단호하게 시작하라. 
 [경고] 내담자가 "~하는 게 맞을까?"라고 진로나 새로운 시작을 물었을 때, 이미 그 일을 하며 고통받고 있다고 멋대로 넘겨짚어 "그동안 ~하느라 고생했다", "사표를 던져라" 식의 소설을 절대 쓰지 마라. 질문에 주어진 상황 내에서만 기운의 득실을 진단하라. (3~4문장)
+
 @CARD_1@
 첫 번째 카드가 짚어내는 내담자의 가장 뼈아픈 단점.
 "첫 장부터 ~카드가 떴다는 건, 본인의 고집이 도리어 구설수를 부르고 있다는 뜻입니다."처럼 카드가 보여주는 팩트를 에두르지 말고 직설적으로 꽂아라. (4문장 내외)
@@ -1084,7 +950,6 @@ def build_prompt(
 ==================================================================
 {current_date}
 
-# ... (이하 프로필 및 기존 코드 동일) ...
 ==================================================================
 [내담자 프로필]
 ==================================================================
@@ -1111,93 +976,43 @@ def build_prompt(
 
 {output_format}
 """
+
 # =========================================================
 # 결과 표시
 # =========================================================
 
 def extract_section(text, tag, next_tag=None):
-    if tag not in text:
-        return ""
-
+    if tag not in text: return ""
     try:
         content = text.split(tag, 1)[1]
-
         if next_tag and next_tag in content:
             content = content.split(next_tag, 1)[0]
-
         return content.strip()
-
-    except Exception:
-        return ""
-
+    except: return ""
 
 def display_card(card_name, title=None):
-    if title:
-        st.markdown(
-            f"<h4 style='text-align:center; color:#1a1a2e;'>"
-            f"{title}</h4>",
-            unsafe_allow_html=True,
-        )
-
+    if title: st.markdown(f"<h4 style='text-align:center; color:#1a1a2e;'>{title}</h4>", unsafe_allow_html=True)
     image_path = get_card_image_path(card_name)
-
-    if image_path:
-        st.image(
-            image_path,
-            caption=card_name,
-            use_container_width=True,
-        )
-    else:
-        st.warning(f"카드 이미지가 없습니다: {card_name}")
-
+    if image_path: st.image(image_path, caption=card_name, use_container_width=True)
+    else: st.warning(f"카드 이미지가 없습니다: {card_name}")
 
 def safe_html_text(text):
     return html.escape(text or "").replace("\n", "<br>")
 
-
 def display_free_result(result_text, drawn_keys):
-    intro = extract_section(
-        result_text,
-        "@INTRO@",
-        "@CARD_1@",
-    )
-
-    card1 = extract_section(
-        result_text,
-        "@CARD_1@",
-        "@CARD_2@",
-    )
-
-    card2 = extract_section(
-        result_text,
-        "@CARD_2@",
-        "@CARD_3@",
-    )
-
-    card3 = extract_section(
-        result_text,
-        "@CARD_3@",
-        "@CONCLUSION@",
-    )
-
-    conclusion = extract_section(
-        result_text,
-        "@CONCLUSION@",
-        None,
-    )
+    intro = extract_section(result_text, "@INTRO@", "@CARD_1@")
+    card1 = extract_section(result_text, "@CARD_1@", "@CARD_2@")
+    card2 = extract_section(result_text, "@CARD_2@", "@CARD_3@")
+    card3 = extract_section(result_text, "@CARD_3@", "@CONCLUSION@")
+    conclusion = extract_section(result_text, "@CONCLUSION@", None)
 
     if intro:
-        st.markdown(
-            f"""
-            <div class="raw-card">
-                <div class="raw-label">RAW SNAPSHOT</div>
-                <div style="color:#343a40; line-height:1.85;">
-                    {safe_html_text(intro)}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f"""
+        <div class="raw-card">
+            <div class="raw-label">RAW SNAPSHOT</div>
+            <div style="color:#343a40; line-height:1.85;">{safe_html_text(intro)}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     sections = [
         ("1 · 현재의 현실", drawn_keys[0], card1),
@@ -1206,43 +1021,21 @@ def display_free_result(result_text, drawn_keys):
     ]
 
     for title, card_name, text in sections:
-        st.markdown(
-            f"<h4 style='color:#1a1a2e; margin-top:28px;'>"
-            f"{title}</h4>",
-            unsafe_allow_html=True,
-        )
-
+        st.markdown(f"<h4 style='color:#1a1a2e; margin-top:28px;'>{title}</h4>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 1.5, 1])
-
-        with col2:
-            display_card(card_name)
-
+        with col2: display_card(card_name)
         if text:
-            st.markdown(
-                f"""
-                <div class="raw-card"
-                     style="line-height:1.85;">
-                    {safe_html_text(text)}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            st.markdown(f"""
+            <div class="raw-card" style="line-height:1.85;">{safe_html_text(text)}</div>
+            """, unsafe_allow_html=True)
 
     if conclusion:
-        st.markdown(
-            f"""
-            <div class="raw-dark-card">
-                <div class="raw-label" style="color:#d4af37;">
-                    THE RAW CONCLUSION
-                </div>
-                <div style="line-height:1.85; margin-top:12px;">
-                    {safe_html_text(conclusion)}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
+        st.markdown(f"""
+        <div class="raw-dark-card">
+            <div class="raw-label" style="color:#d4af37;">THE RAW CONCLUSION</div>
+            <div style="line-height:1.85; margin-top:12px;">{safe_html_text(conclusion)}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
 def display_deep_result(result_text, drawn_keys):
     sections = [
@@ -1254,123 +1047,51 @@ def display_deep_result(result_text, drawn_keys):
         ("@TIMING@", "@CONCLUSION@", "TIMING · 흐름"),
         ("@CONCLUSION@", None, "CONCLUSION · 최종 판단"),
     ]
-
     for tag, next_tag, title in sections:
-        content = extract_section(
-            result_text,
-            tag,
-            next_tag,
-        )
+        content = extract_section(result_text, tag, next_tag)
+        if not content: continue
+        st.markdown(f"""
+        <div class="raw-card">
+            <div class="raw-label">{title}</div>
+            <div style="color:#343a40; line-height:1.9; margin-top:10px;">{safe_html_text(content)}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        if not content:
-            continue
-
-        st.markdown(
-            f"""
-            <div class="raw-card">
-                <div class="raw-label">{title}</div>
-                <div style="color:#343a40; line-height:1.9; margin-top:10px;">
-                    {safe_html_text(content)}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    st.markdown(
-        "<h4 style='color:#1a1a2e; margin-top:30px;'>"
-        "🎴 이번 분석에 사용된 카드</h4>",
-        unsafe_allow_html=True,
-    )
-
+    st.markdown("<h4 style='color:#1a1a2e; margin-top:30px;'>🎴 이번 분석에 사용된 카드</h4>", unsafe_allow_html=True)
     cols = st.columns(len(drawn_keys))
-
     for idx, card_name in enumerate(drawn_keys):
-        with cols[idx]:
-            display_card(card_name)
-
+        with cols[idx]: display_card(card_name)
 
 # =========================================================
 # 이메일
 # =========================================================
 
 def send_result_email(user_email, user_name, result_text, product_name):
-    if not user_email:
-        return False
-
+    if not user_email: return False
     try:
         safe_name = html.escape(user_name or "여행자")
         safe_result = safe_html_text(result_text)
-
         html_body = f"""
         <html>
-        <body style="
-            background:#050505;
-            color:#d4d4d4;
-            font-family:Arial,Helvetica,sans-serif;
-            padding:20px;
-            line-height:1.7;
-        ">
-            <div style="
-                max-width:600px;
-                margin:0 auto;
-                border:1px solid #222;
-                padding:35px;
-                background:#0a0a0a;
-            ">
-                <h2 style="
-                    text-align:center;
-                    color:#ffffff;
-                    letter-spacing:4px;
-                    font-weight:normal;
-                ">
-                    THE RAW TAROT
-                </h2>
-
-                <p style="color:#999;">
-                    {safe_name}님을 위한 {html.escape(product_name)}
-                </p>
-
-                <div style="
-                    margin-top:30px;
-                    color:#cccccc;
-                    font-size:15px;
-                ">
-                    {safe_result}
-                </div>
-
-                <hr style="
-                    border:0;
-                    border-top:1px solid #222;
-                    margin:40px 0;
-                ">
-
-                <p style="
-                    color:#888;
-                    font-size:13px;
-                    text-align:center;
-                ">
-                    THE RAW TAROT · 현실을 직시하고 다음 행동을 선택하십시오.
-                </p>
+        <body style="background:#050505; color:#d4d4d4; font-family:Arial,Helvetica,sans-serif; padding:20px; line-height:1.7;">
+            <div style="max-width:600px; margin:0 auto; border:1px solid #222; padding:35px; background:#0a0a0a;">
+                <h2 style="text-align:center; color:#ffffff; letter-spacing:4px; font-weight:normal;">THE RAW TAROT</h2>
+                <p style="color:#999;">{safe_name}님을 위한 {html.escape(product_name)}</p>
+                <div style="margin-top:30px; color:#cccccc; font-size:15px;">{safe_result}</div>
+                <hr style="border:0; border-top:1px solid #222; margin:40px 0;">
+                <p style="color:#888; font-size:13px; text-align:center;">THE RAW TAROT · 현실을 직시하고 다음 행동을 선택하십시오.</p>
             </div>
         </body>
         </html>
         """
-
         msg = MIMEText(html_body, "html")
         msg["Subject"] = f"THE RAW TAROT · {product_name}"
         msg["From"] = st.secrets["EMAIL_SENDER"]
         msg["To"] = user_email
-
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(
-                st.secrets["EMAIL_SENDER"],
-                st.secrets["EMAIL_PASSWORD"],
-            )
+            server.login(st.secrets["EMAIL_SENDER"], st.secrets["EMAIL_PASSWORD"])
             server.send_message(msg)
-
         return True
-
     except Exception as e:
         print(f"Email Error: {e}")
         return False
@@ -1382,7 +1103,6 @@ def send_result_email(user_email, user_name, result_text, product_name):
 
 if selected_product_id == "FREE":
 
-    # 💡 [핵심] 모든 모드에서 만세력 표를 띄우기 위해 함수를 바깥으로 뺐습니다. (들여쓰기 4칸 유지)
     def build_visual_block():
         saju_dict = get_saju_data(int(birth_year), int(birth_month), int(birth_day), TIME_TO_ZHI.get(birth_time, 0))
         num_data = get_numerology(int(birth_year), int(birth_month), int(birth_day))
@@ -1404,8 +1124,7 @@ if selected_product_id == "FREE":
         zodiac_name, zodiac_symbol = get_zodiac(int(birth_month), int(birth_day))
         life_path = num_data['life_path']
         
-        if not saju_dict:
-            return ""
+        if not saju_dict: return ""
             
         return f"""
         <div style="border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px; padding: 25px 20px; margin-bottom: 30px; background: rgba(13, 14, 18, 0.7); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
@@ -1423,36 +1142,21 @@ if selected_product_id == "FREE":
         </div>
         """
 
-    # =========================================================
-    # 1. 실시간 상담 모드 (RAW CHAT)
-    # =========================================================
+    # 1. 실시간 상담 모드
     if reading_mode.startswith("RAW CHAT"):
         st.markdown("""
         <style>
         .luxury-terminal {
-            background-color: #0d0e12;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 12px;
-            padding: 24px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            color: #e2e8f0;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            margin-bottom: 20px;
+            background-color: #0d0e12; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px;
+            padding: 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #e2e8f0; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); margin-bottom: 20px;
         }
         .terminal-header {
-            color: #d4af37;
-            font-family: Georgia, 'Times New Roman', serif;
-            letter-spacing: 3px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 16px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-            padding-bottom: 12px;
-            text-transform: uppercase;
+            color: #d4af37; font-family: Georgia, 'Times New Roman', serif; letter-spacing: 3px; font-weight: 700;
+            font-size: 1.1rem; margin-bottom: 16px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 12px; text-transform: uppercase;
         }
         </style>
         """, unsafe_allow_html=True)
-
         st.markdown('<div class="terminal-header">THE RAW · ORACLE SECURE CHANNEL (PREVIEW)</div>', unsafe_allow_html=True)
 
         if "chat_messages" not in st.session_state:
@@ -1462,18 +1166,12 @@ if selected_product_id == "FREE":
         if not st.session_state["chat_initialized"]:
             if st.button(">> INITIALIZE ORACLE CHAT (상담 채널 열기)"):
                 current_date = today_kst()
-
                 if not user_name.strip():
-                    st.warning("이름 또는 닉네임을 입력하십시오.")
-                    st.stop()
-                
+                    st.warning("이름 또는 닉네임을 입력하십시오."); st.stop()
                 upsert_user(user_email, user_name)
-
                 if user_email != ADMIN_EMAIL:
                     if has_used_free_today(user_email, current_date):
-                        st.error("오늘의 오라클 세션은 이미 사용했습니다. 내일 다시 새로운 세션을 시작할 수 있습니다.")
-                        st.stop()
-
+                        st.error("오늘의 오라클 세션은 이미 사용했습니다. 내일 다시 새로운 세션을 시작할 수 있습니다."); st.stop()
                 astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
                 
                 steps = [
@@ -1482,162 +1180,89 @@ if selected_product_id == "FREE":
                     ("☽ 베딕 점성술 행성 궤도 대조", f"[프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}\n[점술 데이터] {astrology_data}\n[상담 주제] {user_question}\n[지시] 베딕 점성술의 행성 궤도에서 드러나는 거대한 흐름과 피해야 할 위기를 딱 2줄로 서늘하게 진단하라.", "베딕 점성술의 행성 배치를 대조하는 중..."),
                     ("⚡ 자미두수 및 최종 오라클 선언", f"[프로필] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}\n[점술 데이터] {astrology_data}\n[상담 주제] {user_question}\n[지시] 자미두수와 수비학 숫자가 가리키는 현실적 돌파구를 짚고, 마지막 문장은 반드시 방위(예: 북서쪽), 특정 띠, 성씨 등의 디테일을 포함한 단호한 선언으로 마무리하라. 절대 물음표로 끝내지 마라. 분량은 4~5줄 내외로 압축하라.", "자미두수 및 수비학 코드를 교차 검증하는 중...")
                 ]
-
                 try:
                     saju_visual_block = build_visual_block()
                     terminal_placeholder = st.empty()
                     saved_results = []
-
                     for title, prompt_text, loading_msg in steps:
                         text_display = ""
                         for res_title, res_text in saved_results:
                             text_display += f"<strong style='color:#d4af37; font-size:1.05em;'>{res_title}</strong><br><br>{res_text}<br><br><hr style='border: 0; border-top: 1px solid rgba(212,175,55,0.2); margin: 15px 0;'><br>"
-                        
                         text_display += f"<span style='color:#94a3b8; font-style:italic;'>⚡ {loading_msg}</span>"
-
-                        terminal_html = (
-                            '<div class="luxury-terminal">'
-                            '<div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:20px;">[ ORACLE · SECURE CHANNEL ]</div>'
-                            f'{saju_visual_block}'
-                            f'<div style="line-height: 1.8; color: #f1f5f9; font-size:0.95rem;">{text_display}</div>'
-                            '</div>'
-                        )
+                        terminal_html = ('<div class="luxury-terminal"><div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:20px;">[ ORACLE · SECURE CHANNEL ]</div>'
+                            f'{saju_visual_block}<div style="line-height: 1.8; color: #f1f5f9; font-size:0.95rem;">{text_display}</div></div>')
                         terminal_placeholder.markdown(terminal_html, unsafe_allow_html=True)
                         time.sleep(0.6)
-
                         response = client.models.generate_content(model="gemini-3.6-flash", contents=prompt_text)
-                        step_result = response.text.strip().replace("</div>", "").replace("<div>", "").replace("**", "").replace("###", "")
-                        step_result = step_result.replace(chr(10), "<br>")
+                        step_result = response.text.strip().replace("</div>", "").replace("<div>", "").replace("**", "").replace("###", "").replace(chr(10), "<br>")
                         saved_results.append((title, step_result))
                         time.sleep(0.4)
-
                     final_text_html = ""
                     for res_title, res_text in saved_results:
                         final_text_html += f"<strong style='color:#d4af37; font-size:1.05em;'>{res_title}</strong><br><br>{res_text}<br><br><hr style='border: 0; border-top: 1px solid rgba(212,175,55,0.2); margin: 15px 0;'><br>"
-
                     save_free_usage(user_email, current_date)
                     st.session_state["chat_messages"] = [{"role": "assistant", "content": final_text_html}]
                     st.session_state["chat_initialized"] = True
                     st.rerun()
-                    
-                except Exception as e:
-                    st.error(f"채널 연결 오류: {e}")
+                except Exception as e: st.error(f"채널 연결 오류: {e}")
             else:
-                st.markdown("""
-                <div class="luxury-terminal" style="text-align:center; padding: 30px;">
-                    <div style="color:#d4af37; font-size:1.1rem; margin-bottom:10px;">SECURE CHANNEL READY</div>
-                    <div style="color:#94a3b8; font-size:0.9rem; line-height:1.7;">
-                        입력된 프로필과 질문을 바탕으로 오라클의 4단계 정밀 교차 검증 세션을 엽니다.<br>
-                        사주, 타로, 베딕, 자미두수의 데이터가 순차적으로 해부되어 출력됩니다.
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-        
+                st.markdown('<div class="luxury-terminal" style="text-align:center; padding: 30px;"><div style="color:#d4af37; font-size:1.1rem; margin-bottom:10px;">SECURE CHANNEL READY</div><div style="color:#94a3b8; font-size:0.9rem; line-height:1.7;">입력된 프로필과 질문을 바탕으로 오라클의 4단계 정밀 교차 검증 세션을 엽니다.<br>사주, 타로, 베딕, 자미두수의 데이터가 순차적으로 해부되어 출력됩니다.</div></div>', unsafe_allow_html=True)
         else:
             saju_visual_block = build_visual_block()
             for message in st.session_state["chat_messages"]:
                 content_html = message["content"]
-                final_html = (
-                    '<div class="luxury-terminal">'
-                    '<div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:20px;">[ ORACLE · SECURE CHANNEL ]</div>'
-                    f'{saju_visual_block}'
-                    f'<div style="line-height: 1.8; color: #f1f5f9; font-size:0.95rem;">{content_html}</div>'
-                    '</div>'
-                )
-                st.markdown(final_html, unsafe_allow_html=True)
-
+                st.markdown(f'<div class="luxury-terminal"><div style="color:#d4af37; font-size:0.85rem; letter-spacing:1px; margin-bottom:20px;">[ ORACLE · SECURE CHANNEL ]</div>{saju_visual_block}<div style="line-height: 1.8; color: #f1f5f9; font-size:0.95rem;">{content_html}</div></div>', unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
-            
             if st.button("🔓 THE RAW DEEP ANALYSIS · 990원", use_container_width=True, key="go_deep_chat_wide_final"):
-                st.session_state["checkout_product"] = "RAW_DEEP"
-                st.rerun()
-
+                st.session_state["checkout_product"] = "RAW_DEEP"; st.rerun()
             st.markdown("<div style='text-align: center; margin-top: 15px;'>", unsafe_allow_html=True)
             if st.button("↺ 처음부터 다시 시작하기", key="reset_session_sub_final"):
-                st.session_state["chat_messages"] = []
-                st.session_state["chat_initialized"] = False
-                st.rerun()
+                st.session_state["chat_messages"] = []; st.session_state["chat_initialized"] = False; st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-    # =========================================================
-    # 2. 오늘의 금전 운세 모드 (매일 접속 유도)
-    # =========================================================
+    # 2. 오늘의 운세 모드
     elif reading_mode.startswith("TODAY'S"):
         if st.button("오늘의 RAW MONEY 확인하기", use_container_width=True):
             current_date = today_kst()
-
-            if not user_name.strip():
-                st.warning("이름 또는 닉네임을 입력하십시오.")
-                st.stop()
-
+            if not user_name.strip(): st.warning("이름 또는 닉네임을 입력하십시오."); st.stop()
             upsert_user(user_email, user_name)
-
             if user_email != ADMIN_EMAIL:
                 if has_used_free_today(user_email, current_date):
-                    st.error("오늘의 오라클 세션은 이미 사용했습니다. 내일 다시 확인하십시오.")
-                    st.stop()
-
+                    st.error("오늘의 오라클 세션은 이미 사용했습니다. 내일 다시 확인하십시오."); st.stop()
             ph = st.empty()
             bar = st.progress(0.0)
-
-            loading_steps = [
-                ("일진(日辰) 데이터 동기화 중...", 0.3),
-                ("오늘의 금전 흐름과 흉살 교차 검증 중...", 0.6),
-                ("오늘 피해야 할 손재수(損財數) 계산 중...", 1.0)
-            ]
-
+            loading_steps = [("일진(日辰) 데이터 동기화 중...", 0.3), ("오늘의 금전 흐름과 흉살 교차 검증 중...", 0.6), ("오늘 피해야 할 손재수(損財數) 계산 중...", 1.0)]
             for msg, progress_val in loading_steps:
-                ph.info(msg)
-                bar.progress(progress_val)
-                time.sleep(0.3)
-
+                ph.info(msg); bar.progress(progress_val); time.sleep(0.3)
             astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
-
             today_prompt = f"""
 당신은 THE RAW TAROT의 오라클이다.
 오늘({current_date}) 하루 동안 내담자의 '돈과 현실'에 어떤 일이 벌어질지만 냉정하게 분석하라.
-한자 사용을 금지하고, "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
-
-[내담자 데이터]
-이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}
-{astrology_data}
+한자 사용을 금지하고, "~다는 거죠", "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
+[내담자 데이터] 이름: {user_name} / 생년월일시: {birth_year}년 {birth_month}월 {birth_day}일 {birth_time}\n{astrology_data}
 
 아래 태그를 정확히 사용하여 출력하라.
-
 @SCORE@
 오늘의 금전 기운 점수를 0~100 사이의 숫자로만 적어라. (예: 45)
-
 @SAJU@
-오늘 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "오늘 지갑을 열면 ~한 이유로 손해를 볼 수 있습니다." 식으로 구체적인 돈의 흐름을 경고하라.
-
+오늘 일진과 내담자의 명식이 부딪히는 지점을 2문장으로 짚어라. "오늘 지갑을 열면 ~한 이유로 손해를 본다는 거죠" 식으로 경고하라.
 @ASTRO@
 오늘 별자리와 수비학 기운이 주는 금전적 힌트를 2문장으로 짚어라. 
-
 @SUMMARY@
-오늘 당장 돈을 지키기 위해 '절대 하지 말아야 할 행동' 1가지를 단호하게 선언하라. (3문장 내외)
-오늘 당장 돈의 운을 올리기 위해 악세서리, 색상, 방향을 알려줘라. (3문장 내외)
+오늘 당장 돈을 지키기 위해 '절대 하지 말아야 할 행동' 1가지와 운을 올리기 위한 색상/방향을 단호하게 선언하라. (3문장 내외)
 """
             ph.info("🌌 오늘의 금전 기운을 추출하고 있습니다...")
-
             try:
                 response = client.models.generate_content(model="gemini-3.6-flash", contents=today_prompt)
-                
-                bar.empty()
-                ph.empty()
-                
+                bar.empty(); ph.empty()
                 result_text = response.text.strip()
-                
                 score = extract_section(result_text, "@SCORE@", "@SAJU@").strip()
                 saju_text = extract_section(result_text, "@SAJU@", "@ASTRO@").strip()
                 astro_text = extract_section(result_text, "@ASTRO@", "@SUMMARY@").strip()
                 summary_text = extract_section(result_text, "@SUMMARY@", None).strip()
-
                 st.success(f"{user_name} 님의 {current_date} 금전 운세가 완성되었습니다.")
-
                 saju_html = build_visual_block()
-                if saju_html:
-                    st.markdown(saju_html, unsafe_allow_html=True)
-
+                if saju_html: st.markdown(saju_html, unsafe_allow_html=True)
                 st.markdown(f"""
                 <div style="background-color: #0d0e12; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 25px; margin-bottom: 20px;">
                     <div style="text-align: center; margin-bottom: 25px;">
@@ -1658,15 +1283,162 @@ if selected_product_id == "FREE":
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                
                 save_free_usage(user_email, current_date)
-
             except Exception as e:
-                ph.empty()
-                st.error(f"운세 생성 중 오류가 발생했습니다: {e}")
+                ph.empty(); st.error(f"운세 생성 중 오류가 발생했습니다: {e}")
 
-    # =========================================================
-    # 3. 기존 무료 리딩 모드 (MONEY SHADOW / RAW QUESTION)
-    # =========================================================
+    # 3. 일반 무료 리딩 모드
     else:
         if st.button("오늘의 SHADOW READING 시작하기"):
+            current_date = today_kst()
+            if not user_name.strip(): st.warning("이름 또는 닉네임을 입력하십시오."); st.stop()
+            upsert_user(user_email, user_name)
+            if user_email != ADMIN_EMAIL:
+                if has_used_free_today(user_email, current_date):
+                    st.error("오늘의 무료 SHADOW READING은 이미 사용했습니다. 내일 다시 새로운 리딩을 시작할 수 있습니다."); st.stop()
+            ph = st.empty()
+            bar = st.progress(0.0)
+            loading_steps = [("🌌 운명 데이터 동기화 중...", 0.2), ("🪐 사주 명식과 수비학 구조 교차 분석 중...", 0.4), ("☽ 베딕 점성술 행성 배치 대조 중...", 0.6), ("🎴 타로 덱에서 운명의 카드를 뽑는 중...", 0.8), ("⚡ 카드를 뒤집어 오늘의 그림자를 조합하는 중...", 0.95)]
+            for msg, progress_val in loading_steps:
+                ph.info(msg); bar.progress(progress_val); time.sleep(0.4)
+            astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
+            drawn_keys = random.sample(MAJOR_ARCANA, PRODUCTS["FREE"]["cards"])
+            prompt = build_prompt(user_name=user_name, gender=gender, birth_place=birth_place, birth_year=int(birth_year), birth_month=int(birth_month), birth_day=int(birth_day), birth_time=birth_time, user_question=user_question, astrology_data=astrology_data, drawn_keys=drawn_keys, product_id="FREE")
+            bar.progress(1.0)
+            ph.info("🌌 오라클 엔진 가동 중... 교차 검증을 마치고 리포트를 조립하고 있습니다. (약 5~10초 소요)")
+            try:
+                response = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
+                bar.empty(); ph.empty()
+                result_text = response.text.strip()
+                st.success("오늘의 SHADOW READING이 완성되었습니다.")
+                saju_html = build_visual_block()
+                if saju_html: st.markdown(saju_html, unsafe_allow_html=True)
+                display_free_result(result_text, drawn_keys)
+                save_free_usage(user_email, current_date)
+                save_report_to_db(user_email, "FREE", user_question, result_text)
+                if send_result_email(user_email, user_name, result_text, "무료 SHADOW READING"):
+                    st.caption("리딩 결과를 이메일로도 보내드렸습니다.")
+                st.markdown("---")
+                st.markdown('<div class="raw-dark-card" style="text-align:center;"><div class="raw-label" style="color:#d4af37;">GO DEEPER</div><div style="font-size:1.45rem; font-weight:700; margin-top:8px;">여기서부터 THE RAW입니다.</div><p style="color:#d9d9df; line-height:1.8; margin-top:12px;">무료 리딩은 지금의 핵심 그림자를 보여줍니다.<br>DEEP ANALYSIS에서는 돈의 구조, 교차검증, 현실 전략과 흐름을 더 깊게 분석합니다.</p><div class="deep-price" style="color:#f3e5ab; margin-top:15px;">990원</div><div style="color:#aaa; font-size:0.85rem; margin-top:5px;">1회성 · 결제 연동 전 테스트 모드</div></div>', unsafe_allow_html=True)
+                if st.button("🔓 THE RAW DEEP ANALYSIS · 990원", key="go_deep"):
+                    st.session_state["checkout_product"] = "RAW_DEEP"; st.rerun()
+            except Exception as e:
+                ph.empty(); st.error(f"리딩 생성 중 오류가 발생했습니다: {str(e)}")
+
+# =========================================================
+# THE RAW DEEP ANALYSIS (유료)
+# =========================================================
+
+else:
+    st.markdown("""
+    <div class="raw-dark-card" style="text-align:center; padding:40px 20px;">
+        <div class="raw-label" style="color:#d4af37;">SECURE PAYMENT</div>
+        <div style="font-size:1.8rem; font-weight:700; margin:15px 0;">
+            THE RAW DEEP ANALYSIS
+        </div>
+        <div style="color:#aaa; font-size:0.95rem; line-height:1.7;">
+            결제가 완료되면 사주, 수비학, 베딕, 5장의 타로를 교차 검증한<br>
+            가장 심층적인 분석 리포트가 즉시 생성됩니다.
+        </div>
+        <div style="font-size:2.5rem; font-weight:800; color:#f3e5ab; margin-top:25px;">
+            990원
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("결제하고 심층 분석 시작하기 (테스트)", use_container_width=True):
+        
+        current_date = today_kst()
+        
+        if not user_name.strip():
+            st.warning("이름 또는 닉네임을 입력하십시오.")
+            st.stop()
+
+        upsert_user(user_email, user_name)
+
+        ph = st.empty()
+        bar = st.progress(0.0)
+
+        loading_steps = [
+            ("결제 승인 대기 중...", 0.1),
+            ("운명 데이터 동기화 완료...", 0.3),
+            ("사주 명식과 수비학 구조 교차 분석 중...", 0.5),
+            ("베딕 점성술 행성 배치 대조 중...", 0.7),
+            ("타로 덱에서 5장의 운명 카드를 뽑는 중...", 0.9),
+            ("최종 딥 리포트 조립 중...", 0.95)
+        ]
+
+        for msg, progress_val in loading_steps:
+            ph.info(msg)
+            bar.progress(progress_val)
+            time.sleep(0.5)
+
+        astrology_data = build_astrology_block(
+            int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city
+        )
+
+        drawn_keys = random.sample(
+            MAJOR_ARCANA,
+            PRODUCTS["RAW_DEEP"]["cards"],
+        )
+
+        prompt = build_prompt(
+            user_name=user_name,
+            gender=gender,
+            birth_place=birth_place,
+            birth_year=int(birth_year),
+            birth_month=int(birth_month),
+            birth_day=int(birth_day),
+            birth_time=birth_time,
+            user_question=user_question,
+            astrology_data=astrology_data,
+            drawn_keys=drawn_keys,
+            product_id="RAW_DEEP",
+        )
+        
+        bar.progress(1.0)
+        ph.info("🌌 THE RAW 오라클 엔진 가동 중... 가장 깊은 진실을 추출하고 있습니다. (약 10~15초 소요)")
+
+        try:
+            response = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=prompt,
+            )
+
+            bar.empty()
+            ph.empty()
+            
+            result_text = response.text.strip()
+            
+            st.success("THE RAW DEEP ANALYSIS가 완료되었습니다.")
+            
+            display_deep_result(
+                result_text,
+                drawn_keys,
+            )
+
+            save_report_to_db(
+                user_email,
+                "RAW_DEEP",
+                user_question,
+                result_text,
+            )
+
+            email_sent = send_result_email(
+                user_email,
+                user_name,
+                result_text,
+                "THE RAW DEEP ANALYSIS",
+            )
+            
+            if email_sent:
+                st.caption("리딩 결과를 이메일로도 안전하게 보내드렸습니다.")
+
+            st.markdown("---")
+            if st.button("처음으로 돌아가기"):
+                st.session_state["checkout_product"] = "FREE"
+                st.rerun()
+
+        except Exception as e:
+            ph.empty()
+            st.error(f"리딩 생성 중 오류가 발생했습니다: {str(e)}")
