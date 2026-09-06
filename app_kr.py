@@ -1239,7 +1239,6 @@ if selected_product_id == "FREE":
                 ph.info(msg); bar.progress(progress_val); time.sleep(0.3)
             astrology_data = build_astrology_block(int(birth_year), int(birth_month), int(birth_day), birth_time, birth_city)
             today_prompt = f"""
-today_prompt = f"""
 당신은 THE RAW TAROT의 오라클이다.
 오늘({current_date}) 하루 동안 내담자의 '돈과 현실'에 어떤 일이 벌어질지만 냉정하게 분석하라.
 한자 사용을 금지하고, "~형국입니다", "~겁니다" 등의 단호한 점사 화법을 사용하라.
