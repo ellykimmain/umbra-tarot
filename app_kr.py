@@ -716,8 +716,8 @@ st.sidebar.markdown("---")
 reading_mode = st.sidebar.radio(
     "질문 테마",
     [
-        "TODAY'S MONEY — 오늘의 금전 운세",
-        "TARGET DATE MONEY — 지정일 금전 운세",
+        "TODAY'S MONEY — 오늘의 운세",
+        "TARGET DATE MONEY — 지정일 운세",
         "MONEY SHADOW — 돈과 현실",
         "RAW QUESTION — 나만의 심층 질문",
         "RAW CHAT — 실시간 상담하기",
